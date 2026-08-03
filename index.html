@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FixTana - Dépannage à Tana</title>
+  <!-- CDN Supabase JS -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f6f8; }
+    .card { background: white; padding: 15px; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .btn { padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; display: inline-block; }
+    .btn-call { background-color: #28a745; color: white; }
+    .btn-wa { background-color: #25D366; color: white; }
+    .badge { background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; }
+  </style>
+</head>
+<body>
+
+  <h1>🛠️ FixTana - Artisans & Dépannage</h1>
+  <div id="artisans-container">Chargement des artisans...</div>
+
+  <script>
+    // 1. Initialiser Supabase (REMPLACEZ PAR VOS CLÉS)
+    const SUPABASE_URL = 'VOTRE_PROJECT_URL_ICI';
+    const SUPABASE_ANON_KEY = 'VOTRE_ANON_KEY_ICI';
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // 2. Fonction pour enregistrer le clic dans la base de données
+    async function enregistrerClic(artisanId, typeAction) {
+      const { error } = await supabase
+        .from('clics_contact')
+        .insert([{ artisan_id: artisanId, type_action: typeAction }]);
+      
+      if (error) console.error("Erreur lors de l'enregistrement du clic:", error);
+      else console.log(`Clic ${typeAction} enregistré pour l'artisan ${artisanId}`);
+    }
+
+    // 3. Charger et afficher la liste des artisans
+    async function chargerArtisans() {
+      const { data: artisans, error } = await supabase
+        .from('artisans')
+        .select('*');
+
+      if (error) {
+        document.getElementById('artisans-container').innerText = "Erreur de chargement...";
+        return;
+      }
+
+      const container = document.getElementById('artisans-container');
+      container.innerHTML = '';
+
+      artisans.forEach(artisan => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <h3>${artisan.nom} ${artisan.est_verifie ? '✅' : ''}</h3>
+          <p><strong>Métier :</strong> ${artisan.metier} | <span class="badge">${artisan.quartier}</span></p>
+          <p>${artisan.description || ''}</p>
+          
+          <a href="tel:${artisan.telephone}" 
+             class="btn btn-call" 
+             onclick="enregistrerClic(${artisan.id}, 'appel')">
+             📞 Appeler
+          </a>
+          
+          ${artisan.whatsapp ? `
+            <a href="https://wa.me/${artisan.whatsapp}" 
+               target="_blank" 
+               class="btn btn-wa" 
+               onclick="enregistrerClic(${artisan.id}, 'whatsapp')">
+               💬 WhatsApp
+            </a>
+          ` : ''}
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // Exécuter au chargement
+    chargerArtisans();
+  </script>
+</body>
+</html>
