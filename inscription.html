@@ -18,6 +18,9 @@
     input, select, textarea { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95em; outline: none; }
     input:focus, select:focus, textarea:focus { border-color: #2563eb; }
 
+    /* Champ masqué par défaut */
+    #group-metier-autre { display: none; margin-top: 10px; }
+
     .btn-submit { width: 100%; padding: 12px; background-color: #2563eb; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1em; cursor: pointer; transition: 0.2s; margin-top: 10px; }
     .btn-submit:hover { background-color: #1d4ed8; }
 
@@ -43,9 +46,10 @@
         <input type="text" id="nom" placeholder="Ex: Jean Plomberie, Mamy Auto..." required>
       </div>
 
+      <!-- SECTEUR / MÉTIER -->
       <div class="form-group">
         <label for="metier">Secteur / Métier principal *</label>
-        <select id="metier" required>
+        <select id="metier" onchange="verifierAutreMetier()" required>
           <option value="">-- Sélectionnez un métier --</option>
           <option value="Plombier">Plombier</option>
           <option value="Électricien">Électricien</option>
@@ -54,8 +58,13 @@
           <option value="Serrurier">Serrurier</option>
           <option value="Peintre">Peintre</option>
           <option value="Frigoriste">Frigoriste (Clim & Frigo)</option>
-          <option value="Autre">Autre dépannage</option>
+          <option value="Autre">Autre dépannage...</option>
         </select>
+
+        <!-- CHAMP TEXTE DYNAMIQUE SI "AUTRE" EST SÉLECTIONNÉ -->
+        <div id="group-metier-autre">
+          <input type="text" id="metier-autre" placeholder="Précisez votre métier (ex: Vitrier, Cordonnier...)">
+        </div>
       </div>
 
       <div class="form-group">
@@ -85,11 +94,27 @@
   </div>
 
   <script>
-    // ⚠️ Vos clés Supabase
+    // ⚠️ Remplacez avec vos clés Supabase
     const SUPABASE_URL = 'https://xfqzlifauzlmtzaidixb.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhmcXpsaWZhdXpsbXR6YWlkaXhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3NTkxMTIsImV4cCI6MjEwMTMzNTExMn0.AmBdkYq70S9QntL13EcmFSJaxASh-x4gu6T1Mkhxsvk';
 
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Afficher ou masquer le champ personnalisé
+    function verifierAutreMetier() {
+      const selectMetier = document.getElementById('metier');
+      const groupAutre = document.getElementById('group-metier-autre');
+      const inputAutre = document.getElementById('metier-autre');
+
+      if (selectMetier.value === 'Autre') {
+        groupAutre.style.display = 'block';
+        inputAutre.required = true;
+      } else {
+        groupAutre.style.display = 'none';
+        inputAutre.required = false;
+        inputAutre.value = '';
+      }
+    }
 
     async function soumettreFormulaire(event) {
       event.preventDefault();
@@ -101,42 +126,46 @@
       btn.innerText = "Envoi en cours...";
       alertBox.style.display = 'none';
 
-      // Récupération des données
       const nom = document.getElementById('nom').value;
-      const metier = document.getElementById('metier').value;
+      const selectMetier = document.getElementById('metier').value;
+      const metierAutre = document.getElementById('metier-autre').value;
+      
+      // Si l'utilisateur a choisi "Autre", on enregistre ce qu'il a saisi dans le champ texte
+      const metierFinal = (selectMetier === 'Autre') ? metierAutre : selectMetier;
+
       const quartier = document.getElementById('quartier').value;
       const telephone = document.getElementById('telephone').value;
       const whatsapp = document.getElementById('whatsapp').value;
       const description = document.getElementById('description').value;
 
-      // Insertion dans Supabase avec est_verifie = false
       const { data, error } = await supabaseClient
         .from('artisans')
         .insert([
           {
             nom: nom,
-            metier: metier,
+            metier: metierFinal, // Sauvegarde du métier précis dans Supabase
             quartier: quartier,
             telephone: telephone,
             whatsapp: whatsapp || null,
             description: description || null,
-            est_verifie: false // 🔒 Requiert votre validation admin !
+            est_verifie: false
           }
         ]);
 
       if (error) {
         console.error("Erreur inscription:", error);
         alertBox.className = "alert alert-error";
-        alertBox.innerText = "Une erreur est survenue lors de l'enregistrement. Réessayez.";
+        alertBox.innerText = "Une erreur est survenue. Réessayez.";
         alertBox.style.display = 'block';
         btn.disabled = false;
         btn.innerText = "Envoyer ma demande";
       } else {
         alertBox.className = "alert alert-success";
-        alertBox.innerText = "✅ Inscription envoyée avec succès ! Votre profil sera publié après vérification de l'équipe FixTana.";
+        alertBox.innerText = "✅ Inscription envoyée ! Votre profil sera publié après vérification.";
         alertBox.style.display = 'block';
         
         document.getElementById('inscription-form').reset();
+        document.getElementById('group-metier-autre').style.display = 'none';
         btn.innerText = "Demande envoyée !";
       }
     }
