@@ -3,87 +3,224 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FixTana - Dépannage à Tana</title>
-  <!-- CDN Supabase JS -->
+  <title>FixTana - Artisans & Dépannage à Antananarivo</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f6f8; }
-    .card { background: white; padding: 15px; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    .btn { padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; display: inline-block; margin-right: 5px; }
-    .btn-call { background-color: #28a745; color: white; }
-    .btn-wa { background-color: #25D366; color: white; }
-    .badge { background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; }
+    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #f4f6f9; margin: 0; padding: 20px; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; }
+    
+    h1 { font-size: 1.6em; text-align: center; color: #1e293b; margin-bottom: 20px; }
+    
+    /* Zone de Recherche et Filtres */
+    .filter-box {
+      background: white;
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .filter-box input, .filter-box select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 0.95em;
+      outline: none;
+    }
+
+    .filter-box input:focus, .filter-box select:focus {
+      border-color: #2563eb;
+    }
+
+    .filter-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    /* Cartes Artisans */
+    .artisan-card {
+      background: white;
+      border-radius: 12px;
+      padding: 18px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    
+    .artisan-header { display: flex; justify-content: space-between; align-items: flex-start; }
+    .artisan-name { font-size: 1.2em; font-weight: bold; margin: 0 0 5px 0; color: #0f172a; }
+    .badge-check { color: #16a34a; font-size: 0.9em; }
+    
+    .meta-info { font-size: 0.9em; color: #475569; margin-bottom: 8px; }
+    .tag-quartier { background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 12px; font-weight: 500; font-size: 0.85em; }
+    
+    .artisan-desc { font-size: 0.9em; color: #64748b; margin-bottom: 15px; }
+
+    /* Boutons de Contact */
+    .btn-group { display: flex; gap: 10px; }
+    .btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 0.9em;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      text-decoration: none;
+      color: white;
+    }
+    .btn-call { background-color: #16a34a; }
+    .btn-call:hover { background-color: #15803d; }
+    .btn-wa { background-color: #25d366; }
+    .btn-wa:hover { background-color: #1eb857; }
+
+    .empty-state { text-align: center; color: #64748b; padding: 30px 10px; }
   </style>
 </head>
 <body>
 
-  <h1>🛠️ FixTana - Artisans & Dépannage</h1>
-  <div id="artisans-container">Chargement des artisans...</div>
+  <div class="container">
+    <h1>🛠️ FixTana - Artisans & Dépannage</h1>
+
+    <!-- BARRE DE RECHERCHE ET FILTRES -->
+    <div class="filter-box">
+      <input type="text" id="search-input" placeholder="🔍 Rechercher un nom, mot-clé..." oninput="filtrerArtisans()">
+      
+      <div class="filter-row">
+        <select id="select-metier" onchange="filtrerArtisans()">
+          <option value="">Tous les métiers</option>
+        </select>
+        
+        <select id="select-quartier" onchange="filtrerArtisans()">
+          <option value="">Tous les quartiers</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- LISTE DES ARTISANS -->
+    <div id="liste-artisans">
+      <div class="empty-state">Chargement des artisans...</div>
+    </div>
+  </div>
 
   <script>
-    // 1. Vos clés Supabase (Pensez à bien mettre VOS vraies clés ici)
+    // ⚠️ Remplacez avec vos accès Supabase
     const SUPABASE_URL = 'https://xfqzlifauzlmtzaidixb.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhmcXpsaWZhdXpsbXR6YWlkaXhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3NTkxMTIsImV4cCI6MjEwMTMzNTExMn0.AmBdkYq70S9QntL13EcmFSJaxASh-x4gu6T1Mkhxsvk';
 
-    // Correction du nom de variable pour éviter le conflit
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    
+    let tousLesArtisans = []; // Stockage local des données
 
-    // 2. Enregistrer un clic
-    async function enregistrerClic(artisanId, typeAction) {
-      const { error } = await supabaseClient
-        .from('clics_contact')
-        .insert([{ artisan_id: artisanId, type_action: typeAction }]);
-      
-      if (error) console.error("Erreur enregistrement clic:", error);
-    }
-
-    // 3. Charger les artisans
     async function chargerArtisans() {
-      const { data: artisans, error } = await supabaseClient
+      const { data, error } = await supabaseClient
         .from('artisans')
-        .select('*');
+        .select('*')
+        .eq('est_verifie', true) // N'affiche que les artisans validés
+        .order('nom', { ascending: true });
 
       if (error) {
-        console.error("Erreur Supabase:", error);
-        document.getElementById('artisans-container').innerText = "Erreur de chargement...";
+        console.error("Erreur chargement:", error);
+        document.getElementById('liste-artisans').innerHTML = '<div class="empty-state">Impossible de charger les données.</div>';
         return;
       }
 
-      const container = document.getElementById('artisans-container');
-      container.innerHTML = '';
+      tousLesArtisans = data;
+      remplirSelects();
+      afficherArtisans(tousLesArtisans);
+    }
+
+    // Remplir dynamiquement les menus déroulants selon les données en base
+    function remplirSelects() {
+      const métiers = [...new Set(tousLesArtisans.map(a => a.metier))].sort();
+      const quartiers = [...new Set(tousLesArtisans.map(a => a.quartier))].sort();
+
+      const selectMetier = document.getElementById('select-metier');
+      métiers.forEach(m => {
+        if(m) selectMetier.innerHTML += `<option value="${m}">${m}</option>`;
+      });
+
+      const selectQuartier = document.getElementById('select-quartier');
+      quartiers.forEach(q => {
+        if(q) selectQuartier.innerHTML += `<option value="${q}">${q}</option>`;
+      });
+    }
+
+    // Filtrer la liste en fonction des critères de l'utilisateur
+    function filtrerArtisans() {
+      const recherche = document.getElementById('search-input').value.toLowerCase();
+      const metierFiltre = document.getElementById('select-metier').value;
+      const quartierFiltre = document.getElementById('select-quartier').value;
+
+      const resultat = tousLesArtisans.filter(artisan => {
+        const correspondRecherche = 
+          artisan.nom.toLowerCase().includes(recherche) ||
+          (artisan.description && artisan.description.toLowerCase().includes(recherche));
+
+        const correspondMetier = metierFiltre === "" || artisan.metier === metierFiltre;
+        const correspondQuartier = quartierFiltre === "" || artisan.quartier === quartierFiltre;
+
+        return correspondRecherche && correspondMetier && correspondQuartier;
+      });
+
+      afficherArtisans(resultat);
+    }
+
+    // Afficher les cartes HTML
+    function afficherArtisans(artisans) {
+      const conteneur = document.getElementById('liste-artisans');
+      conteneur.innerHTML = '';
 
       if (artisans.length === 0) {
-        container.innerText = "Aucun artisan trouvé dans la base de données.";
+        conteneur.innerHTML = '<div class="empty-state">Aucun artisan trouvé pour ces critères.</div>';
         return;
       }
 
       artisans.forEach(artisan => {
+        const waClean = artisan.whatsapp ? artisan.whatsapp.replace(/[^0-9]/g, '') : '';
+        const waLink = waClean ? `https://wa.me/${waClean}?text=Bonjour%20${encodeURIComponent(artisan.nom)},%20je%20vous%20contacte%20depuis%20FixTana.` : '#';
+
         const card = document.createElement('div');
-        card.className = 'card';
+        card.className = 'artisan-card';
         card.innerHTML = `
-          <h3>${artisan.nom} ${artisan.est_verifie ? '✅' : ''}</h3>
-          <p><strong>Métier :</strong> ${artisan.metier} | <span class="badge">${artisan.quartier}</span></p>
-          <p>${artisan.description || ''}</p>
-          
-          <a href="tel:${artisan.telephone}" 
-             class="btn btn-call" 
-             onclick="enregistrerClic(${artisan.id}, 'appel')">
-             📞 Appeler
-          </a>
-          
-          ${artisan.whatsapp ? `
-            <a href="https://wa.me/${artisan.whatsapp}" 
-               target="_blank" 
-               class="btn btn-wa" 
-               onclick="enregistrerClic(${artisan.id}, 'whatsapp')">
-               💬 WhatsApp
+          <div class="artisan-header">
+            <h2 class="artisan-name">${artisan.nom} ${artisan.est_verifie ? '<span class="badge-check">✅</span>' : ''}</h2>
+          </div>
+          <div class="meta-info">
+            <strong>Métier :</strong> ${artisan.metier} | <span class="tag-quartier">${artisan.quartier}</span>
+          </div>
+          <div class="artisan-desc">${artisan.description || ''}</div>
+          <div class="btn-group">
+            <a href="tel:${artisan.telephone}" class="btn btn-call" onclick="enregistrerClic(${artisan.id}, 'appel')">
+              📞 Appeler
             </a>
-          ` : ''}
+            ${waClean ? `
+              <a href="${waLink}" target="_blank" class="btn btn-wa" onclick="enregistrerClic(${artisan.id}, 'whatsapp')">
+                💬 WhatsApp
+              </a>
+            ` : ''}
+          </div>
         `;
-        container.appendChild(card);
+        conteneur.appendChild(card);
       });
     }
 
+    // Enregistrer les statistiques dans Supabase
+    async function enregistrerClic(artisanId, typeAction) {
+      await supabaseClient.from('clics_contact').insert([
+        { artisan_id: artisanId, type_action: typeAction }
+      ]);
+    }
+
+    // Lancer au chargement
     chargerArtisans();
   </script>
 </body>
