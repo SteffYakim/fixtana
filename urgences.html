@@ -4,10 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FixTana - Urgences & Pharmacies à Tana</title>
-  
-  <!-- ⚠️ SCRIPT SUPABASE OBLIGATOIRE -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  
   <style>
     * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     body { background-color: #f4f6f9; margin: 0; padding: 20px; color: #333; }
@@ -33,7 +30,7 @@
     .pharmacie-meta { font-size: 0.85em; color: #64748b; margin: 4px 0 10px; }
     .btn-call-pharmacie { display: inline-block; background: #16a34a; color: white; text-decoration: none; padding: 8px 12px; border-radius: 6px; font-size: 0.85em; font-weight: bold; }
 
-    .empty-state { text-align: center; color: #64748b; padding: 20px; }
+    .empty-state { text-align: center; color: #64748b; padding: 20px; background: white; border-radius: 10px; border: 1px dashed #cbd5e1; }
   </style>
 </head>
 <body>
@@ -72,16 +69,15 @@
     </div>
 
     <!-- 2. PHARMACIES DE GARDE -->
-    <div class="section-title">💊 Pharmacies de Garde (Aujourd'hui)</div>
+    <div class="section-title">💊 Pharmacies de Garde (En cours)</div>
     <div id="liste-pharmacies">
       <div class="empty-state">Chargement des pharmacies de garde...</div>
     </div>
   </div>
 
   <script>
-    // ⚠️ Remplacez avec vos identifiants Supabase
     const SUPABASE_URL = 'https://xfqzlifauzlmtzaidixb.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhmcXpsaWZhdXpsbXR6YWlkaXhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3NTkxMTIsImV4cCI6MjEwMTMzNTExMn0.AmBdkYq70S9QntL13EcmFSJaxASh-x4gu6T1Mkhxsvk'; 
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhmcXpsaWZhdXpsbXR6YWlkaXhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3NTkxMTIsImV4cCI6MjEwMTMzNTExMn0.AmBdkYq70S9QntL13EcmFSJaxASh-x4gu6T1Mkhxsvk'; // ⚠️ Mettez votre clé anon
 
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -100,7 +96,26 @@
         return;
       }
 
-      data.forEach(p => {
+      // Date du jour à minuit
+      const aujourdhui = new Date();
+      aujourdhui.setHours(0, 0, 0, 0);
+
+      // FILTRAGE : On conserve uniquement les pharmacies dont la date_fin_garde >= aujourd'hui (ou sans date renseignée)
+      const pharmaciesActives = data.filter(p => {
+        if (!p.date_fin_garde) return true; // Si pas de date de fin, on l'affiche par défaut
+        
+        const [year, month, day] = p.date_fin_garde.split('-').map(Number);
+        const dateFin = new Date(year, month - 1, day);
+        
+        return dateFin >= aujourdhui; // Garde vraie aujourd'hui ou dans le futur
+      });
+
+      if (pharmaciesActives.length === 0) {
+        conteneur.innerHTML = '<div class="empty-state">Aucune pharmacie de garde actuellement active.</div>';
+        return;
+      }
+
+      pharmaciesActives.forEach(p => {
         let dateFinStr = '';
         if (p.date_fin_garde) {
           const parts = p.date_fin_garde.split('-');
