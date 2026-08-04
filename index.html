@@ -24,7 +24,7 @@
     // 1. Initialiser Supabase (REMPLACEZ PAR VOS CLÉS)
     const SUPABASE_URL = 'https://xfqzlifauzlmtzaidixb.supabase.co/rest/v1/';
     const SUPABASE_ANON_KEY = 'sb_publishable_A8FyWWVn5giTiBeXHJcUdQ_uYlonYEC';
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     // 2. Fonction pour enregistrer le clic dans la base de données
     async function enregistrerClic(artisanId, typeAction) {
