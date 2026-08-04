@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FixTana - Inscription Artisan</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #f4f6f9; margin: 0; padding: 20px; color: #333; }
+    .container { max-width: 500px; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+    
+    h1 { font-size: 1.5em; text-align: center; color: #1e293b; margin-top: 0; }
+    p.subtitle { text-align: center; color: #64748b; font-size: 0.9em; margin-bottom: 25px; }
+
+    .form-group { margin-bottom: 15px; }
+    label { display: block; font-weight: 600; font-size: 0.85em; color: #475569; margin-bottom: 5px; }
+    input, select, textarea { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95em; outline: none; }
+    input:focus, select:focus, textarea:focus { border-color: #2563eb; }
+
+    .btn-submit { width: 100%; padding: 12px; background-color: #2563eb; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 1em; cursor: pointer; transition: 0.2s; margin-top: 10px; }
+    .btn-submit:hover { background-color: #1d4ed8; }
+
+    /* Alertes */
+    .alert { padding: 12px; border-radius: 8px; font-size: 0.9em; margin-bottom: 15px; display: none; text-align: center; }
+    .alert-success { background-color: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+    .alert-error { background-color: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+    
+    .back-link { display: block; text-align: center; margin-top: 15px; color: #64748b; text-decoration: none; font-size: 0.85em; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>🛠️ Rejoindre FixTana</h1>
+    <p class="subtitle">Inscrivez-vous gratuitement pour recevoir des clients à Antananarivo.</p>
+
+    <div id="alert-msg" class="alert"></div>
+
+    <form id="inscription-form" onsubmit="soumettreFormulaire(event)">
+      <div class="form-group">
+        <label for="nom">Nom complet ou Nom de l'entreprise *</label>
+        <input type="text" id="nom" placeholder="Ex: Jean Plomberie, Mamy Auto..." required>
+      </div>
+
+      <div class="form-group">
+        <label for="metier">Secteur / Métier principal *</label>
+        <select id="metier" required>
+          <option value="">-- Sélectionnez un métier --</option>
+          <option value="Plombier">Plombier</option>
+          <option value="Électricien">Électricien</option>
+          <option value="Mécanicien">Mécanicien</option>
+          <option value="Menuisier">Menuisier</option>
+          <option value="Serrurier">Serrurier</option>
+          <option value="Peintre">Peintre</option>
+          <option value="Frigoriste">Frigoriste (Clim & Frigo)</option>
+          <option value="Autre">Autre dépannage</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="quartier">Quartier de couverture principal *</label>
+        <input type="text" id="quartier" placeholder="Ex: Mahamasina, Itaosy, 67Ha, Talatamaty..." required>
+      </div>
+
+      <div class="form-group">
+        <label for="telephone">Téléphone d'appel *</label>
+        <input type="tel" id="telephone" placeholder="Ex: 0340000000" required>
+      </div>
+
+      <div class="form-group">
+        <label for="whatsapp">Numéro WhatsApp (avec indicatif 261)</label>
+        <input type="tel" id="whatsapp" placeholder="Ex: 261340000000">
+      </div>
+
+      <div class="form-group">
+        <label for="description">Courte description de vos services</label>
+        <textarea id="description" rows="3" placeholder="Ex: Dépannage rapide 7j/7, installation sanitaire, fuite d'eau..."></textarea>
+      </div>
+
+      <button type="submit" class="btn-submit" id="btn-btn">Envoyer ma demande</button>
+    </form>
+
+    <a href="index.html" class="back-link">← Retour à la liste des artisans</a>
+  </div>
+
+  <script>
+    // ⚠️ Vos clés Supabase
+    const SUPABASE_URL = 'https://xfqzlifauzlmtzaidixb.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhmcXpsaWZhdXpsbXR6YWlkaXhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3NTkxMTIsImV4cCI6MjEwMTMzNTExMn0.AmBdkYq70S9QntL13EcmFSJaxASh-x4gu6T1Mkhxsvk';
+
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function soumettreFormulaire(event) {
+      event.preventDefault();
+
+      const btn = document.getElementById('btn-btn');
+      const alertBox = document.getElementById('alert-msg');
+      
+      btn.disabled = true;
+      btn.innerText = "Envoi en cours...";
+      alertBox.style.display = 'none';
+
+      // Récupération des données
+      const nom = document.getElementById('nom').value;
+      const metier = document.getElementById('metier').value;
+      const quartier = document.getElementById('quartier').value;
+      const telephone = document.getElementById('telephone').value;
+      const whatsapp = document.getElementById('whatsapp').value;
+      const description = document.getElementById('description').value;
+
+      // Insertion dans Supabase avec est_verifie = false
+      const { data, error } = await supabaseClient
+        .from('artisans')
+        .insert([
+          {
+            nom: nom,
+            metier: metier,
+            quartier: quartier,
+            telephone: telephone,
+            whatsapp: whatsapp || null,
+            description: description || null,
+            est_verifie: false // 🔒 Requiert votre validation admin !
+          }
+        ]);
+
+      if (error) {
+        console.error("Erreur inscription:", error);
+        alertBox.className = "alert alert-error";
+        alertBox.innerText = "Une erreur est survenue lors de l'enregistrement. Réessayez.";
+        alertBox.style.display = 'block';
+        btn.disabled = false;
+        btn.innerText = "Envoyer ma demande";
+      } else {
+        alertBox.className = "alert alert-success";
+        alertBox.innerText = "✅ Inscription envoyée avec succès ! Votre profil sera publié après vérification de l'équipe FixTana.";
+        alertBox.style.display = 'block';
+        
+        document.getElementById('inscription-form').reset();
+        btn.innerText = "Demande envoyée !";
+      }
+    }
+  </script>
+</body>
+</html>
