@@ -9,7 +9,7 @@
   <style>
     body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f6f8; }
     .card { background: white; padding: 15px; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    .btn { padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; display: inline-block; }
+    .btn { padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; display: inline-block; margin-right: 5px; }
     .btn-call { background-color: #28a745; color: white; }
     .btn-wa { background-color: #25D366; color: white; }
     .badge { background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; }
@@ -21,34 +21,41 @@
   <div id="artisans-container">Chargement des artisans...</div>
 
   <script>
-    // 1. Initialiser Supabase (REMPLACEZ PAR VOS CLÉS)
-    const SUPABASE_URL = 'https://xfqzlifauzlmtzaidixb.supabase.co/rest/v1/';
-    const SUPABASE_ANON_KEY = 'sb_publishable_A8FyWWVn5giTiBeXHJcUdQ_uYlonYEC';
+    // 1. Vos clés Supabase (Pensez à bien mettre VOS vraies clés ici)
+    const SUPABASE_URL = 'VOTRE_PROJECT_URL_ICI';
+    const SUPABASE_ANON_KEY = 'VOTRE_ANON_KEY_ICI';
+
+    // Correction du nom de variable pour éviter le conflit
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // 2. Fonction pour enregistrer le clic dans la base de données
+    // 2. Enregistrer un clic
     async function enregistrerClic(artisanId, typeAction) {
-      const { error } = await supabase
+      const { error } = await supabaseClient
         .from('clics_contact')
         .insert([{ artisan_id: artisanId, type_action: typeAction }]);
       
-      if (error) console.error("Erreur lors de l'enregistrement du clic:", error);
-      else console.log(`Clic ${typeAction} enregistré pour l'artisan ${artisanId}`);
+      if (error) console.error("Erreur enregistrement clic:", error);
     }
 
-    // 3. Charger et afficher la liste des artisans
+    // 3. Charger les artisans
     async function chargerArtisans() {
-      const { data: artisans, error } = await supabase
+      const { data: artisans, error } = await supabaseClient
         .from('artisans')
         .select('*');
 
       if (error) {
+        console.error("Erreur Supabase:", error);
         document.getElementById('artisans-container').innerText = "Erreur de chargement...";
         return;
       }
 
       const container = document.getElementById('artisans-container');
       container.innerHTML = '';
+
+      if (artisans.length === 0) {
+        container.innerText = "Aucun artisan trouvé dans la base de données.";
+        return;
+      }
 
       artisans.forEach(artisan => {
         const card = document.createElement('div');
@@ -77,7 +84,6 @@
       });
     }
 
-    // Exécuter au chargement
     chargerArtisans();
   </script>
 </body>
