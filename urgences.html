@@ -43,29 +43,10 @@
       </div>
     </div>
 
-    <!-- 1. NUMÉROS D'URGENCE FIXES -->
+    <!-- 1. NUMÉROS D'URGENCE DYNAMIQUES -->
     <div class="section-title">🚨 Urgences Antananarivo</div>
-    <div class="emergency-grid">
-      <div class="emergency-card">
-        <h3>Sapeurs Pompiers</h3>
-        <div class="phone">118</div>
-        <a href="tel:118">📞 Appeler</a>
-      </div>
-      <div class="emergency-card">
-        <h3>Police Secours</h3>
-        <div class="phone">117</div>
-        <a href="tel:117">📞 Appeler</a>
-      </div>
-      <div class="emergency-card">
-        <h3>Gendarmerie</h3>
-        <div class="phone">119</div>
-        <a href="tel:119">📞 Appeler</a>
-      </div>
-      <div class="emergency-card">
-        <h3>SAMU / Urgence</h3>
-        <div class="phone">034 22 000 00</div>
-        <a href="tel:0342200000">📞 Appeler</a>
-      </div>
+    <div id="liste-urgences" class="emergency-grid">
+      <div class="empty-state">Chargement des numéros d'urgence...</div>
     </div>
 
     <!-- 2. PHARMACIES DE GARDE -->
@@ -77,9 +58,37 @@
 
   <script>
     const SUPABASE_URL = 'https://xfqzlifauzlmtzaidixb.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhmcXpsaWZhdXpsbXR6YWlkaXhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3NTkxMTIsImV4cCI6MjEwMTMzNTExMn0.AmBdkYq70S9QntL13EcmFSJaxASh-x4gu6T1Mkhxsvk'; // ⚠️ Mettez votre clé anon
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhmcXpsaWZhdXpsbXR6YWlkaXhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3NTkxMTIsImV4cCI6MjEwMTMzNTExMn0.AmBdkYq70S9QntL13EcmFSJaxASh-x4gu6T1Mkhxsvk';
 
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function initPage() {
+      await chargerUrgences();
+      await chargerPharmacies();
+    }
+
+    async function chargerUrgences() {
+      const { data, error } = await supabaseClient.from('urgences').select('*').order('id', { ascending: true });
+      const conteneur = document.getElementById('liste-urgences');
+      conteneur.innerHTML = '';
+
+      if (error || !data || data.length === 0) {
+        conteneur.innerHTML = '<div class="empty-state">Aucun numéro d\'urgence.</div>';
+        return;
+      }
+
+      data.forEach(u => {
+        const telNettoye = u.telephone.replace(/\s+/g, '');
+        const card = document.createElement('div');
+        card.className = 'emergency-card';
+        card.innerHTML = `
+          <h3>${u.nom}</h3>
+          <div class="phone">${u.telephone}</div>
+          <a href="tel:${telNettoye}">📞 Appeler</a>
+        `;
+        conteneur.appendChild(card);
+      });
+    }
 
     async function chargerPharmacies() {
       const { data, error } = await supabaseClient
@@ -96,18 +105,14 @@
         return;
       }
 
-      // Date du jour à minuit
       const aujourdhui = new Date();
       aujourdhui.setHours(0, 0, 0, 0);
 
-      // FILTRAGE : On conserve uniquement les pharmacies dont la date_fin_garde >= aujourd'hui (ou sans date renseignée)
       const pharmaciesActives = data.filter(p => {
-        if (!p.date_fin_garde) return true; // Si pas de date de fin, on l'affiche par défaut
-        
+        if (!p.date_fin_garde) return true;
         const [year, month, day] = p.date_fin_garde.split('-').map(Number);
         const dateFin = new Date(year, month - 1, day);
-        
-        return dateFin >= aujourdhui; // Garde vraie aujourd'hui ou dans le futur
+        return dateFin >= aujourdhui;
       });
 
       if (pharmaciesActives.length === 0) {
@@ -129,13 +134,13 @@
           <div class="pharmacie-meta">
             📍 <strong>Quartier :</strong> ${p.quartier} ${p.adresse ? `(${p.adresse})` : ''}
           </div>
-          ${p.telephone ? `<a href="tel:${p.telephone}" class="btn-call-pharmacie">📞 Appeler (${p.telephone})</a>` : ''}
+          ${p.telephone ? `<a href="tel:${p.telephone.replace(/\s+/g, '')}" class="btn-call-pharmacie">📞 Appeler (${p.telephone})</a>` : ''}
         `;
         conteneur.appendChild(card);
       });
     }
 
-    chargerPharmacies();
+    initPage();
   </script>
 </body>
 </html>
