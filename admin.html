@@ -60,7 +60,7 @@
     .btn-delete:hover { background-color: #dc2626; }
     .btn-cancel { background-color: #94a3b8; color: white; }
 
-    /* Formulaire rapide */
+    /* Formulaires */
     .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 15px; }
     .form-grid input { padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9em; outline: none; }
     
@@ -80,7 +80,7 @@
 
   <div class="container">
     <h1>👑 FixTana — Administration</h1>
-    <p class="subtitle">Gestion du catalogue, des validations et du roulement hebdomadaire des pharmacies.</p>
+    <p class="subtitle">Gestion globale des numéros d'urgence, des pharmacies et des artisans.</p>
 
     <!-- BANNIÈRE DE RAPPEL DE GARDE -->
     <div id="alert-garde" class="alert-banner">
@@ -88,10 +88,34 @@
       <div id="alert-garde-text"></div>
     </div>
 
+    <!-- SECTION 0 : GESTION DES NUMÉROS D'URGENCE -->
+    <div class="card">
+      <h2>🚨 Numéros d'Urgence</h2>
+      <form id="form-urgence" onsubmit="ajouterUrgence(event)">
+        <div class="form-grid">
+          <input type="text" id="urg-nom" placeholder="Service (ex: SAMU, Pompiers) *" required>
+          <input type="text" id="urg-tel" placeholder="Numéro d'urgence *" required>
+        </div>
+        <button type="submit" class="btn btn-validate" style="width: 100%; padding: 8px; margin-top: 5px;">+ Ajouter un numéro d'urgence</button>
+      </form>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Service d'Urgence</th>
+            <th>Numéro d'Appel</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="table-urgences">
+          <tr><td colspan="3" class="empty-msg">Chargement des numéros d'urgence...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
     <!-- SECTION 1 : GESTION DES PHARMACIES -->
     <div class="card">
       <h2>💊 Pharmacies de Garde (Roulement Hebdomadaire)</h2>
-      
       <form id="form-pharmacie" onsubmit="ajouterPharmacie(event)">
         <div class="form-grid">
           <input type="text" id="ph-nom" placeholder="Nom pharmacie *" required>
@@ -100,7 +124,7 @@
           <input type="date" id="ph-debut" title="Début de garde">
           <input type="date" id="ph-fin" title="Fin de garde">
         </div>
-        <button type="submit" class="btn btn-validate" style="width: 100%; padding: 10px; margin-top: 5px;">+ Enregistrer la nouvelle pharmacie de garde</button>
+        <button type="submit" class="btn btn-validate" style="width: 100%; padding: 8px; margin-top: 5px;">+ Enregistrer la pharmacie</button>
       </form>
 
       <table>
@@ -158,10 +182,30 @@
     </div>
   </div>
 
+  <!-- MODALE MODIFIER URGENCE -->
+  <div id="modalUrgence" class="modal">
+    <div class="modal-content">
+      <h3>✏️ Modifier l'Urgence</h3>
+      <input type="hidden" id="edit-urg-id">
+      <div class="form-group">
+        <label>Nom du service</label>
+        <input type="text" id="edit-urg-nom">
+      </div>
+      <div class="form-group">
+        <label>Numéro de téléphone</label>
+        <input type="text" id="edit-urg-tel">
+      </div>
+      <div class="modal-buttons">
+        <button class="btn btn-cancel" onclick="fermerModales()">Annuler</button>
+        <button class="btn btn-validate" onclick="sauvegarderUrgence()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODALE MODIFIER PHARMACIE -->
   <div id="modalPharmacie" class="modal">
     <div class="modal-content">
-      <h3>✏️ Modifier / Rendre Garde</h3>
+      <h3>✏️ Modifier la Pharmacie</h3>
       <input type="hidden" id="edit-ph-id">
       <div class="form-group">
         <label>Nom de la pharmacie</label>
@@ -193,7 +237,7 @@
   <!-- MODALE MODIFIER ARTISAN -->
   <div id="modalArtisan" class="modal">
     <div class="modal-content">
-      <h3>✏️ Modifier le prestataire</h3>
+      <h3>✏️ Modifier le Prestataire</h3>
       <input type="hidden" id="edit-art-id">
       <div class="form-group">
         <label>Nom complet</label>
@@ -232,12 +276,91 @@
 
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+    let cacheUrgences = [];
     let cachePharmacies = [];
     let cacheArtisans = [];
 
     async function initAdmin() {
+      await chargerUrgences();
       await chargerPharmacies();
       await chargerArtisans();
+    }
+
+    /* --- GESTION DES URGENCES --- */
+    async function chargerUrgences() {
+      const { data: urgences, error } = await supabaseClient
+        .from('urgences')
+        .select('*')
+        .order('id', { ascending: true });
+
+      const tbody = document.getElementById('table-urgences');
+      tbody.innerHTML = '';
+
+      if (error || !urgences || urgences.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" class="empty-msg">Aucun numéro d\'urgence configuré.</td></tr>';
+        return;
+      }
+
+      cacheUrgences = urgences;
+
+      urgences.forEach(u => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${u.nom}</strong></td>
+          <td><span style="font-size:1.1em; font-weight:bold; color:#dc2626;">${u.telephone}</span></td>
+          <td class="actions-cell">
+            <button class="btn btn-edit" title="Modifier" onclick="ouvrirEditUrgence(${u.id})">✏️</button>
+            <button class="btn btn-delete" title="Supprimer" onclick="supprimerUrgence(${u.id})">🗑️</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function ajouterUrgence(e) {
+      e.preventDefault();
+      const nom = document.getElementById('urg-nom').value;
+      const telephone = document.getElementById('urg-tel').value;
+
+      const { error } = await supabaseClient.from('urgences').insert([{ nom, telephone }]);
+
+      if (!error) {
+        document.getElementById('form-urgence').reset();
+        chargerUrgences();
+      } else {
+        alert("Erreur : " + error.message);
+      }
+    }
+
+    function ouvrirEditUrgence(id) {
+      const u = cacheUrgences.find(i => i.id === id);
+      if (!u) return;
+      document.getElementById('edit-urg-id').value = u.id;
+      document.getElementById('edit-urg-nom').value = u.nom || '';
+      document.getElementById('edit-urg-tel').value = u.telephone || '';
+      document.getElementById('modalUrgence').style.display = 'flex';
+    }
+
+    async function sauvegarderUrgence() {
+      const id = document.getElementById('edit-urg-id').value;
+      const nom = document.getElementById('edit-urg-nom').value;
+      const telephone = document.getElementById('edit-urg-tel').value;
+
+      const { error } = await supabaseClient.from('urgences').update({ nom, telephone }).eq('id', id);
+
+      if (!error) {
+        fermerModales();
+        chargerUrgences();
+      } else {
+        alert("Erreur de modification : " + error.message);
+      }
+    }
+
+    async function supprimerUrgence(id) {
+      if (confirm("Supprimer ce numéro d'urgence ?")) {
+        await supabaseClient.from('urgences').delete().eq('id', id);
+        chargerUrgences();
+      }
     }
 
     /* --- PHARMACIES & RAPPELS --- */
@@ -256,8 +379,6 @@
       }
 
       cachePharmacies = pharmacies;
-      
-      // Date courante à minuit pile (heure locale)
       const aujourdhui = new Date();
       aujourdhui.setHours(0,0,0,0);
 
@@ -267,11 +388,8 @@
         let statutBadge = '<span class="badge-status status-ok">🟢 En Garde</span>';
         
         if (p.date_fin_garde) {
-          // Parsing explicite (YYYY, MM-1, DD) pour éviter les décalages UTC
           const [year, month, day] = p.date_fin_garde.split('-').map(Number);
           const dateFin = new Date(year, month - 1, day);
-          
-          // Calcul de la différence en jours francs
           const diffJours = Math.round((dateFin - aujourdhui) / (1000 * 60 * 60 * 24));
 
           if (diffJours < 0) {
@@ -302,7 +420,6 @@
         tbody.appendChild(tr);
       });
 
-      // Affichage du bandeau d'alerte si au moins une date pose problème
       const alertBanner = document.getElementById('alert-garde');
       if (alertesText.length > 0) {
         document.getElementById('alert-garde-text').innerHTML = alertesText.join('<br>');
@@ -480,6 +597,7 @@
 
     /* UTILS */
     function fermerModales() {
+      document.getElementById('modalUrgence').style.display = 'none';
       document.getElementById('modalPharmacie').style.display = 'none';
       document.getElementById('modalArtisan').style.display = 'none';
     }
