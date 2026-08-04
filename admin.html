@@ -8,7 +8,7 @@
   <style>
     * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     body { background-color: #f8fafc; margin: 0; padding: 20px; color: #1e293b; }
-    .container { max-width: 950px; margin: 0 auto; }
+    .container { max-width: 1000px; margin: 0 auto; }
     
     h1 { color: #0f172a; margin-bottom: 5px; font-size: 1.8em; }
     .subtitle { color: #64748b; font-size: 0.9em; margin-bottom: 25px; }
@@ -31,9 +31,10 @@
     th { background-color: #f8fafc; color: #475569; font-weight: 600; }
     tr:hover { background-color: #f8fafc; }
 
-    /* Boutons */
+    /* Boutons & Actions */
+    .actions-cell { display: flex; gap: 6px; align-items: center; }
     .btn {
-      padding: 6px 12px;
+      padding: 6px 10px;
       border: none;
       border-radius: 6px;
       font-weight: 600;
@@ -43,8 +44,11 @@
     }
     .btn-validate { background-color: #16a34a; color: white; }
     .btn-validate:hover { background-color: #15803d; }
+    .btn-edit { background-color: #3b82f6; color: white; }
+    .btn-edit:hover { background-color: #2563eb; }
     .btn-delete { background-color: #ef4444; color: white; }
     .btn-delete:hover { background-color: #dc2626; }
+    .btn-cancel { background-color: #94a3b8; color: white; }
 
     /* Formulaire rapide */
     .form-inline { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
@@ -52,6 +56,15 @@
     .form-inline input:focus { border-color: #2563eb; }
 
     .empty-msg { text-align: center; color: #94a3b8; padding: 20px 0; font-style: italic; }
+
+    /* Pop-up Modale (Modification) */
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
+    .modal-content { background: white; padding: 25px; border-radius: 12px; width: 100%; max-width: 450px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+    .modal-content h3 { margin-top: 0; color: #0f172a; font-size: 1.2em; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; }
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; font-size: 0.85em; font-weight: 600; color: #475569; margin-bottom: 4px; }
+    .form-group input, .form-group textarea { width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9em; }
+    .modal-buttons { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
   </style>
 </head>
 <body>
@@ -78,7 +91,7 @@
             <th>Quartier</th>
             <th>Téléphone</th>
             <th>Statut Garde</th>
-            <th>Action</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody id="table-pharmacies">
@@ -116,7 +129,7 @@
             <th>Métier</th>
             <th>Quartier</th>
             <th>Téléphone</th>
-            <th>Action</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody id="table-valides">
@@ -126,19 +139,82 @@
     </div>
   </div>
 
+  <!-- MODALE MODIFIER PHARMACIE -->
+  <div id="modalPharmacie" class="modal">
+    <div class="modal-content">
+      <h3>✏️ Modifier la pharmacie</h3>
+      <input type="hidden" id="edit-ph-id">
+      <div class="form-group">
+        <label>Nom de la pharmacie</label>
+        <input type="text" id="edit-ph-nom">
+      </div>
+      <div class="form-group">
+        <label>Quartier</label>
+        <input type="text" id="edit-ph-quartier">
+      </div>
+      <div class="form-group">
+        <label>Téléphone</label>
+        <input type="text" id="edit-ph-tel">
+      </div>
+      <div class="modal-buttons">
+        <button class="btn btn-cancel" onclick="fermerModales()">Annuler</button>
+        <button class="btn btn-validate" onclick="sauvegarderPharmacie()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODALE MODIFIER ARTISAN -->
+  <div id="modalArtisan" class="modal">
+    <div class="modal-content">
+      <h3>✏️ Modifier le prestataire</h3>
+      <input type="hidden" id="edit-art-id">
+      <div class="form-group">
+        <label>Nom complet / Entreprise</label>
+        <input type="text" id="edit-art-nom">
+      </div>
+      <div class="form-group">
+        <label>Métier</label>
+        <input type="text" id="edit-art-metier">
+      </div>
+      <div class="form-group">
+        <label>Quartier</label>
+        <input type="text" id="edit-art-quartier">
+      </div>
+      <div class="form-group">
+        <label>Téléphone d'appel</label>
+        <input type="text" id="edit-art-tel">
+      </div>
+      <div class="form-group">
+        <label>WhatsApp</label>
+        <input type="text" id="edit-art-wa">
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea id="edit-art-desc" rows="3"></textarea>
+      </div>
+      <div class="modal-buttons">
+        <button class="btn btn-cancel" onclick="fermerModales()">Annuler</button>
+        <button class="btn btn-validate" onclick="sauvegarderArtisan()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
   <script>
-    // ⚠️ ASSUREZ-VOUS D'INSERER VOTRE VRAIE CLE SUPABASE CI-DESSOUS
+    // ⚠️ Remplacez avec vos clés Supabase
     const SUPABASE_URL = 'https://xfqzlifauzlmtzaidixb.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhmcXpsaWZhdXpsbXR6YWlkaXhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3NTkxMTIsImV4cCI6MjEwMTMzNTExMn0.AmBdkYq70S9QntL13EcmFSJaxASh-x4gu6T1Mkhxsvk'; // <--- Remplacez par votre clé de la console Supabase
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhmcXpsaWZhdXpsbXR6YWlkaXhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3NTkxMTIsImV4cCI6MjEwMTMzNTExMn0.AmBdkYq70S9QntL13EcmFSJaxASh-x4gu6T1Mkhxsvk';
 
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let cachePharmacies = [];
+    let cacheArtisans = [];
 
     async function initAdmin() {
       await chargerPharmacies();
       await chargerArtisans();
     }
 
-    /* --- GESTION DES PHARMACIES --- */
+    /* --- GESTION PHARMACIES --- */
     async function chargerPharmacies() {
       const { data: pharmacies, error } = await supabaseClient
         .from('pharmacies')
@@ -148,16 +224,12 @@
       const tbody = document.getElementById('table-pharmacies');
       tbody.innerHTML = '';
 
-      if (error) {
-        console.error("Erreur pharmacies:", error);
-        tbody.innerHTML = `<tr><td colspan="5" class="empty-msg" style="color:red">Erreur chargement: ${error.message}</td></tr>`;
-        return;
-      }
-
-      if (!pharmacies || pharmacies.length === 0) {
+      if (error || !pharmacies || pharmacies.length === 0) {
         tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">Aucune pharmacie enregistrée.</td></tr>';
         return;
       }
+
+      cachePharmacies = pharmacies;
 
       pharmacies.forEach(p => {
         const tr = document.createElement('tr');
@@ -170,8 +242,9 @@
               ${p.est_de_garde ? '🟢 DE GARDE' : '🔴 NON'}
             </button>
           </td>
-          <td>
-            <button class="btn btn-delete" onclick="supprimerPharmacie(${p.id})">🗑️</button>
+          <td class="actions-cell">
+            <button class="btn btn-edit" title="Modifier" onclick="ouvrirEditPharmacie(${p.id})">✏️</button>
+            <button class="btn btn-delete" title="Supprimer" onclick="supprimerPharmacie(${p.id})">🗑️</button>
           </td>
         `;
         tbody.appendChild(tr);
@@ -196,19 +269,49 @@
       }
     }
 
+    function ouvrirEditPharmacie(id) {
+      const p = cachePharmacies.find(item => item.id === id);
+      if (!p) return;
+      document.getElementById('edit-ph-id').value = p.id;
+      document.getElementById('edit-ph-nom').value = p.nom || '';
+      document.getElementById('edit-ph-quartier').value = p.quartier || '';
+      document.getElementById('edit-ph-tel').value = p.telephone || '';
+      document.getElementById('modalPharmacie').style.display = 'flex';
+    }
+
+    async function sauvegarderPharmacie() {
+      const id = document.getElementById('edit-ph-id').value;
+      const nom = document.getElementById('edit-ph-nom').value;
+      const quartier = document.getElementById('edit-ph-quartier').value;
+      const telephone = document.getElementById('edit-ph-tel').value;
+
+      const { error } = await supabaseClient
+        .from('pharmacies')
+        .update({ nom, quartier, telephone })
+        .eq('id', id);
+
+      if (!error) {
+        fermerModales();
+        chargerPharmacies();
+      } else {
+        alert("Erreur de modification : " + error.message);
+      }
+    }
+
     async function toggleGarde(id, nouveauStatut) {
       await supabaseClient.from('pharmacies').update({ est_de_garde: nouveauStatut }).eq('id', id);
       chargerPharmacies();
     }
 
     async function supprimerPharmacie(id) {
-      if (confirm("Voulez-vous vraiment supprimer cette pharmacie ?")) {
+      if (confirm("Supprimer cette pharmacie ?")) {
         await supabaseClient.from('pharmacies').delete().eq('id', id);
         chargerPharmacies();
       }
     }
 
-    /* --- GESTION DES ARTISANS --- */
+
+    /* --- GESTION ARTISANS --- */
     async function chargerArtisans() {
       const { data: artisans, error } = await supabaseClient
         .from('artisans')
@@ -223,6 +326,8 @@
 
       if (error || !artisans) return;
 
+      cacheArtisans = artisans;
+
       const enAttente = artisans.filter(a => !a.est_verifie);
       const valides = artisans.filter(a => a.est_verifie);
 
@@ -236,9 +341,10 @@
             <td>${a.metier}</td>
             <td>${a.quartier}</td>
             <td>${a.telephone}</td>
-            <td>
-              <button class="btn btn-validate" onclick="validerArtisan(${a.id})">✅ Valider</button>
-              <button class="btn btn-delete" onclick="supprimerArtisan(${a.id})">🗑️ Refuser</button>
+            <td class="actions-cell">
+              <button class="btn btn-validate" title="Valider" onclick="validerArtisan(${a.id})">✅</button>
+              <button class="btn btn-edit" title="Modifier" onclick="ouvrirEditArtisan(${a.id})">✏️</button>
+              <button class="btn btn-delete" title="Supprimer" onclick="supprimerArtisan(${a.id})">🗑️</button>
             </td>
           `;
           tbodyAttente.appendChild(tr);
@@ -255,12 +361,48 @@
             <td>${a.metier}</td>
             <td>${a.quartier}</td>
             <td>${a.telephone}</td>
-            <td>
-              <button class="btn btn-delete" onclick="supprimerArtisan(${a.id})">🗑️ Retirer</button>
+            <td class="actions-cell">
+              <button class="btn btn-edit" title="Modifier" onclick="ouvrirEditArtisan(${a.id})">✏️</button>
+              <button class="btn btn-delete" title="Retirer" onclick="supprimerArtisan(${a.id})">🗑️</button>
             </td>
           `;
           tbodyValides.appendChild(tr);
         });
+      }
+    }
+
+    function ouvrirEditArtisan(id) {
+      const a = cacheArtisans.find(item => item.id === id);
+      if (!a) return;
+      document.getElementById('edit-art-id').value = a.id;
+      document.getElementById('edit-art-nom').value = a.nom || '';
+      document.getElementById('edit-art-metier').value = a.metier || '';
+      document.getElementById('edit-art-quartier').value = a.quartier || '';
+      document.getElementById('edit-art-tel').value = a.telephone || '';
+      document.getElementById('edit-art-wa').value = a.whatsapp || '';
+      document.getElementById('edit-art-desc').value = a.description || '';
+      document.getElementById('modalArtisan').style.display = 'flex';
+    }
+
+    async function sauvegarderArtisan() {
+      const id = document.getElementById('edit-art-id').value;
+      const nom = document.getElementById('edit-art-nom').value;
+      const metier = document.getElementById('edit-art-metier').value;
+      const quartier = document.getElementById('edit-art-quartier').value;
+      const telephone = document.getElementById('edit-art-tel').value;
+      const whatsapp = document.getElementById('edit-art-wa').value;
+      const description = document.getElementById('edit-art-desc').value;
+
+      const { error } = await supabaseClient
+        .from('artisans')
+        .update({ nom, metier, quartier, telephone, whatsapp, description })
+        .eq('id', id);
+
+      if (!error) {
+        fermerModales();
+        chargerArtisans();
+      } else {
+        alert("Erreur de modification : " + error.message);
       }
     }
 
@@ -270,10 +412,15 @@
     }
 
     async function supprimerArtisan(id) {
-      if (confirm("Êtes-vous sûr de vouloir supprimer cet artisan ?")) {
+      if (confirm("Supprimer cet artisan ?")) {
         await supabaseClient.from('artisans').delete().eq('id', id);
         chargerArtisans();
       }
+    }
+
+    function fermerModales() {
+      document.getElementById('modalPharmacie').style.display = 'none';
+      document.getElementById('modalArtisan').style.display = 'none';
     }
 
     initAdmin();
