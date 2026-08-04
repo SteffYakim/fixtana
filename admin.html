@@ -256,6 +256,8 @@
       }
 
       cachePharmacies = pharmacies;
+      
+      // Date courante à minuit pile (heure locale)
       const aujourdhui = new Date();
       aujourdhui.setHours(0,0,0,0);
 
@@ -265,15 +267,20 @@
         let statutBadge = '<span class="badge-status status-ok">🟢 En Garde</span>';
         
         if (p.date_fin_garde) {
-          const dateFin = new Date(p.date_fin_garde);
-          const diffJours = Math.ceil((dateFin - aujourdhui) / (1000 * 60 * 60 * 24));
+          // Parsing explicite (YYYY, MM-1, DD) pour éviter les décalages UTC
+          const [year, month, day] = p.date_fin_garde.split('-').map(Number);
+          const dateFin = new Date(year, month - 1, day);
+          
+          // Calcul de la différence en jours francs
+          const diffJours = Math.round((dateFin - aujourdhui) / (1000 * 60 * 60 * 24));
 
           if (diffJours < 0) {
-            statutBadge = '<span class="badge-status status-expired">🔴 Expirée</span>';
+            statutBadge = '<span class="badge-status status-expired">🔴 Expirée</span>';
             alertesText.push(`• <strong>${p.nom}</strong> : La garde a expiré le ${formaterDate(p.date_fin_garde)}.`);
           } else if (diffJours <= 2) {
-            statutBadge = `<span class="badge-status status-warning">⏳ Fin dans ${diffJours} j</span>`;
-            alertesText.push(`• <strong>${p.nom}</strong> : La garde se termine très bientôt (${formaterDate(p.date_fin_garde)}).`);
+            const libelleFin = diffJours === 0 ? "aujourd'hui" : `dans ${diffJours} j`;
+            statutBadge = `<span class="badge-status status-warning">⏳ Fin ${libelleFin}</span>`;
+            alertesText.push(`• <strong>${p.nom}</strong> : La garde se termine ${libelleFin} (${formaterDate(p.date_fin_garde)}).`);
           }
         }
 
@@ -295,7 +302,7 @@
         tbody.appendChild(tr);
       });
 
-      // Gestion de la bannière d'alerte
+      // Affichage du bandeau d'alerte si au moins une date pose problème
       const alertBanner = document.getElementById('alert-garde');
       if (alertesText.length > 0) {
         document.getElementById('alert-garde-text').innerHTML = alertesText.join('<br>');
