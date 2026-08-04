@@ -1,28 +1,282 @@
-<!-- SECTION PHARMACIES DANS ADMIN -->
-<div class="card">
-  <h2>💊 Gestion des Pharmacies de Garde</h2>
-  
-  <!-- Formulaire d'ajout rapide -->
-  <form id="form-pharmacie" onsubmit="ajouterPharmacie(event)" style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
-    <input type="text" id="ph-nom" placeholder="Nom (ex: Pharmacie Métropole)" required style="flex:2; padding: 8px;">
-    <input type="text" id="ph-quartier" placeholder="Quartier (ex: Analakely)" required style="flex:1; padding: 8px;">
-    <input type="tel" id="ph-tel" placeholder="Téléphone" style="flex:1; padding: 8px;">
-    <button type="submit" class="btn btn-validate">+ Ajouter</button>
-  </form>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FixTana - Administration</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #f8fafc; margin: 0; padding: 20px; color: #1e293b; }
+    .container { max-width: 950px; margin: 0 auto; }
+    
+    h1 { color: #0f172a; margin-bottom: 5px; font-size: 1.8em; }
+    .subtitle { color: #64748b; font-size: 0.9em; margin-bottom: 25px; }
 
-  <!-- Tableau des pharmacies -->
-  <table>
-    <thead>
-      <tr>
-        <th>Pharmacie</th>
-        <th>Quartier</th>
-        <th>Téléphone</th>
-        <th>De garde ?</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody id="pharmacies-table-body">
-      <!-- Rempli en JS -->
-    </tbody>
-  </table>
-</div>
+    /* Cartes / Sections */
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 25px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      border: 1px solid #e2e8f0;
+    }
+    
+    h2 { font-size: 1.2em; margin-top: 0; color: #1e293b; display: flex; align-items: center; gap: 8px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; }
+
+    /* Tableaux */
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9em; }
+    th, td { text-align: left; padding: 12px; border-bottom: 1px solid #e2e8f0; }
+    th { background-color: #f8fafc; color: #475569; font-weight: 600; }
+    tr:hover { background-color: #f8fafc; }
+
+    /* Boutons */
+    .btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.85em;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .btn-validate { background-color: #16a34a; color: white; }
+    .btn-validate:hover { background-color: #15803d; }
+    .btn-delete { background-color: #ef4444; color: white; }
+    .btn-delete:hover { background-color: #dc2626; }
+
+    /* Formulaire rapide */
+    .form-inline { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+    .form-inline input { padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9em; outline: none; }
+    .form-inline input:focus { border-color: #2563eb; }
+
+    .empty-msg { text-align: center; color: #94a3b8; padding: 20px 0; font-style: italic; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>👑 FixTana — Administration</h1>
+    <p class="subtitle">Gérez les demandes d'artisans et la liste des pharmacies de garde à Antananarivo.</p>
+
+    <!-- SECTION 1 : GESTION DES PHARMACIES -->
+    <div class="card">
+      <h2>💊 Pharmacies de Garde</h2>
+      
+      <form id="form-pharmacie" class="form-inline" onsubmit="ajouterPharmacie(event)">
+        <input type="text" id="ph-nom" placeholder="Nom de la pharmacie *" style="flex: 2;" required>
+        <input type="text" id="ph-quartier" placeholder="Quartier *" style="flex: 1;" required>
+        <input type="tel" id="ph-tel" placeholder="Téléphone" style="flex: 1;">
+        <button type="submit" class="btn btn-validate">+ Ajouter</button>
+      </form>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Pharmacie</th>
+            <th>Quartier</th>
+            <th>Téléphone</th>
+            <th>Statut Garde</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="table-pharmacies">
+          <tr><td colspan="5" class="empty-msg">Chargement des pharmacies...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SECTION 2 : DEMANDES D'ARTISANS EN ATTENTE -->
+    <div class="card">
+      <h2>⏳ Artisans en attente de validation</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Nom</th>
+            <th>Métier</th>
+            <th>Quartier</th>
+            <th>Téléphone</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="table-en-attente">
+          <tr><td colspan="5" class="empty-msg">Chargement des demandes...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SECTION 3 : ARTISANS VALIDÉS -->
+    <div class="card">
+      <h2>✅ Artisans vérifiés & publiés</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Nom</th>
+            <th>Métier</th>
+            <th>Quartier</th>
+            <th>Téléphone</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="table-valides">
+          <tr><td colspan="5" class="empty-msg">Chargement des artisans...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    // ⚠️ ASSUREZ-VOUS D'INSERER VOTRE VRAIE CLE SUPABASE CI-DESSOUS
+    const SUPABASE_URL = 'https://xfqzlifauzlmtzaidixb.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'; // <--- Remplacez par votre clé de la console Supabase
+
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function initAdmin() {
+      await chargerPharmacies();
+      await chargerArtisans();
+    }
+
+    /* --- GESTION DES PHARMACIES --- */
+    async function chargerPharmacies() {
+      const { data: pharmacies, error } = await supabaseClient
+        .from('pharmacies')
+        .select('*')
+        .order('nom', { ascending: true });
+
+      const tbody = document.getElementById('table-pharmacies');
+      tbody.innerHTML = '';
+
+      if (error) {
+        console.error("Erreur pharmacies:", error);
+        tbody.innerHTML = `<tr><td colspan="5" class="empty-msg" style="color:red">Erreur chargement: ${error.message}</td></tr>`;
+        return;
+      }
+
+      if (!pharmacies || pharmacies.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">Aucune pharmacie enregistrée.</td></tr>';
+        return;
+      }
+
+      pharmacies.forEach(p => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${p.nom}</strong></td>
+          <td>${p.quartier}</td>
+          <td>${p.telephone || '-'}</td>
+          <td>
+            <button class="btn ${p.est_de_garde ? 'btn-validate' : 'btn-delete'}" onclick="toggleGarde(${p.id}, ${!p.est_de_garde})">
+              ${p.est_de_garde ? '🟢 DE GARDE' : '🔴 NON'}
+            </button>
+          </td>
+          <td>
+            <button class="btn btn-delete" onclick="supprimerPharmacie(${p.id})">🗑️</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function ajouterPharmacie(event) {
+      event.preventDefault();
+      const nom = document.getElementById('ph-nom').value;
+      const quartier = document.getElementById('ph-quartier').value;
+      const telephone = document.getElementById('ph-tel').value;
+
+      const { error } = await supabaseClient
+        .from('pharmacies')
+        .insert([{ nom, quartier, telephone, est_de_garde: true }]);
+
+      if (!error) {
+        document.getElementById('form-pharmacie').reset();
+        chargerPharmacies();
+      } else {
+        alert("Erreur lors de l'ajout : " + error.message);
+      }
+    }
+
+    async function toggleGarde(id, nouveauStatut) {
+      await supabaseClient.from('pharmacies').update({ est_de_garde: nouveauStatut }).eq('id', id);
+      chargerPharmacies();
+    }
+
+    async function supprimerPharmacie(id) {
+      if (confirm("Voulez-vous vraiment supprimer cette pharmacie ?")) {
+        await supabaseClient.from('pharmacies').delete().eq('id', id);
+        chargerPharmacies();
+      }
+    }
+
+    /* --- GESTION DES ARTISANS --- */
+    async function chargerArtisans() {
+      const { data: artisans, error } = await supabaseClient
+        .from('artisans')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      const tbodyAttente = document.getElementById('table-en-attente');
+      const tbodyValides = document.getElementById('table-valides');
+
+      tbodyAttente.innerHTML = '';
+      tbodyValides.innerHTML = '';
+
+      if (error || !artisans) return;
+
+      const enAttente = artisans.filter(a => !a.est_verifie);
+      const valides = artisans.filter(a => a.est_verifie);
+
+      if (enAttente.length === 0) {
+        tbodyAttente.innerHTML = '<tr><td colspan="5" class="empty-msg">Aucune demande en attente.</td></tr>';
+      } else {
+        enAttente.forEach(a => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><strong>${a.nom}</strong></td>
+            <td>${a.metier}</td>
+            <td>${a.quartier}</td>
+            <td>${a.telephone}</td>
+            <td>
+              <button class="btn btn-validate" onclick="validerArtisan(${a.id})">✅ Valider</button>
+              <button class="btn btn-delete" onclick="supprimerArtisan(${a.id})">🗑️ Refuser</button>
+            </td>
+          `;
+          tbodyAttente.appendChild(tr);
+        });
+      }
+
+      if (valides.length === 0) {
+        tbodyValides.innerHTML = '<tr><td colspan="5" class="empty-msg">Aucun artisan valide publié.</td></tr>';
+      } else {
+        valides.forEach(a => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><strong>${a.nom}</strong></td>
+            <td>${a.metier}</td>
+            <td>${a.quartier}</td>
+            <td>${a.telephone}</td>
+            <td>
+              <button class="btn btn-delete" onclick="supprimerArtisan(${a.id})">🗑️ Retirer</button>
+            </td>
+          `;
+          tbodyValides.appendChild(tr);
+        });
+      }
+    }
+
+    async function validerArtisan(id) {
+      await supabaseClient.from('artisans').update({ est_verifie: true }).eq('id', id);
+      chargerArtisans();
+    }
+
+    async function supprimerArtisan(id) {
+      if (confirm("Êtes-vous sûr de vouloir supprimer cet artisan ?")) {
+        await supabaseClient.from('artisans').delete().eq('id', id);
+        chargerArtisans();
+      }
+    }
+
+    initAdmin();
+  </script>
+</body>
+</html>
