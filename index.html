@@ -14,23 +14,39 @@
     .header { text-align: center; margin-bottom: 20px; }
     h1 { font-size: 1.8em; color: #1e293b; margin: 0 0 10px 0; }
     
-    /* Bouton Inscription Artisan */
-    .btn-register-link {
+    /* Navigation rapide */
+    .nav-bar {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+    
+    .nav-btn {
       display: inline-block;
-      background-color: #e0e7ff;
-      color: #3730a3;
-      padding: 8px 16px;
+      padding: 8px 14px;
       border-radius: 20px;
-      font-size: 0.9em;
+      font-size: 0.85em;
       font-weight: 600;
       text-decoration: none;
       transition: all 0.2s ease;
+    }
+    
+    .btn-artisan {
+      background-color: #e0e7ff;
+      color: #3730a3;
       border: 1px solid #c7d2fe;
     }
-    .btn-register-link:hover {
-      background-color: #c7d2fe;
-      transform: translateY(-1px);
+    .btn-artisan:hover { background-color: #c7d2fe; }
+
+    .btn-urgence {
+      background-color: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fca5a5;
     }
+    .btn-urgence:hover { background-color: #fca5a5; }
 
     /* Zone de Recherche et Filtres */
     .filter-box {
@@ -108,12 +124,18 @@
 <body>
 
   <div class="container">
-    <!-- EN-TÊTE ET BOUTON D'INSCRIPTION -->
+    <!-- EN-TÊTE ET MENUS RAPIDES -->
     <div class="header">
-      <h1>🛠️ FixTana - Artisans & Dépannage</h1>
-      <a href="inscription.html" class="btn-register-link">
-        💼 Vous êtes artisan ? Rejoignez la plateforme ici →
-      </a>
+      <h1>🛠️ FixTana - Dépannage à Tana</h1>
+      
+      <div class="nav-bar">
+        <a href="inscription.html" class="nav-btn btn-artisan">
+          💼 Vous êtes artisan ? Inscrivez-vous
+        </a>
+        <a href="urgences.html" class="nav-btn btn-urgence">
+          🚨 Urgences & Pharmacies
+        </a>
+      </div>
     </div>
 
     <!-- BARRE DE RECHERCHE ET FILTRES -->
@@ -138,7 +160,7 @@
   </div>
 
   <script>
-    // ⚠️ Remplacez avec vos accès Supabase
+    // ⚠️ Assurez-vous d'avoir votre vraie clé anon public ci-dessous
     const SUPABASE_URL = 'https://xfqzlifauzlmtzaidixb.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhmcXpsaWZhdXpsbXR6YWlkaXhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3NTkxMTIsImV4cCI6MjEwMTMzNTExMn0.AmBdkYq70S9QntL13EcmFSJaxASh-x4gu6T1Mkhxsvk';
 
@@ -150,7 +172,7 @@
       const { data, error } = await supabaseClient
         .from('artisans')
         .select('*')
-        .eq('est_verifie', true) // Affiche uniquement les artisans validés
+        .eq('est_verifie', true)
         .order('nom', { ascending: true });
 
       if (error) {
