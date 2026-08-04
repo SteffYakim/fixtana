@@ -10,8 +10,28 @@
     body { background-color: #f4f6f9; margin: 0; padding: 20px; color: #333; }
     .container { max-width: 600px; margin: 0 auto; }
     
-    h1 { font-size: 1.6em; text-align: center; color: #1e293b; margin-bottom: 20px; }
+    /* En-tête */
+    .header { text-align: center; margin-bottom: 20px; }
+    h1 { font-size: 1.8em; color: #1e293b; margin: 0 0 10px 0; }
     
+    /* Bouton Inscription Artisan */
+    .btn-register-link {
+      display: inline-block;
+      background-color: #e0e7ff;
+      color: #3730a3;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.9em;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      border: 1px solid #c7d2fe;
+    }
+    .btn-register-link:hover {
+      background-color: #c7d2fe;
+      transform: translateY(-1px);
+    }
+
     /* Zone de Recherche et Filtres */
     .filter-box {
       background: white;
@@ -88,11 +108,17 @@
 <body>
 
   <div class="container">
-    <h1>🛠️ FixTana - Artisans & Dépannage</h1>
+    <!-- EN-TÊTE ET BOUTON D'INSCRIPTION -->
+    <div class="header">
+      <h1>🛠️ FixTana - Artisans & Dépannage</h1>
+      <a href="inscription.html" class="btn-register-link">
+        💼 Vous êtes artisan ? Rejoignez la plateforme ici →
+      </a>
+    </div>
 
     <!-- BARRE DE RECHERCHE ET FILTRES -->
     <div class="filter-box">
-      <input type="text" id="search-input" placeholder="🔍 Rechercher un nom, mot-clé..." oninput="filtrerArtisans()">
+      <input type="text" id="search-input" placeholder="🔍 Rechercher un nom, métier, service..." oninput="filtrerArtisans()">
       
       <div class="filter-row">
         <select id="select-metier" onchange="filtrerArtisans()">
@@ -118,13 +144,13 @@
 
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     
-    let tousLesArtisans = []; // Stockage local des données
+    let tousLesArtisans = [];
 
     async function chargerArtisans() {
       const { data, error } = await supabaseClient
         .from('artisans')
         .select('*')
-        .eq('est_verifie', true) // N'affiche que les artisans validés
+        .eq('est_verifie', true) // Affiche uniquement les artisans validés
         .order('nom', { ascending: true });
 
       if (error) {
@@ -138,23 +164,19 @@
       afficherArtisans(tousLesArtisans);
     }
 
-    // Remplir dynamiquement les menus déroulants selon les données en base
     function remplirSelects() {
-      const métiers = [...new Set(tousLesArtisans.map(a => a.metier))].sort();
-      const quartiers = [...new Set(tousLesArtisans.map(a => a.quartier))].sort();
+      const métiers = [...new Set(tousLesArtisans.map(a => a.metier))].filter(Boolean).sort();
+      const quartiers = [...new Set(tousLesArtisans.map(a => a.quartier))].filter(Boolean).sort();
 
       const selectMetier = document.getElementById('select-metier');
-      métiers.forEach(m => {
-        if(m) selectMetier.innerHTML += `<option value="${m}">${m}</option>`;
-      });
+      selectMetier.innerHTML = '<option value="">Tous les métiers</option>';
+      métiers.forEach(m => selectMetier.innerHTML += `<option value="${m}">${m}</option>`);
 
       const selectQuartier = document.getElementById('select-quartier');
-      quartiers.forEach(q => {
-        if(q) selectQuartier.innerHTML += `<option value="${q}">${q}</option>`;
-      });
+      selectQuartier.innerHTML = '<option value="">Tous les quartiers</option>';
+      quartiers.forEach(q => selectQuartier.innerHTML += `<option value="${q}">${q}</option>`);
     }
 
-    // Filtrer la liste en fonction des critères de l'utilisateur
     function filtrerArtisans() {
       const recherche = document.getElementById('search-input').value.toLowerCase();
       const metierFiltre = document.getElementById('select-metier').value;
@@ -162,8 +184,9 @@
 
       const resultat = tousLesArtisans.filter(artisan => {
         const correspondRecherche = 
-          artisan.nom.toLowerCase().includes(recherche) ||
-          (artisan.description && artisan.description.toLowerCase().includes(recherche));
+          (artisan.nom && artisan.nom.toLowerCase().includes(recherche)) ||
+          (artisan.description && artisan.description.toLowerCase().includes(recherche)) ||
+          (artisan.metier && artisan.metier.toLowerCase().includes(recherche));
 
         const correspondMetier = metierFiltre === "" || artisan.metier === metierFiltre;
         const correspondQuartier = quartierFiltre === "" || artisan.quartier === quartierFiltre;
@@ -174,7 +197,6 @@
       afficherArtisans(resultat);
     }
 
-    // Afficher les cartes HTML
     function afficherArtisans(artisans) {
       const conteneur = document.getElementById('liste-artisans');
       conteneur.innerHTML = '';
@@ -213,14 +235,12 @@
       });
     }
 
-    // Enregistrer les statistiques dans Supabase
     async function enregistrerClic(artisanId, typeAction) {
       await supabaseClient.from('clics_contact').insert([
         { artisan_id: artisanId, type_action: typeAction }
       ]);
     }
 
-    // Lancer au chargement
     chargerArtisans();
   </script>
 </body>
