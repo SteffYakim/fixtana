@@ -1,1 +1,174 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FixTana - Dashboard Admin</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #f4f6f9; margin: 0; padding: 20px; color: #333; }
+    .container { max-width: 1000px; margin: 0 auto; }
+    h1 { color: #1e293b; display: flex; align-items: center; gap: 10px; }
+    
+    /* Stats Cards */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
+    .stat-card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); text-align: center; }
+    .stat-card h3 { margin: 0; font-size: 2em; color: #2563eb; }
+    .stat-card p { margin: 5px 0 0; color: #64748b; font-size: 0.9em; }
 
+    /* Tables */
+    .card { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 25px; }
+    h2 { font-size: 1.2em; color: #334155; margin-top: 0; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { text-align: left; padding: 12px; border-bottom: 1px solid #e2e8f0; }
+    th { background-color: #f8fafc; color: #475569; font-weight: 600; }
+    
+    /* Badges & Buttons */
+    .badge { padding: 4px 8px; border-radius: 12px; font-size: 0.8em; font-weight: bold; }
+    .badge-success { background-color: #dcfce7; color: #166534; }
+    .badge-warning { background-color: #fef9c3; color: #854d0e; }
+    
+    .btn { padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.85em; font-weight: bold; transition: 0.2s; }
+    .btn-validate { background-color: #22c55e; color: white; margin-right: 5px; }
+    .btn-validate:hover { background-color: #16a34a; }
+    .btn-delete { background-color: #ef4444; color: white; }
+    .btn-delete:hover { background-color: #dc2626; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>👑 FixTana — Administration</h1>
+
+    <!-- KPI STATS -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <h3 id="total-artisans">0</h3>
+        <p>Artisans inscrits</p>
+      </div>
+      <div class="stat-card">
+        <h3 id="total-appels">0</h3>
+        <p>Appels générés 📞</p>
+      </div>
+      <div class="stat-card">
+        <h3 id="total-whatsapp">0</h3>
+        <p>Messages WhatsApp 💬</p>
+      </div>
+    </div>
+
+    <!-- TABLEAU DE VALIDATION & GESTION -->
+    <div class="card">
+      <h2>Liste des Prestataires</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Nom / Métier</th>
+            <th>Quartier</th>
+            <th>Téléphone</th>
+            <th>Statut</th>
+            <th>Contacts (Appels/WA)</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="artisans-table-body">
+          <tr><td colspan="6">Chargement des données...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    // ⚠️ METTEZ VOS VRAIS IDENTIFIANTS SUPABASE ICI
+    const SUPABASE_URL = 'https://xfqzlifauzlmtzaidixb.supabase.co';
+    const SUPABASE_ANON_KEY = 'VOTRE_CLE_ANON_ICI';
+
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function chargerDashboard() {
+      // 1. Récupérer les artisans
+      const { data: artisans, error: errArtisans } = await supabaseClient
+        .from('artisans')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      // 2. Récupérer les clics de contact
+      const { data: clics, error: errClics } = await supabaseClient
+        .from('clics_contact')
+        .select('*');
+
+      if (errArtisans || errClics) {
+        console.error("Erreur Dashboard:", errArtisans || errClics);
+        return;
+      }
+
+      // 3. Calculer les statistiques globales
+      document.getElementById('total-artisans').textContent = artisans.length;
+      
+      const appels = clics.filter(c => c.type_action === 'appel').length;
+      const whatsapp = clics.filter(c => c.type_action === 'whatsapp').length;
+      
+      document.getElementById('total-appels').textContent = appels;
+      document.getElementById('total-whatsapp').textContent = whatsapp;
+
+      // 4. Remplir le tableau
+      const tbody = document.getElementById('artisans-table-body');
+      tbody.innerHTML = '';
+
+      artisans.forEach(artisan => {
+        // Compter les clics spécifiques à cet artisan
+        const nbAppels = clics.filter(c => c.artisan_id === artisan.id && c.type_action === 'appel').length;
+        const nbWA = clics.filter(c => c.artisan_id === artisan.id && c.type_action === 'whatsapp').length;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>
+            <strong>${artisan.nom}</strong><br>
+            <small style="color: #64748b">${artisan.metier}</small>
+          </td>
+          <td>${artisan.quartier}</td>
+          <td>${artisan.telephone}</td>
+          <td>
+            <span class="badge ${artisan.est_verifie ? 'badge-success' : 'badge-warning'}">
+              ${artisan.est_verifie ? 'Vérifié' : 'En attente'}
+            </span>
+          </td>
+          <td><strong>${nbAppels}</strong> 📞 / <strong>${nbWA}</strong> 💬</td>
+          <td>
+            ${!artisan.est_verifie ? `<button class="btn btn-validate" onclick="validerArtisan(${artisan.id})">Valider</button>` : ''}
+            <button class="btn btn-delete" onclick="supprimerArtisan(${artisan.id})">🗑️</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Fonction pour valider un artisan
+    async function validerArtisan(id) {
+      const { error } = await supabaseClient
+        .from('artisans')
+        .update({ est_verifie: true })
+        .eq('id', id);
+
+      if (!error) chargerDashboard();
+      else alert("Erreur lors de la validation");
+    }
+
+    // Fonction pour supprimer un artisan
+    async function supprimerArtisan(id) {
+      if (confirm("Voulez-vous vraiment supprimer ce prestataire ?")) {
+        const { error } = await supabaseClient
+          .from('artisans')
+          .delete()
+          .eq('id', id);
+
+        if (!error) chargerDashboard();
+        else alert("Erreur lors de la suppression");
+      }
+    }
+
+    // Charger au démarrage
+    chargerDashboard();
+  </script>
+</body>
+</html>
