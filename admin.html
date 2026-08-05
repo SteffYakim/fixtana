@@ -351,29 +351,27 @@
     }
 
     async function ajouterPub(e) {
-      e.preventDefault();
-      const titre = document.getElementById('pub-titre').value;
-      const image_url = document.getElementById('pub-image').value;
-      const lien_url = document.getElementById('pub-lien').value;
-      const description = document.getElementById('pub-desc').value;
+  e.preventDefault();
+  
+  const titre = document.getElementById('pub-titre').value;
+  const image_url = document.getElementById('pub-image').value;
+  const lien_url = document.getElementById('pub-lien').value;
+  const description = document.getElementById('pub-desc').value;
 
-      await supabaseClient.from('publicites').insert([{ titre, image_url, lien_url, description, est_actif: true }]);
-      document.getElementById('form-pub').reset();
-      chargerPubs();
-    }
+  // Envoi à Supabase avec vérification d'erreur
+  const { data, error } = await supabaseClient
+    .from('publicites')
+    .insert([{ titre, image_url, lien_url, description, est_actif: true }]);
 
-    async function togglePub(id, statut) {
-      await supabaseClient.from('publicites').update({ est_actif: statut }).eq('id', id);
-      chargerPubs();
-    }
-
-    async function supprimerPub(id) {
-      if (confirm("Supprimer cette pub ?")) {
-        await supabaseClient.from('publicites').delete().eq('id', id);
-        chargerPubs();
-      }
-    }
-
+  if (error) {
+    alert("❌ Erreur lors de l'enregistrement de la pub : " + error.message);
+    console.error("Détails de l'erreur :", error);
+  } else {
+    alert("✅ Publicité enregistrée avec succès !");
+    document.getElementById('form-pub').reset();
+    chargerPubs(); // Recharge le tableau des pubs
+  }
+}
     /* --- URGENCES --- */
     async function chargerUrgences() {
       const { data: urgences } = await supabaseClient.from('urgences').select('*').order('id', { ascending: true });
