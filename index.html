@@ -60,11 +60,11 @@
     .dot { width: 8px; height: 8px; background-color: #fcd34d; border-radius: 50%; cursor: pointer; transition: 0.3s; }
     .dot.active-dot { background-color: #b45309; width: 18px; border-radius: 10px; }
 
-    /* Barre de recherche & Filtres */
+    /* Barre de recherche & Filtres dynamiques */
     .search-box { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.95em; margin-bottom: 15px; outline: none; }
     .filter-tags { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px; }
-    .tag { background: white; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 15px; font-size: 0.8em; cursor: pointer; white-space: nowrap; }
-    .tag.active { background: #2563eb; color: white; border-color: #2563eb; }
+    .tag { background: white; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 15px; font-size: 0.8em; cursor: pointer; white-space: nowrap; transition: 0.2s; }
+    .tag.active { background: #2563eb; color: white; border-color: #2563eb; font-weight: bold; }
 
     /* Cartes Artisans */
     .artisan-card { background: white; border-radius: 12px; padding: 16px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; }
@@ -111,16 +111,11 @@
       <div id="pub-dots-container" class="carousel-dots"></div>
     </div>
 
-    <!-- Recherche & Filtres -->
+    <!-- Recherche -->
     <input type="text" id="search-input" class="search-box" placeholder="Rechercher (ex: Plombier, Analakely...)" oninput="filtrerArtisans()">
     
-    <div class="filter-tags" id="tags-container">
-      <div class="tag active" onclick="filtrerMetier('TOUS', this)">Tous</div>
-      <div class="tag" onclick="filtrerMetier('Plombier', this)">Plombier</div>
-      <div class="tag" onclick="filtrerMetier('Électricien', this)">Électricien</div>
-      <div class="tag" onclick="filtrerMetier('Mécanicien', this)">Mécanicien</div>
-      <div class="tag" onclick="filtrerMetier('Menuisier', this)">Menuisier</div>
-    </div>
+    <!-- CONTENEUR DES FILTRES DE MÉTIERS (GÉNÉRÉ EN JAVASCRIPT) -->
+    <div class="filter-tags" id="tags-container"></div>
 
     <!-- Liste des Artisans -->
     <div id="liste-artisans">
@@ -139,7 +134,7 @@
         </div>
         <div class="form-group">
           <label>Métier / Activité *</label>
-          <input type="text" id="ins-metier" required placeholder="Ex: Plombier, Électricien...">
+          <input type="text" id="ins-metier" required placeholder="Ex: Vitrier, Plombier, Électricien...">
         </div>
         <div class="form-group">
           <label>Quartier d'intervention *</label>
@@ -167,7 +162,7 @@
 
   <script>
     const SUPABASE_URL = 'https://xfqzlifauzlmtzaidixb.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhmcXpsaWZhdXpsbXR6YWlkaXhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3NTkxMTIsImV4cCI6MjEwMTMzNTExMn0.AmBdkYq70S9QntL13EcmFSJaxASh-x4gu6T1Mkhxsvk';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhmcXpsaWZhdXpsbXR6YWlkaXhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3NTkxMTIsImV4cCI6MjEwMTMzNTExMn0.AmBdkYq70S9QntL13EcmFSJaxASh-x4gu6T1Mkhxsvk'; // ⚠️ Remplacez par votre clé anon
 
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -181,7 +176,7 @@
       await chargerArtisans();
     }
 
-    /* GESTION DU CARROUSEL DE PUBS */
+    /* 1. GESTION DU CARROUSEL DE PUBS */
     async function chargerCarrouselPubs() {
       const { data: pubs, error } = await supabaseClient
         .from('publicites')
@@ -252,7 +247,7 @@
       }, 5000);
     }
 
-    /* GESTION DES ARTISANS */
+    /* 2. GESTION DES ARTISANS & FILTRES DYNAMIQUES */
     async function chargerArtisans() {
       const { data, error } = await supabaseClient
         .from('artisans')
@@ -261,12 +256,39 @@
         .order('nom', { ascending: true });
 
       if (error || !data) {
-        document.getElementById('liste-artisans').innerHTML = '<div class="empty-state">Erreur lors du chargement.</div>';
+        document.getElementById('liste-artisans').innerHTML = '<div class="empty-state">Erreur lors du chargement des prestataires.</div>';
         return;
       }
 
       tousLesArtisans = data;
+      genererFiltresMetiers(tousLesArtisans);
       afficherArtisans(tousLesArtisans);
+    }
+
+    function genererFiltresMetiers(artisans) {
+      const container = document.getElementById('tags-container');
+      if (!container) return;
+
+      // Extraire automatiquement tous les métiers uniques
+      const metiersUniques = [...new Set(artisans.map(a => a.metier).filter(Boolean))].sort();
+
+      container.innerHTML = '';
+
+      // Bouton "Tous"
+      const tagTous = document.createElement('div');
+      tagTous.className = `tag ${metierFiltre === 'TOUS' ? 'active' : ''}`;
+      tagTous.innerText = 'Tous';
+      tagTous.onclick = function() { filtrerMetier('TOUS', this); };
+      container.appendChild(tagTous);
+
+      // Génération automatique des autres boutons
+      metiersUniques.forEach(metier => {
+        const tag = document.createElement('div');
+        tag.className = `tag ${metierFiltre === metier ? 'active' : ''}`;
+        tag.innerText = metier;
+        tag.onclick = function() { filtrerMetier(metier, this); };
+        container.appendChild(tag);
+      });
     }
 
     function afficherArtisans(liste) {
@@ -274,7 +296,7 @@
       conteneur.innerHTML = '';
 
       if (liste.length === 0) {
-        conteneur.innerHTML = '<div class="empty-state">Aucun artisan trouvé.</div>';
+        conteneur.innerHTML = '<div class="empty-state">Aucun artisan ne correspond à votre recherche.</div>';
         return;
       }
 
@@ -304,7 +326,9 @@
     function filtrerArtisans() {
       const recherche = document.getElementById('search-input').value.toLowerCase();
       const resultats = tousLesArtisans.filter(a => {
-        const matchSearch = a.nom.toLowerCase().includes(recherche) || a.metier.toLowerCase().includes(recherche) || a.quartier.toLowerCase().includes(recherche);
+        const matchSearch = a.nom.toLowerCase().includes(recherche) || 
+                            a.metier.toLowerCase().includes(recherche) || 
+                            a.quartier.toLowerCase().includes(recherche);
         const matchMetier = (metierFiltre === 'TOUS') || (a.metier === metierFiltre);
         return matchSearch && matchMetier;
       });
@@ -314,11 +338,11 @@
     function filtrerMetier(metier, elem) {
       metierFiltre = metier;
       document.querySelectorAll('.filter-tags .tag').forEach(t => t.classList.remove('active'));
-      elem.classList.add('active');
+      if (elem) elem.classList.add('active');
       filtrerArtisans();
     }
 
-    /* MODALE INSCRIPTION */
+    /* 3. MODALE D'INSCRIPTION */
     function ouvrirModalInscription() { document.getElementById('modalInscription').style.display = 'flex'; }
     function fermerModalInscription() { document.getElementById('modalInscription').style.display = 'none'; document.getElementById('form-inscription').reset(); }
 
@@ -334,10 +358,10 @@
       const { error } = await supabaseClient.from('artisans').insert([{ nom, metier, quartier, telephone, whatsapp, description, est_verifie: false }]);
 
       if (!error) {
-        alert("Merci ! Votre demande a été envoyée avec succès et sera validée sous peu.");
+        alert("Merci ! Votre demande a été envoyée avec succès. Elle sera vérifiée et publiée très rapidement.");
         fermerModalInscription();
       } else {
-        alert("Erreur : " + error.message);
+        alert("Erreur lors de l'envoi : " + error.message);
       }
     }
 
