@@ -20,110 +20,61 @@
     .nav-links button.register { background: #dcfce7; color: #15803d; }
     .nav-links button.register:hover { background: #bbf7d0; }
 
-    /* Bannière Pub */
-    .ad-container { background: #fffbeb; border: 1px dashed #f59e0b; border-radius: 12px; padding: 12px; margin: 15px 0; text-align: center; position: relative; overflow: hidden; }
-    .ad-badge { position: absolute; top: 5px; right: 8px; font-size: 0.65em; background: #fef3c7; color: #b45309; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
-    .ad-container img { max-width: 100%; height: auto; border-radius: 8px; margin-top: 5px; }
-    .ad-container a { text-decoration: none; color: inherit; display: block; }
-    .ad-title { font-weight: bold; font-size: 0.95em; color: #78350f; margin-top: 5px; }
-    .ad-desc { font-size: 0.8em; color: #92400e; margin-top: 2px; }
+    /* CARROUSEL PUBLICITAIRE */
+    .carousel-container {
+      position: relative;
+      max-width: 100%;
+      margin: 0 0 20px 0;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+    }
+    .pub-slide {
+      display: none;
+      padding: 15px;
+      text-decoration: none;
+      color: #78350f;
+    }
+    .pub-slide.active { display: block; }
+    .pub-tag {
+      font-size: 0.7em;
+      text-transform: uppercase;
+      font-weight: bold;
+      color: #b45309;
+      margin-bottom: 6px;
+      display: block;
+    }
+    .pub-slide img {
+      width: 100%;
+      height: 120px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      display: block;
+    }
+    .pub-title { font-weight: bold; font-size: 1.05em; color: #92400e; margin-bottom: 4px; }
+    .pub-desc { font-size: 0.85em; color: #a16207; margin: 0; }
+    .carousel-dots { display: flex; justify-content: center; gap: 6px; padding-bottom: 10px; background: #fffbeb; }
+    .dot { width: 8px; height: 8px; background-color: #fcd34d; border-radius: 50%; cursor: pointer; transition: 0.3s; }
+    .dot.active-dot { background-color: #b45309; width: 18px; border-radius: 10px; }
 
-    /* CONTENEUR DU CARROUSEL PUB */
-.carousel-container {
-  position: relative;
-  max-width: 100%;
-  margin: 0 0 20px 0;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
-  background: #fffbeb;
-  border: 1px solid #fde68a;
-}
-
-/* CARTE PUB INDIVIDUELLE */
-.pub-slide {
-  display: none; /* Masqué par défaut */
-  padding: 15px;
-  text-decoration: none;
-  color: #78350f;
-  transition: opacity 0.4s ease-in-out;
-}
-
-.pub-slide.active {
-  display: block; /* Visible quand active */
-}
-
-.pub-tag {
-  font-size: 0.7em;
-  text-transform: uppercase;
-  font-weight: bold;
-  color: #b45309;
-  letter-spacing: 0.5px;
-  margin-bottom: 6px;
-  display: block;
-}
-
-.pub-slide img {
-  width: 100%;
-  height: 120px;
-  object-fit: cover;
-  border-radius: 8px;
-  margin-bottom: 8px;
-  display: block;
-}
-
-.pub-title {
-  font-weight: bold;
-  font-size: 1.05em;
-  color: #92400e;
-  margin-bottom: 4px;
-}
-
-.pub-desc {
-  font-size: 0.85em;
-  color: #a16207;
-  margin: 0;
-}
-
-/* INDICATEURS / PUCES EN BAS DU CARROUSEL */
-.carousel-dots {
-  display: flex;
-  justify-content: center;
-  gap: 6px;
-  padding-bottom: 10px;
-  background: #fffbeb;
-}
-
-.dot {
-  width: 8px;
-  height: 8px;
-  background-color: #fcd34d;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.dot.active-dot {
-  background-color: #b45309;
-  width: 18px;
-  border-radius: 10px;
-}
     /* Barre de recherche & Filtres */
     .search-box { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.95em; margin-bottom: 15px; outline: none; }
     .filter-tags { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px; }
     .tag { background: white; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 15px; font-size: 0.8em; cursor: pointer; white-space: nowrap; }
     .tag.active { background: #2563eb; color: white; border-color: #2563eb; }
 
-    /* Carte Artisan */
+    /* Cartes Artisans */
     .artisan-card { background: white; border-radius: 12px; padding: 16px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; }
     .artisan-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px; }
     .artisan-name { font-weight: bold; font-size: 1.1em; color: #0f172a; }
     .artisan-metier { background: #eff6ff; color: #1d4ed8; font-size: 0.75em; padding: 3px 8px; border-radius: 10px; font-weight: bold; }
     .artisan-quartier { font-size: 0.85em; color: #64748b; margin-bottom: 10px; }
     .artisan-desc { font-size: 0.85em; color: #334155; margin-bottom: 12px; line-height: 1.4; }
-    
     .actions-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .btn-action { text-align: center; padding: 10px; border-radius: 8px; text-decoration: none; font-size: 0.85em; font-weight: bold; transition: 0.2s; }
+    .btn-action { text-align: center; padding: 10px; border-radius: 8px; text-decoration: none; font-size: 0.85em; font-weight: bold; }
     .btn-call { background: #2563eb; color: white; }
     .btn-wa { background: #16a34a; color: white; }
 
@@ -135,7 +86,7 @@
     .modal-content h2 { margin-top: 0; color: #0f172a; font-size: 1.3em; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; }
     .form-group { margin-bottom: 12px; }
     .form-group label { display: block; font-size: 0.85em; font-weight: 600; color: #475569; margin-bottom: 4px; }
-    .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9em; outline: none; }
+    .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9em; outline: none; }
     .modal-buttons { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
     .btn-submit { background: #16a34a; color: white; border: none; padding: 10px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; }
     .btn-cancel { background: #94a3b8; color: white; border: none; padding: 10px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; }
@@ -154,15 +105,12 @@
       </div>
     </div>
 
-    <!-- Emplacement Publicitaire Haut -->
-    <div id="emplacement-pub-haut"></div>
-   
-    <!-- CONTENEUR DU CARROUSEL -->
+    <!-- CARROUSEL PUBLICITAIRE -->
     <div id="pub-carousel-wrapper" class="carousel-container" style="display: none;">
-     <div id="pub-slides-container"></div>
+      <div id="pub-slides-container"></div>
       <div id="pub-dots-container" class="carousel-dots"></div>
     </div>
-    
+
     <!-- Recherche & Filtres -->
     <input type="text" id="search-input" class="search-box" placeholder="Rechercher (ex: Plombier, Analakely...)" oninput="filtrerArtisans()">
     
@@ -183,7 +131,7 @@
   <!-- MODALE D'INSCRIPTION ARTISAN -->
   <div id="modalInscription" class="modal">
     <div class="modal-content">
-      <h2>📝 Inscription Prestataire / Artisan</h2>
+      <h2>📝 Inscription Prestataire</h2>
       <form id="form-inscription" onsubmit="soumettreInscription(event)">
         <div class="form-group">
           <label>Nom complet / Nom de l'entreprise *</label>
@@ -219,41 +167,92 @@
 
   <script>
     const SUPABASE_URL = 'https://xfqzlifauzlmtzaidixb.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhmcXpsaWZhdXpsbXR6YWlkaXhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3NTkxMTIsImV4cCI6MjEwMTMzNTExMn0.AmBdkYq70S9QntL13EcmFSJaxASh-x4gu6T1Mkhxsvk'; // ⚠️ Mettez votre clé anon
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhmcXpsaWZhdXpsbXR6YWlkaXhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3NTkxMTIsImV4cCI6MjEwMTMzNTExMn0.AmBdkYq70S9QntL13EcmFSJaxASh-x4gu6T1Mkhxsvk';
 
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let tousLesArtisans = [];
     let metierFiltre = 'TOUS';
+    let currentSlideIndex = 0;
+    let carouselTimer = null;
 
     async function initPage() {
-      await chargerPub();
+      await chargerCarrouselPubs();
       await chargerArtisans();
     }
 
-    async function chargerPub() {
-      const { data } = await supabaseClient
+    /* GESTION DU CARROUSEL DE PUBS */
+    async function chargerCarrouselPubs() {
+      const { data: pubs, error } = await supabaseClient
         .from('publicites')
         .select('*')
         .eq('est_actif', true)
-        .limit(1);
+        .order('created_at', { ascending: false });
 
-      const conteneur = document.getElementById('emplacement-pub-haut');
-      if (!conteneur || !data || data.length === 0) return;
+      const wrapper = document.getElementById('pub-carousel-wrapper');
+      const slidesContainer = document.getElementById('pub-slides-container');
+      const dotsContainer = document.getElementById('pub-dots-container');
 
-      const pub = data[0];
-      conteneur.innerHTML = `
-        <div class="ad-container">
-          <span class="ad-badge">Sponsorisé</span>
-          <a href="${pub.lien_url || '#'}" target="_blank" rel="noopener">
-            ${pub.image_url ? `<img src="${pub.image_url}" alt="${pub.titre}">` : ''}
-            <div class="ad-title">${pub.titre}</div>
-            ${pub.description ? `<div class="ad-desc">${pub.description}</div>` : ''}
-          </a>
-        </div>
-      `;
+      if (error || !pubs || pubs.length === 0) {
+        if (wrapper) wrapper.style.display = 'none';
+        return;
+      }
+
+      wrapper.style.display = 'block';
+      slidesContainer.innerHTML = '';
+      dotsContainer.innerHTML = '';
+
+      pubs.forEach((p, index) => {
+        const slide = document.createElement('a');
+        slide.className = `pub-slide ${index === 0 ? 'active' : ''}`;
+        slide.href = p.lien_url || '#';
+        if (p.lien_url) slide.target = '_blank';
+
+        let imgHTML = p.image_url ? `<img src="${p.image_url}" alt="${p.titre}">` : '';
+
+        slide.innerHTML = `
+          <span class="pub-tag">📢 Sponsorisé</span>
+          ${imgHTML}
+          <div class="pub-title">${p.titre}</div>
+          ${p.description ? `<p class="pub-desc">${p.description}</p>` : ''}
+        `;
+        slidesContainer.appendChild(slide);
+
+        if (pubs.length > 1) {
+          const dot = document.createElement('span');
+          dot.className = `dot ${index === 0 ? 'active-dot' : ''}`;
+          dot.onclick = () => afficherSlide(index);
+          dotsContainer.appendChild(dot);
+        }
+      });
+
+      if (pubs.length > 1) {
+        lancerAutoPlay(pubs.length);
+      }
     }
 
+    function afficherSlide(index) {
+      const slides = document.querySelectorAll('.pub-slide');
+      const dots = document.querySelectorAll('.dot');
+      if (slides.length === 0) return;
+
+      slides.forEach(s => s.classList.remove('active'));
+      dots.forEach(d => d.classList.remove('active-dot'));
+
+      currentSlideIndex = index;
+      if (slides[currentSlideIndex]) slides[currentSlideIndex].classList.add('active');
+      if (dots[currentSlideIndex]) dots[currentSlideIndex].classList.add('active-dot');
+    }
+
+    function lancerAutoPlay(totalSlides) {
+      if (carouselTimer) clearInterval(carouselTimer);
+      carouselTimer = setInterval(() => {
+        currentSlideIndex = (currentSlideIndex + 1) % totalSlides;
+        afficherSlide(currentSlideIndex);
+      }, 5000);
+    }
+
+    /* GESTION DES ARTISANS */
     async function chargerArtisans() {
       const { data, error } = await supabaseClient
         .from('artisans')
@@ -262,7 +261,7 @@
         .order('nom', { ascending: true });
 
       if (error || !data) {
-        document.getElementById('liste-artisans').innerHTML = '<div class="empty-state">Erreur lors du chargement des données.</div>';
+        document.getElementById('liste-artisans').innerHTML = '<div class="empty-state">Erreur lors du chargement.</div>';
         return;
       }
 
@@ -275,7 +274,7 @@
       conteneur.innerHTML = '';
 
       if (liste.length === 0) {
-        conteneur.innerHTML = '<div class="empty-state">Aucun artisan ne correspond à votre recherche.</div>';
+        conteneur.innerHTML = '<div class="empty-state">Aucun artisan trouvé.</div>';
         return;
       }
 
@@ -304,16 +303,11 @@
 
     function filtrerArtisans() {
       const recherche = document.getElementById('search-input').value.toLowerCase();
-      
       const resultats = tousLesArtisans.filter(a => {
-        const correspondRecherche = a.nom.toLowerCase().includes(recherche) || 
-                                     a.metier.toLowerCase().includes(recherche) || 
-                                     a.quartier.toLowerCase().includes(recherche);
-        const correspondMetier = (metierFiltre === 'TOUS') || (a.metier === metierFiltre);
-        
-        return correspondRecherche && correspondMetier;
+        const matchSearch = a.nom.toLowerCase().includes(recherche) || a.metier.toLowerCase().includes(recherche) || a.quartier.toLowerCase().includes(recherche);
+        const matchMetier = (metierFiltre === 'TOUS') || (a.metier === metierFiltre);
+        return matchSearch && matchMetier;
       });
-
       afficherArtisans(resultats);
     }
 
@@ -324,15 +318,9 @@
       filtrerArtisans();
     }
 
-    /* GESTION DE LA MODALE D'INSCRIPTION */
-    function ouvrirModalInscription() {
-      document.getElementById('modalInscription').style.display = 'flex';
-    }
-
-    function fermerModalInscription() {
-      document.getElementById('modalInscription').style.display = 'none';
-      document.getElementById('form-inscription').reset();
-    }
+    /* MODALE INSCRIPTION */
+    function ouvrirModalInscription() { document.getElementById('modalInscription').style.display = 'flex'; }
+    function fermerModalInscription() { document.getElementById('modalInscription').style.display = 'none'; document.getElementById('form-inscription').reset(); }
 
     async function soumettreInscription(e) {
       e.preventDefault();
@@ -343,21 +331,13 @@
       const whatsapp = document.getElementById('ins-wa').value;
       const description = document.getElementById('ins-desc').value;
 
-      const { error } = await supabaseClient.from('artisans').insert([{
-        nom,
-        metier,
-        quartier,
-        telephone,
-        whatsapp,
-        description,
-        est_verifie: false // En attente de votre validation dans admin.html
-      }]);
+      const { error } = await supabaseClient.from('artisans').insert([{ nom, metier, quartier, telephone, whatsapp, description, est_verifie: false }]);
 
       if (!error) {
-        alert("Merci ! Votre demande d'inscription a été envoyée. Elle sera vérifiée et publiée très rapidement.");
+        alert("Merci ! Votre demande a été envoyée avec succès et sera validée sous peu.");
         fermerModalInscription();
       } else {
-        alert("Une erreur est survenue lors de l'envoi : " + error.message);
+        alert("Erreur : " + error.message);
       }
     }
 
