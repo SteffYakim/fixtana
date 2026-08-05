@@ -14,11 +14,28 @@
     .subtitle { color: #64748b; font-size: 0.9em; margin-bottom: 25px; }
 
     /* Alertes & Rappels */
-    .alert-banner { background-color: #fef3c7; border-left: 5px solid #f59e0b; color: #92400e; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: none; font-size: 0.95em; }
+    .alert-banner {
+      background-color: #fef3c7;
+      border-left: 5px solid #f59e0b;
+      color: #92400e;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      display: none;
+      font-size: 0.95em;
+    }
     .alert-banner h4 { margin: 0 0 5px 0; font-size: 1.05em; }
 
     /* Cartes / Sections */
-    .card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 25px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0; }
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 25px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      border: 1px solid #e2e8f0;
+    }
+    
     h2 { font-size: 1.2em; margin-top: 0; color: #1e293b; display: flex; align-items: center; gap: 8px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; }
 
     /* Tableaux */
@@ -52,7 +69,7 @@
     
     .empty-msg { text-align: center; color: #94a3b8; padding: 20px 0; font-style: italic; }
 
-    /* Modales */
+    /* Pop-up Modales */
     .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
     .modal-content { background: white; padding: 25px; border-radius: 12px; width: 100%; max-width: 450px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
     .modal-content h3 { margin-top: 0; color: #0f172a; font-size: 1.2em; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; }
@@ -66,15 +83,43 @@
 
   <div class="container">
     <h1>👑 FixTana — Administration</h1>
-    <p class="subtitle">Gestion globale des numéros d'urgence, des pharmacies, des artisans, des pubs et suivi des clics.</p>
+    <p class="subtitle">Gestion globale de la plateforme (Statistiques, Publicités, Urgences, Pharmacies et Artisans).</p>
 
-    <!-- BANNIÈRE DE RAPPEL DE GARDE -->
+    <!-- BANNIÈRE DE RAPPEL DE GARDE PHARMACIE -->
     <div id="alert-garde" class="alert-banner">
       <h4>⏰ Rappel Mises à jour Pharmacies</h4>
       <div id="alert-garde-text"></div>
     </div>
 
-    <!-- SECTION 0 : STATISTIQUES & CLICS -->
+    <!-- SECTION 1 : PUBLICITÉS -->
+    <div class="card">
+      <h2>📣 Bannières Publicitaires</h2>
+      <form id="form-pub" onsubmit="ajouterPub(event)">
+        <div class="form-grid">
+          <input type="text" id="pub-titre" placeholder="Nom de l'annonceur *" required>
+          <input type="text" id="pub-image" placeholder="Lien URL de l'image">
+          <input type="text" id="pub-lien" placeholder="Lien URL de redirection">
+          <input type="text" id="pub-desc" placeholder="Texte promotionnel">
+        </div>
+        <button type="submit" class="btn btn-validate" style="width: 100%; padding: 8px; margin-top: 5px;">+ Enregistrer la Pub</button>
+      </form>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Annonceur & Contenu</th>
+            <th>Lien Redirection</th>
+            <th>Statut</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="table-pubs">
+          <tr><td colspan="4" class="empty-msg">Chargement des publicités...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SECTION 2 : STATISTIQUES & CLICS -->
     <div class="card">
       <h2>📊 Statistiques de Contact (Clics Artisans)</h2>
       <table>
@@ -93,35 +138,7 @@
       </table>
     </div>
 
-    <!-- SECTION 1 : GESTION DES PUBLICITÉS -->
-    <div class="card">
-      <h2>📢 Bannières Publicitaires</h2>
-      <form id="form-pub" onsubmit="ajouterPub(event)">
-        <div class="form-grid">
-          <input type="text" id="pub-titre" placeholder="Nom de l'annonceur *" required>
-          <input type="url" id="pub-image" placeholder="Lien URL de l'image">
-          <input type="url" id="pub-lien" placeholder="Lien URL de redirection">
-          <input type="text" id="pub-desc" placeholder="Texte promotionnel">
-        </div>
-        <button type="submit" class="btn btn-validate" style="width: 100%; padding: 8px; margin-top: 5px;">+ Enregistrer la Pub</button>
-      </form>
-
-      <table>
-        <thead>
-          <tr>
-            <th>Annonceur</th>
-            <th>Lien</th>
-            <th>Statut</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="table-pubs">
-          <tr><td colspan="4" class="empty-msg">Chargement des pubs...</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- SECTION 2 : GESTION DES NUMÉROS D'URGENCE -->
+    <!-- SECTION 3 : NUMÉROS D'URGENCE -->
     <div class="card">
       <h2>🚨 Numéros d'Urgence</h2>
       <form id="form-urgence" onsubmit="ajouterUrgence(event)">
@@ -141,14 +158,14 @@
           </tr>
         </thead>
         <tbody id="table-urgences">
-          <tr><td colspan="3" class="empty-msg">Chargement des numéros d'urgence...</td></tr>
+          <tr><td colspan="3" class="empty-msg">Chargement des numéros...</td></tr>
         </tbody>
       </table>
     </div>
 
-    <!-- SECTION 3 : GESTION DES PHARMACIES -->
+    <!-- SECTION 4 : PHARMACIES DE GARDE -->
     <div class="card">
-      <h2>💊 Pharmacies de Garde</h2>
+      <h2>💊 Pharmacies de Garde (Roulement Hebdomadaire)</h2>
       <form id="form-pharmacie" onsubmit="ajouterPharmacie(event)">
         <div class="form-grid">
           <input type="text" id="ph-nom" placeholder="Nom pharmacie *" required>
@@ -176,7 +193,7 @@
       </table>
     </div>
 
-    <!-- SECTION 4 : DEMANDES D'ARTISANS EN ATTENTE -->
+    <!-- SECTION 5 : ARTISANS EN ATTENTE -->
     <div class="card">
       <h2>⏳ Artisans en attente de validation</h2>
       <table>
@@ -195,7 +212,7 @@
       </table>
     </div>
 
-    <!-- SECTION 5 : ARTISANS VALIDÉS -->
+    <!-- SECTION 6 : ARTISANS VALIDÉS -->
     <div class="card">
       <h2>✅ Artisans vérifiés & publiés</h2>
       <table>
@@ -215,13 +232,47 @@
     </div>
   </div>
 
+  <!-- MODALE MODIFIER PUBLICITÉ -->
+  <div id="modalPub" class="modal">
+    <div class="modal-content">
+      <h3>✏️ Modifier la Publicité</h3>
+      <input type="hidden" id="edit-pub-id">
+      <div class="form-group">
+        <label>Nom de l'annonceur / Titre *</label>
+        <input type="text" id="edit-pub-titre" required>
+      </div>
+      <div class="form-group">
+        <label>Lien URL de l'image</label>
+        <input type="text" id="edit-pub-image">
+      </div>
+      <div class="form-group">
+        <label>Lien URL de redirection</label>
+        <input type="text" id="edit-pub-lien">
+      </div>
+      <div class="form-group">
+        <label>Texte promotionnel</label>
+        <textarea id="edit-pub-desc" rows="3"></textarea>
+      </div>
+      <div class="modal-buttons">
+        <button class="btn btn-cancel" onclick="fermerModales()">Annuler</button>
+        <button class="btn btn-validate" onclick="sauvegarderPub()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODALE MODIFIER URGENCE -->
   <div id="modalUrgence" class="modal">
     <div class="modal-content">
       <h3>✏️ Modifier l'Urgence</h3>
       <input type="hidden" id="edit-urg-id">
-      <div class="form-group"><label>Nom du service</label><input type="text" id="edit-urg-nom"></div>
-      <div class="form-group"><label>Numéro de téléphone</label><input type="text" id="edit-urg-tel"></div>
+      <div class="form-group">
+        <label>Nom du service</label>
+        <input type="text" id="edit-urg-nom">
+      </div>
+      <div class="form-group">
+        <label>Numéro de téléphone</label>
+        <input type="text" id="edit-urg-tel">
+      </div>
       <div class="modal-buttons">
         <button class="btn btn-cancel" onclick="fermerModales()">Annuler</button>
         <button class="btn btn-validate" onclick="sauvegarderUrgence()">Enregistrer</button>
@@ -234,11 +285,26 @@
     <div class="modal-content">
       <h3>✏️ Modifier la Pharmacie</h3>
       <input type="hidden" id="edit-ph-id">
-      <div class="form-group"><label>Nom de la pharmacie</label><input type="text" id="edit-ph-nom"></div>
-      <div class="form-group"><label>Quartier</label><input type="text" id="edit-ph-quartier"></div>
-      <div class="form-group"><label>Téléphone</label><input type="text" id="edit-ph-tel"></div>
-      <div class="form-group"><label>Début de la garde</label><input type="date" id="edit-ph-debut"></div>
-      <div class="form-group"><label>Fin de la garde</label><input type="date" id="edit-ph-fin"></div>
+      <div class="form-group">
+        <label>Nom de la pharmacie</label>
+        <input type="text" id="edit-ph-nom">
+      </div>
+      <div class="form-group">
+        <label>Quartier</label>
+        <input type="text" id="edit-ph-quartier">
+      </div>
+      <div class="form-group">
+        <label>Téléphone</label>
+        <input type="text" id="edit-ph-tel">
+      </div>
+      <div class="form-group">
+        <label>Début de la garde</label>
+        <input type="date" id="edit-ph-debut">
+      </div>
+      <div class="form-group">
+        <label>Fin de la garde</label>
+        <input type="date" id="edit-ph-fin">
+      </div>
       <div class="modal-buttons">
         <button class="btn btn-cancel" onclick="fermerModales()">Annuler</button>
         <button class="btn btn-validate" onclick="sauvegarderPharmacie()">Enregistrer</button>
@@ -251,12 +317,30 @@
     <div class="modal-content">
       <h3>✏️ Modifier le Prestataire</h3>
       <input type="hidden" id="edit-art-id">
-      <div class="form-group"><label>Nom complet</label><input type="text" id="edit-art-nom"></div>
-      <div class="form-group"><label>Métier</label><input type="text" id="edit-art-metier"></div>
-      <div class="form-group"><label>Quartier</label><input type="text" id="edit-art-quartier"></div>
-      <div class="form-group"><label>Téléphone</label><input type="text" id="edit-art-tel"></div>
-      <div class="form-group"><label>WhatsApp</label><input type="text" id="edit-art-wa"></div>
-      <div class="form-group"><label>Description</label><textarea id="edit-art-desc" rows="3"></textarea></div>
+      <div class="form-group">
+        <label>Nom complet</label>
+        <input type="text" id="edit-art-nom">
+      </div>
+      <div class="form-group">
+        <label>Métier</label>
+        <input type="text" id="edit-art-metier">
+      </div>
+      <div class="form-group">
+        <label>Quartier</label>
+        <input type="text" id="edit-art-quartier">
+      </div>
+      <div class="form-group">
+        <label>Téléphone</label>
+        <input type="text" id="edit-art-tel">
+      </div>
+      <div class="form-group">
+        <label>WhatsApp</label>
+        <input type="text" id="edit-art-wa">
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea id="edit-art-desc" rows="3"></textarea>
+      </div>
       <div class="modal-buttons">
         <button class="btn btn-cancel" onclick="fermerModales()">Annuler</button>
         <button class="btn btn-validate" onclick="sauvegarderArtisan()">Enregistrer</button>
@@ -266,25 +350,125 @@
 
   <script>
     const SUPABASE_URL = 'https://xfqzlifauzlmtzaidixb.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhmcXpsaWZhdXpsbXR6YWlkaXhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3NTkxMTIsImV4cCI6MjEwMTMzNTExMn0.AmBdkYq70S9QntL13EcmFSJaxASh-x4gu6T1Mkhxsvk'; // ⚠️ Mettez votre clé anon
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhmcXpsaWZhdXpsbXR6YWlkaXhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3NTkxMTIsImV4cCI6MjEwMTMzNTExMn0.AmBdkYq70S9QntL13EcmFSJaxASh-x4gu6T1Mkhxsvk';
 
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+    let cachePubs = [];
     let cacheUrgences = [];
     let cachePharmacies = [];
     let cacheArtisans = [];
 
     async function initAdmin() {
-      await chargerStats();
       await chargerPubs();
+      await chargerStats();
       await chargerUrgences();
       await chargerPharmacies();
       await chargerArtisans();
     }
 
-    /* --- STATISTIQUES --- */
+    /* --- GESTION DES PUBLICITÉS --- */
+    async function chargerPubs() {
+      const { data: pubs, error } = await supabaseClient
+        .from('publicites')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      const tbody = document.getElementById('table-pubs');
+      tbody.innerHTML = '';
+
+      if (error || !pubs || pubs.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="empty-msg">Aucune publicité enregistrée.</td></tr>';
+        return;
+      }
+
+      cachePubs = pubs;
+
+      pubs.forEach(p => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${p.titre}</strong><br><small style="color:#64748b">${p.description || ''}</small></td>
+          <td><small><a href="${p.lien_url || '#'}" target="_blank">${p.lien_url ? 'Visiter le lien' : '-'}</a></small></td>
+          <td>
+            <button class="btn ${p.est_actif ? 'btn-validate' : 'btn-delete'}" onclick="togglePub(${p.id}, ${!p.est_actif})">
+              ${p.est_actif ? '🟢 Active' : '🔴 Masquée'}
+            </button>
+          </td>
+          <td class="actions-cell">
+            <button class="btn btn-edit" title="Modifier" onclick="ouvrirEditPub(${p.id})">✏️</button>
+            <button class="btn btn-delete" title="Supprimer" onclick="supprimerPub(${p.id})">🗑️</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function ajouterPub(e) {
+      if (e) e.preventDefault();
+      const titre = document.getElementById('pub-titre').value.trim();
+      const image_url = document.getElementById('pub-image').value.trim();
+      const lien_url = document.getElementById('pub-lien').value.trim();
+      const description = document.getElementById('pub-desc').value.trim();
+
+      const { error } = await supabaseClient
+        .from('publicites')
+        .insert([{ titre, image_url: image_url || null, lien_url: lien_url || null, description: description || null, est_actif: true }]);
+
+      if (!error) {
+        document.getElementById('form-pub').reset();
+        chargerPubs();
+      } else {
+        alert("❌ Erreur : " + error.message);
+      }
+    }
+
+    function ouvrirEditPub(id) {
+      const p = cachePubs.find(item => item.id === id);
+      if (!p) return;
+      document.getElementById('edit-pub-id').value = p.id;
+      document.getElementById('edit-pub-titre').value = p.titre || '';
+      document.getElementById('edit-pub-image').value = p.image_url || '';
+      document.getElementById('edit-pub-lien').value = p.lien_url || '';
+      document.getElementById('edit-pub-desc').value = p.description || '';
+      document.getElementById('modalPub').style.display = 'flex';
+    }
+
+    async function sauvegarderPub() {
+      const id = document.getElementById('edit-pub-id').value;
+      const titre = document.getElementById('edit-pub-titre').value.trim();
+      const image_url = document.getElementById('edit-pub-image').value.trim();
+      const lien_url = document.getElementById('edit-pub-lien').value.trim();
+      const description = document.getElementById('edit-pub-desc').value.trim();
+
+      const { error } = await supabaseClient
+        .from('publicites')
+        .update({ titre, image_url: image_url || null, lien_url: lien_url || null, description: description || null })
+        .eq('id', id);
+
+      if (!error) {
+        fermerModales();
+        chargerPubs();
+      } else {
+        alert("Erreur de modification : " + error.message);
+      }
+    }
+
+    async function togglePub(id, statut) {
+      await supabaseClient.from('publicites').update({ est_actif: statut }).eq('id', id);
+      chargerPubs();
+    }
+
+    async function supprimerPub(id) {
+      if (confirm("Supprimer cette publicité ?")) {
+        await supabaseClient.from('publicites').delete().eq('id', id);
+        chargerPubs();
+      }
+    }
+
+    /* --- STATISTIQUES & CLICS --- */
     async function chargerStats() {
       const tbody = document.getElementById('table-stats');
+
       const [resArtisans, resClics] = await Promise.all([
         supabaseClient.from('artisans').select('id, nom, metier'),
         supabaseClient.from('clics_contact').select('artisan_id, type_action')
@@ -297,8 +481,13 @@
 
       const artisans = resArtisans.data || [];
       const clics = resClics.data || [];
-      const statsMap = {};
 
+      if (artisans.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">Aucun artisan enregistré.</td></tr>';
+        return;
+      }
+
+      const statsMap = {};
       clics.forEach(c => {
         if (!statsMap[c.artisan_id]) statsMap[c.artisan_id] = { appel: 0, whatsapp: 0 };
         if (c.type_action === 'appel') statsMap[c.artisan_id].appel++;
@@ -309,136 +498,45 @@
       artisans.forEach(a => {
         const appels = statsMap[a.id]?.appel || 0;
         const wa = statsMap[a.id]?.whatsapp || 0;
+        const total = appels + wa;
+
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td><strong>${a.nom}</strong></td>
           <td>${a.metier}</td>
           <td><span class="stat-badge">${appels}</span></td>
           <td><span class="stat-badge stat-wa">${wa}</span></td>
-          <td><strong>${appels + wa} clics</strong></td>
+          <td><strong>${total} clics</strong></td>
         `;
         tbody.appendChild(tr);
       });
     }
 
-    /* --- PUBLICITÉS --- */
-    /* --- GESTION DES PUBLICITÉS (CORRIGÉE & SÉCURISÉE) --- */
-async function chargerPubs() {
-  try {
-    const { data: pubs, error } = await supabaseClient
-      .from('publicites')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error("Erreur de chargement des pubs :", error);
-      return;
-    }
-
-    const tbody = document.getElementById('table-pubs');
-    if (!tbody) return;
-    
-    tbody.innerHTML = '';
-
-    if (!pubs || pubs.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="4" class="empty-msg">Aucune publicité enregistrée.</td></tr>';
-      return;
-    }
-
-    pubs.forEach(p => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td><strong>${p.titre}</strong><br><small style="color:#64748b">${p.description || ''}</small></td>
-        <td><small><a href="${p.lien_url || '#'}" target="_blank">${p.lien_url || '-'}</a></small></td>
-        <td>
-          <button class="btn ${p.est_actif ? 'btn-validate' : 'btn-delete'}" onclick="togglePub(${p.id}, ${!p.est_actif})">
-            ${p.est_actif ? '🟢 Active' : '🔴 Masquée'}
-          </button>
-        </td>
-        <td class="actions-cell">
-          <button class="btn btn-delete" onclick="supprimerPub(${p.id})">🗑️</button>
-        </td>
-      `;
-      tbody.appendChild(tr);
-    });
-  } catch (err) {
-    console.error("Erreur critique chargement pub:", err);
-  }
-}
-
-async function ajouterPub(e) {
-  // 1. Empêcher le rechargement de la page
-  if (e) e.preventDefault();
-
-  // 2. Récupération des valeurs
-  const titreInput = document.getElementById('pub-titre');
-  const imageInput = document.getElementById('pub-image');
-  const lienInput = document.getElementById('pub-lien');
-  const descInput = document.getElementById('pub-desc');
-
-  if (!titreInput || !titreInput.value.trim()) {
-    alert("⚠️ Veuillez indiquer au moins le nom de l'annonceur.");
-    return;
-  }
-
-  const titre = titreInput.value.trim();
-  const image_url = imageInput ? imageInput.value.trim() : '';
-  const lien_url = lienInput ? lienInput.value.trim() : '';
-  const description = descInput ? descInput.value.trim() : '';
-
-  // 3. Envoi vers Supabase
-  const { data, error } = await supabaseClient
-    .from('publicites')
-    .insert([{
-      titre: titre,
-      image_url: image_url || null,
-      lien_url: lien_url || null,
-      description: description || null,
-      est_actif: true
-    }]);
-
-  // 4. Traitement du retour
-  if (error) {
-    alert("❌ Erreur Supabase : " + error.message);
-    console.error("Détail Erreur Supabase:", error);
-  } else {
-    alert("✅ La publicité a bien été enregistrée !");
-    document.getElementById('form-pub').reset();
-    await chargerPubs();
-  }
-}
-
-async function togglePub(id, statut) {
-  await supabaseClient.from('publicites').update({ est_actif: statut }).eq('id', id);
-  chargerPubs();
-}
-
-async function supprimerPub(id) {
-  if (confirm("Supprimer cette pub ?")) {
-    await supabaseClient.from('publicites').delete().eq('id', id);
-    chargerPubs();
-  }
-}
-    /* --- URGENCES --- */
+    /* --- NUMÉROS D'URGENCE --- */
     async function chargerUrgences() {
-      const { data: urgences } = await supabaseClient.from('urgences').select('*').order('id', { ascending: true });
+      const { data: urgences, error } = await supabaseClient
+        .from('urgences')
+        .select('*')
+        .order('id', { ascending: true });
+
       const tbody = document.getElementById('table-urgences');
       tbody.innerHTML = '';
 
-      if (!urgences || urgences.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="3" class="empty-msg">Aucun numéro d\'urgence.</td></tr>';
+      if (error || !urgences || urgences.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" class="empty-msg">Aucun numéro d\'urgence configuré.</td></tr>';
         return;
       }
 
       cacheUrgences = urgences;
+
       urgences.forEach(u => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td><strong>${u.nom}</strong></td>
           <td><span style="font-size:1.1em; font-weight:bold; color:#dc2626;">${u.telephone}</span></td>
           <td class="actions-cell">
-            <button class="btn btn-edit" onclick="ouvrirEditUrgence(${u.id})">✏️</button>
-            <button class="btn btn-delete" onclick="supprimerUrgence(${u.id})">🗑️</button>
+            <button class="btn btn-edit" title="Modifier" onclick="ouvrirEditUrgence(${u.id})">✏️</button>
+            <button class="btn btn-delete" title="Supprimer" onclick="supprimerUrgence(${u.id})">🗑️</button>
           </td>
         `;
         tbody.appendChild(tr);
@@ -449,9 +547,15 @@ async function supprimerPub(id) {
       e.preventDefault();
       const nom = document.getElementById('urg-nom').value;
       const telephone = document.getElementById('urg-tel').value;
-      await supabaseClient.from('urgences').insert([{ nom, telephone }]);
-      document.getElementById('form-urgence').reset();
-      chargerUrgences();
+
+      const { error } = await supabaseClient.from('urgences').insert([{ nom, telephone }]);
+
+      if (!error) {
+        document.getElementById('form-urgence').reset();
+        chargerUrgences();
+      } else {
+        alert("Erreur : " + error.message);
+      }
     }
 
     function ouvrirEditUrgence(id) {
@@ -467,25 +571,35 @@ async function supprimerPub(id) {
       const id = document.getElementById('edit-urg-id').value;
       const nom = document.getElementById('edit-urg-nom').value;
       const telephone = document.getElementById('edit-urg-tel').value;
-      await supabaseClient.from('urgences').update({ nom, telephone }).eq('id', id);
-      fermerModales();
-      chargerUrgences();
+
+      const { error } = await supabaseClient.from('urgences').update({ nom, telephone }).eq('id', id);
+
+      if (!error) {
+        fermerModales();
+        chargerUrgences();
+      } else {
+        alert("Erreur : " + error.message);
+      }
     }
 
     async function supprimerUrgence(id) {
-      if (confirm("Supprimer ce numéro ?")) {
+      if (confirm("Supprimer ce numéro d'urgence ?")) {
         await supabaseClient.from('urgences').delete().eq('id', id);
         chargerUrgences();
       }
     }
 
-    /* --- PHARMACIES --- */
+    /* --- PHARMACIES & RAPPELS --- */
     async function chargerPharmacies() {
-      const { data: pharmacies } = await supabaseClient.from('pharmacies').select('*').order('nom', { ascending: true });
+      const { data: pharmacies, error } = await supabaseClient
+        .from('pharmacies')
+        .select('*')
+        .order('nom', { ascending: true });
+
       const tbody = document.getElementById('table-pharmacies');
       tbody.innerHTML = '';
 
-      if (!pharmacies || pharmacies.length === 0) {
+      if (error || !pharmacies || pharmacies.length === 0) {
         tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">Aucune pharmacie enregistrée.</td></tr>';
         return;
       }
@@ -493,10 +607,12 @@ async function supprimerPub(id) {
       cachePharmacies = pharmacies;
       const aujourdhui = new Date();
       aujourdhui.setHours(0,0,0,0);
+
       let alertesText = [];
 
       pharmacies.forEach(p => {
         let statutBadge = '<span class="badge-status status-ok">🟢 En Garde</span>';
+        
         if (p.date_fin_garde) {
           const [year, month, day] = p.date_fin_garde.split('-').map(Number);
           const dateFin = new Date(year, month - 1, day);
@@ -504,23 +620,27 @@ async function supprimerPub(id) {
 
           if (diffJours < 0) {
             statutBadge = '<span class="badge-status status-expired">🔴 Expirée</span>';
-            alertesText.push(`• <strong>${p.nom}</strong> : Expirée le ${formaterDate(p.date_fin_garde)}.`);
+            alertesText.push(`• <strong>${p.nom}</strong> : La garde a expiré le ${formaterDate(p.date_fin_garde)}.`);
           } else if (diffJours <= 2) {
-            const lib = diffJours === 0 ? "aujourd'hui" : `dans ${diffJours} j`;
-            statutBadge = `<span class="badge-status status-warning">⏳ Fin ${lib}</span>`;
-            alertesText.push(`• <strong>${p.nom}</strong> : Fin ${lib} (${formaterDate(p.date_fin_garde)}).`);
+            const libelleFin = diffJours === 0 ? "aujourd'hui" : `dans ${diffJours} j`;
+            statutBadge = `<span class="badge-status status-warning">⏳ Fin ${libelleFin}</span>`;
+            alertesText.push(`• <strong>${p.nom}</strong> : La garde se termine ${libelleFin} (${formaterDate(p.date_fin_garde)}).`);
           }
         }
+
+        const periodeStr = (p.date_debut_garde && p.date_fin_garde) 
+          ? `Du ${formaterDate(p.date_debut_garde)} au ${formaterDate(p.date_fin_garde)}`
+          : 'Non définie';
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td><strong>${p.nom}</strong></td>
           <td>${p.quartier}<br><small style="color:#64748b">${p.telephone || '-'}</small></td>
-          <td><small>${(p.date_debut_garde && p.date_fin_garde) ? `Du ${formaterDate(p.date_debut_garde)} au ${formaterDate(p.date_fin_garde)}` : 'Non définie'}</small></td>
+          <td><small>${periodeStr}</small></td>
           <td>${statutBadge}</td>
           <td class="actions-cell">
-            <button class="btn btn-edit" onclick="ouvrirEditPharmacie(${p.id})">✏️</button>
-            <button class="btn btn-delete" onclick="supprimerPharmacie(${p.id})">🗑️</button>
+            <button class="btn btn-edit" title="Modifier" onclick="ouvrirEditPharmacie(${p.id})">✏️</button>
+            <button class="btn btn-delete" title="Supprimer" onclick="supprimerPharmacie(${p.id})">🗑️</button>
           </td>
         `;
         tbody.appendChild(tr);
@@ -535,17 +655,24 @@ async function supprimerPub(id) {
       }
     }
 
-    async function ajouterPharmacie(e) {
-      e.preventDefault();
+    async function ajouterPharmacie(event) {
+      event.preventDefault();
       const nom = document.getElementById('ph-nom').value;
       const quartier = document.getElementById('ph-quartier').value;
       const telephone = document.getElementById('ph-tel').value;
       const date_debut_garde = document.getElementById('ph-debut').value || null;
       const date_fin_garde = document.getElementById('ph-fin').value || null;
 
-      await supabaseClient.from('pharmacies').insert([{ nom, quartier, telephone, date_debut_garde, date_fin_garde, est_de_garde: true }]);
-      document.getElementById('form-pharmacie').reset();
-      chargerPharmacies();
+      const { error } = await supabaseClient
+        .from('pharmacies')
+        .insert([{ nom, quartier, telephone, date_debut_garde, date_fin_garde, est_de_garde: true }]);
+
+      if (!error) {
+        document.getElementById('form-pharmacie').reset();
+        chargerPharmacies();
+      } else {
+        alert("Erreur lors de l'ajout : " + error.message);
+      }
     }
 
     function ouvrirEditPharmacie(id) {
@@ -568,9 +695,17 @@ async function supprimerPub(id) {
       const date_debut_garde = document.getElementById('edit-ph-debut').value || null;
       const date_fin_garde = document.getElementById('edit-ph-fin').value || null;
 
-      await supabaseClient.from('pharmacies').update({ nom, quartier, telephone, date_debut_garde, date_fin_garde }).eq('id', id);
-      fermerModales();
-      chargerPharmacies();
+      const { error } = await supabaseClient
+        .from('pharmacies')
+        .update({ nom, quartier, telephone, date_debut_garde, date_fin_garde })
+        .eq('id', id);
+
+      if (!error) {
+        fermerModales();
+        chargerPharmacies();
+      } else {
+        alert("Erreur : " + error.message);
+      }
     }
 
     async function supprimerPharmacie(id) {
@@ -582,21 +717,26 @@ async function supprimerPub(id) {
 
     /* --- ARTISANS --- */
     async function chargerArtisans() {
-      const { data: artisans } = await supabaseClient.from('artisans').select('*').order('created_at', { ascending: false });
+      const { data: artisans, error } = await supabaseClient
+        .from('artisans')
+        .select('*')
+        .order('created_at', { ascending: false });
+
       const tbodyAttente = document.getElementById('table-en-attente');
       const tbodyValides = document.getElementById('table-valides');
 
       tbodyAttente.innerHTML = '';
       tbodyValides.innerHTML = '';
 
-      if (!artisans) return;
+      if (error || !artisans) return;
 
       cacheArtisans = artisans;
       const enAttente = artisans.filter(a => !a.est_verifie);
       const valides = artisans.filter(a => a.est_verifie);
 
-      if (enAttente.length === 0) tbodyAttente.innerHTML = '<tr><td colspan="5" class="empty-msg">Aucune demande en attente.</td></tr>';
-      else {
+      if (enAttente.length === 0) {
+        tbodyAttente.innerHTML = '<tr><td colspan="5" class="empty-msg">Aucune demande en attente.</td></tr>';
+      } else {
         enAttente.forEach(a => {
           const tr = document.createElement('tr');
           tr.innerHTML = `
@@ -605,17 +745,18 @@ async function supprimerPub(id) {
             <td>${a.quartier}</td>
             <td>${a.telephone}</td>
             <td class="actions-cell">
-              <button class="btn btn-validate" onclick="validerArtisan(${a.id})">✅</button>
-              <button class="btn btn-edit" onclick="ouvrirEditArtisan(${a.id})">✏️</button>
-              <button class="btn btn-delete" onclick="supprimerArtisan(${a.id})">🗑️</button>
+              <button class="btn btn-validate" title="Valider" onclick="validerArtisan(${a.id})">✅</button>
+              <button class="btn btn-edit" title="Modifier" onclick="ouvrirEditArtisan(${a.id})">✏️</button>
+              <button class="btn btn-delete" title="Supprimer" onclick="supprimerArtisan(${a.id})">🗑️</button>
             </td>
           `;
           tbodyAttente.appendChild(tr);
         });
       }
 
-      if (valides.length === 0) tbodyValides.innerHTML = '<tr><td colspan="5" class="empty-msg">Aucun artisan publié.</td></tr>';
-      else {
+      if (valides.length === 0) {
+        tbodyValides.innerHTML = '<tr><td colspan="5" class="empty-msg">Aucun artisan valide publié.</td></tr>';
+      } else {
         valides.forEach(a => {
           const tr = document.createElement('tr');
           tr.innerHTML = `
@@ -624,8 +765,8 @@ async function supprimerPub(id) {
             <td>${a.quartier}</td>
             <td>${a.telephone}</td>
             <td class="actions-cell">
-              <button class="btn btn-edit" onclick="ouvrirEditArtisan(${a.id})">✏️</button>
-              <button class="btn btn-delete" onclick="supprimerArtisan(${a.id})">🗑️</button>
+              <button class="btn btn-edit" title="Modifier" onclick="ouvrirEditArtisan(${a.id})">✏️</button>
+              <button class="btn btn-delete" title="Retirer" onclick="supprimerArtisan(${a.id})">🗑️</button>
             </td>
           `;
           tbodyValides.appendChild(tr);
@@ -655,10 +796,18 @@ async function supprimerPub(id) {
       const whatsapp = document.getElementById('edit-art-wa').value;
       const description = document.getElementById('edit-art-desc').value;
 
-      await supabaseClient.from('artisans').update({ nom, metier, quartier, telephone, whatsapp, description }).eq('id', id);
-      fermerModales();
-      chargerArtisans();
-      chargerStats();
+      const { error } = await supabaseClient
+        .from('artisans')
+        .update({ nom, metier, quartier, telephone, whatsapp, description })
+        .eq('id', id);
+
+      if (!error) {
+        fermerModales();
+        chargerArtisans();
+        chargerStats();
+      } else {
+        alert("Erreur : " + error.message);
+      }
     }
 
     async function validerArtisan(id) {
@@ -676,6 +825,7 @@ async function supprimerPub(id) {
 
     /* UTILS */
     function fermerModales() {
+      document.getElementById('modalPub').style.display = 'none';
       document.getElementById('modalUrgence').style.display = 'none';
       document.getElementById('modalPharmacie').style.display = 'none';
       document.getElementById('modalArtisan').style.display = 'none';
