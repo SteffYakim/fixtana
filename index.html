@@ -69,7 +69,7 @@
     /* Cartes Artisans */
     .artisan-card { background: white; border-radius: 12px; padding: 16px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; }
     .artisan-card.sponso { border: 2px solid #f59e0b; background: #fffbeb; }
-    .artisan-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px; }
+    .artisan-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
     .artisan-name { font-weight: bold; font-size: 1.1em; color: #0f172a; }
     .artisan-metier { background: #eff6ff; color: #1d4ed8; font-size: 0.75em; padding: 3px 8px; border-radius: 10px; font-weight: bold; }
     .artisan-quartier { font-size: 0.85em; color: #64748b; margin-bottom: 10px; }
@@ -115,9 +115,7 @@
     <!-- Recherche & Filtres Dynamiques -->
     <input type="text" id="search-input" class="search-box" placeholder="Rechercher (ex: Plombier, Analakely...)" oninput="filtrerArtisans()">
     
-    <div class="filter-tags" id="tags-container">
-      <!-- Généré dynamiquement via JS -->
-    </div>
+    <div class="filter-tags" id="tags-container"></div>
 
     <!-- Liste des Artisans -->
     <div id="liste-artisans">
@@ -126,37 +124,37 @@
   </div>
 
   <!-- MODALE D'INSCRIPTION ARTISAN -->
-  <div id="modalInscription" class="modal">
+  <div id="modalInscription" class="modal" onclick="gererClicExterieurModal(event)">
     <div class="modal-content">
       <h2>📝 Inscription Prestataire</h2>
       <form id="form-inscription" onsubmit="soumettreInscription(event)">
         <div class="form-group">
-          <label>Nom complet / Nom de l'entreprise *</label>
+          <label for="ins-nom">Nom complet / Nom de l'entreprise *</label>
           <input type="text" id="ins-nom" required placeholder="Ex: Jean Rakoto">
         </div>
         <div class="form-group">
-          <label>Métier / Activité *</label>
+          <label for="ins-metier">Métier / Activité *</label>
           <input type="text" id="ins-metier" required placeholder="Ex: Plombier, Vitrier...">
         </div>
         <div class="form-group">
-          <label>Quartier d'intervention *</label>
+          <label for="ins-quartier">Quartier d'intervention *</label>
           <input type="text" id="ins-quartier" required placeholder="Ex: Analakely, Ankorondrano...">
         </div>
         <div class="form-group">
-          <label>Numéro Téléphone *</label>
+          <label for="ins-tel">Numéro Téléphone *</label>
           <input type="tel" id="ins-tel" required placeholder="Ex: 034 00 000 00">
         </div>
         <div class="form-group">
-          <label>Numéro WhatsApp (facultatif)</label>
+          <label for="ins-wa">Numéro WhatsApp (facultatif)</label>
           <input type="tel" id="ins-wa" placeholder="Ex: 261340000000">
         </div>
         <div class="form-group">
-          <label>Courte description de vos services</label>
+          <label for="ins-desc">Courte description de vos services</label>
           <textarea id="ins-desc" rows="3" placeholder="Présentez brièvement vos compétences..."></textarea>
         </div>
         <div class="modal-buttons">
           <button type="button" class="btn-cancel" onclick="fermerModalInscription()">Annuler</button>
-          <button type="submit" class="btn-submit">Envoyer ma demande</button>
+          <button type="submit" id="btn-submit-form" class="btn-submit">Envoyer ma demande</button>
         </div>
       </form>
     </div>
@@ -164,7 +162,7 @@
 
   <script>
     const SUPABASE_URL = 'https://xfqzlifauzlmtzaidixb.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhmcXpsaWZhdXpsbXR6YWlkaXhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3NTkxMTIsImV4cCI6MjEwMTMzNTExMn0.AmBdkYq70S9QntL13EcmFSJaxASh-x4gu6T1Mkhxsvk'; // ⚠️ Remplacez par votre clé anonyme
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhmcXpsaWZhdXpsbXR6YWlkaXhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3NTkxMTIsImV4cCI6MjEwMTMzNTExMn0.AmBdkYq70S9QntL13EcmFSJaxASh-x4gu6T1Mkhxsvk';
 
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -173,13 +171,23 @@
     let currentSlideIndex = 0;
     let carouselTimer = null;
 
+    // Helper pour échapper le HTML (Anti-XSS)
+    function escapeHTML(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
     async function initPage() {
       await comptabiliserVisite();
       await chargerCarrouselPubs();
       await chargerArtisans();
     }
 
-    /* COMPTEUR DE VISITES */
     async function comptabiliserVisite() {
       try {
         await supabaseClient.rpc('enregistrer_visite');
@@ -212,16 +220,16 @@
       pubs.forEach((p, index) => {
         const slide = document.createElement('a');
         slide.className = `pub-slide ${index === 0 ? 'active' : ''}`;
-        slide.href = p.lien_url || '#';
+        slide.href = escapeHTML(p.lien_url) || '#';
         if (p.lien_url) slide.target = '_blank';
 
-        let imgHTML = p.image_url ? `<img src="${p.image_url}" alt="${p.titre}">` : '';
+        const imgHTML = p.image_url ? `<img src="${escapeHTML(p.image_url)}" alt="${escapeHTML(p.titre)}">` : '';
 
         slide.innerHTML = `
           <span class="pub-tag">📢 Sponsorisé</span>
           ${imgHTML}
-          <div class="pub-title">${p.titre}</div>
-          ${p.description ? `<p class="pub-desc">${p.description}</p>` : ''}
+          <div class="pub-title">${escapeHTML(p.titre)}</div>
+          ${p.description ? `<p class="pub-desc">${escapeHTML(p.description)}</p>` : ''}
         `;
         slidesContainer.appendChild(slide);
 
@@ -259,7 +267,7 @@
       }, 5000);
     }
 
-    /* ARTISANS & FILTRES DYNAMIQUES */
+    /* ARTISANS & FILTRES */
     async function chargerArtisans() {
       const { data, error } = await supabaseClient
         .from('artisans')
@@ -269,7 +277,7 @@
         .order('nom', { ascending: true });
 
       if (error || !data) {
-        document.getElementById('liste-artisans').innerHTML = '<div class="empty-state">Erreur lors du chargement.</div>';
+        document.getElementById('liste-artisans').innerHTML = '<div class="empty-state">Erreur lors du chargement des prestataires.</div>';
         return;
       }
 
@@ -306,23 +314,27 @@
       conteneur.innerHTML = '';
 
       if (liste.length === 0) {
-        conteneur.innerHTML = '<div class="empty-state">Aucun artisan trouvé.</div>';
+        conteneur.innerHTML = '<div class="empty-state">Aucun artisan ne correspond à votre recherche.</div>';
         return;
       }
 
       liste.forEach(a => {
         const card = document.createElement('div');
         card.className = `artisan-card ${a.est_sponsorise ? 'sponso' : ''}`;
+        
+        const telNettoye = (a.telephone || '').replace(/\s+/g, '');
+        const waNettoye = (a.whatsapp || '').replace(/\+/g, '').replace(/\s+/g, '');
+
         card.innerHTML = `
           <div class="artisan-header">
-            <div class="artisan-name">${a.est_sponsorise ? '⭐ ' : ''}${a.nom}</div>
-            <span class="artisan-metier">${a.metier}</span>
+            <div class="artisan-name">${a.est_sponsorise ? '⭐ ' : ''}${escapeHTML(a.nom)}</div>
+            <span class="artisan-metier">${escapeHTML(a.metier)}</span>
           </div>
-          <div class="artisan-quartier">📍 ${a.quartier}</div>
-          ${a.description ? `<div class="artisan-desc">${a.description}</div>` : ''}
+          <div class="artisan-quartier">📍 ${escapeHTML(a.quartier)}</div>
+          ${a.description ? `<div class="artisan-desc">${escapeHTML(a.description)}</div>` : ''}
           <div class="actions-grid">
-            <a href="tel:${a.telephone.replace(/\s+/g, '')}" class="btn-action btn-call" onclick="enregistrerClic(${a.id}, 'appel')">📞 Appeler</a>
-            ${a.whatsapp ? `<a href="https://wa.me/${a.whatsapp.replace(/\+/g, '').replace(/\s+/g, '')}" target="_blank" class="btn-action btn-wa" onclick="enregistrerClic(${a.id}, 'whatsapp')">💬 WhatsApp</a>` : ''}
+            <a href="tel:${escapeHTML(telNettoye)}" class="btn-action btn-call" onclick="enregistrerClic(${a.id}, 'appel')">📞 Appeler</a>
+            ${a.whatsapp ? `<a href="https://wa.me/${escapeHTML(waNettoye)}" target="_blank" class="btn-action btn-wa" onclick="enregistrerClic(${a.id}, 'whatsapp')">💬 WhatsApp</a>` : ''}
           </div>
         `;
         conteneur.appendChild(card);
@@ -330,13 +342,19 @@
     }
 
     async function enregistrerClic(artisanId, typeAction) {
-      await supabaseClient.from('clics_contact').insert([{ artisan_id: artisanId, type_action: typeAction }]);
+      try {
+        await supabaseClient.from('clics_contact').insert([{ artisan_id: artisanId, type_action: typeAction }]);
+      } catch (err) {
+        console.error("Erreur enregistrement clic", err);
+      }
     }
 
     function filtrerArtisans() {
-      const recherche = document.getElementById('search-input').value.toLowerCase();
+      const recherche = document.getElementById('search-input').value.toLowerCase().trim();
       const resultats = tousLesArtisans.filter(a => {
-        const matchSearch = a.nom.toLowerCase().includes(recherche) || a.metier.toLowerCase().includes(recherche) || a.quartier.toLowerCase().includes(recherche);
+        const matchSearch = (a.nom && a.nom.toLowerCase().includes(recherche)) || 
+                            (a.metier && a.metier.toLowerCase().includes(recherche)) || 
+                            (a.quartier && a.quartier.toLowerCase().includes(recherche));
         const matchMetier = (metierFiltre === 'TOUS') || (a.metier === metierFiltre);
         return matchSearch && matchMetier;
       });
@@ -351,28 +369,50 @@
     }
 
     /* MODALE INSCRIPTION */
-    function ouvrirModalInscription() { document.getElementById('modalInscription').style.display = 'flex'; }
-    function fermerModalInscription() { document.getElementById('modalInscription').style.display = 'none'; document.getElementById('form-inscription').reset(); }
+    function ouvrirModalInscription() { 
+      document.getElementById('modalInscription').style.display = 'flex'; 
+    }
+    
+    function fermerModalInscription() { 
+      document.getElementById('modalInscription').style.display = 'none'; 
+      document.getElementById('form-inscription').reset(); 
+    }
+
+    function gererClicExterieurModal(e) {
+      if (e.target.id === 'modalInscription') {
+        fermerModalInscription();
+      }
+    }
 
     async function soumettreInscription(e) {
       e.preventDefault();
-      const nom = document.getElementById('ins-nom').value;
-      const metier = document.getElementById('ins-metier').value;
-      const quartier = document.getElementById('ins-quartier').value;
-      const telephone = document.getElementById('ins-tel').value;
-      const whatsapp = document.getElementById('ins-wa').value;
-      const description = document.getElementById('ins-desc').value;
+      const btnSubmit = document.getElementById('btn-submit-form');
+      btnSubmit.disabled = true;
+      btnSubmit.innerText = "Envoi...";
 
-      const { error } = await supabaseClient.from('artisans').insert([{ nom, metier, quartier, telephone, whatsapp, description, est_verifie: false }]);
+      const nom = document.getElementById('ins-nom').value.trim();
+      const metier = document.getElementById('ins-metier').value.trim();
+      const quartier = document.getElementById('ins-quartier').value.trim();
+      const telephone = document.getElementById('ins-tel').value.trim();
+      const whatsapp = document.getElementById('ins-wa').value.trim();
+      const description = document.getElementById('ins-desc').value.trim();
+
+      const { error } = await supabaseClient
+        .from('artisans')
+        .insert([{ nom, metier, quartier, telephone, whatsapp, description, est_verifie: false }]);
+
+      btnSubmit.disabled = false;
+      btnSubmit.innerText = "Envoyer ma demande";
 
       if (!error) {
         alert("Merci ! Votre demande a été envoyée avec succès et sera validée sous peu.");
         fermerModalInscription();
       } else {
-        alert("Erreur : " + error.message);
+        alert("Erreur lors de l'envoi : " + error.message);
       }
     }
 
+    // Initialisation
     initPage();
   </script>
 </body>
