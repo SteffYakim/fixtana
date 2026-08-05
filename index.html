@@ -4,7 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FixTana - Artisans & Services à Tana</title>
+  
+  <!-- Supabase JS Client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <!-- ⚠️ ADSENSE : Remplacez ca-pub-XXXXXXXXXXXXXXXX par votre identifiant AdSense après validation -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+
   <style>
     * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     body { background-color: #f4f6f9; margin: 0; padding: 20px; color: #333; }
@@ -20,7 +26,7 @@
     .nav-links button.register { background: #dcfce7; color: #15803d; }
     .nav-links button.register:hover { background: #bbf7d0; }
 
-    /* CARROUSEL PUBLICITAIRE */
+    /* CARROUSEL PUBLICITAIRE INTERNE */
     .carousel-container {
       position: relative;
       max-width: 100%;
@@ -60,6 +66,16 @@
     .dot { width: 8px; height: 8px; background-color: #fcd34d; border-radius: 50%; cursor: pointer; transition: 0.3s; }
     .dot.active-dot { background-color: #b45309; width: 18px; border-radius: 10px; }
 
+    /* CONTENEUR ADSENSE AU MILIEU DE LA LISTE */
+    .adsense-card {
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 10px;
+      margin-bottom: 15px;
+      text-align: center;
+      border: 1px dashed #cbd5e1;
+    }
+
     /* Barre de recherche & Filtres dynamiques */
     .search-box { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.95em; margin-bottom: 15px; outline: none; }
     .filter-tags { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px; }
@@ -91,6 +107,10 @@
     .modal-buttons { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
     .btn-submit { background: #16a34a; color: white; border: none; padding: 10px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; }
     .btn-cancel { background: #94a3b8; color: white; border: none; padding: 10px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+
+    /* Footer */
+    footer { text-align: center; margin-top: 30px; padding: 15px 0; border-top: 1px solid #cbd5e1; font-size: 0.8em; color: #64748b; }
+    footer a { color: #2563eb; text-decoration: none; }
   </style>
 </head>
 <body>
@@ -106,10 +126,23 @@
       </div>
     </div>
 
-    <!-- CARROUSEL PUBLICITAIRE -->
+    <!-- CARROUSEL PUBLICITAIRE INTERNE (Tables supabase) -->
     <div id="pub-carousel-wrapper" class="carousel-container" style="display: none;">
       <div id="pub-slides-container"></div>
       <div id="pub-dots-container" class="carousel-dots"></div>
+    </div>
+
+    <!-- BLOC ADSENSE HAUT (Bannière Responsive) -->
+    <div class="adsense-card">
+      <ins class="adsbygoogle"
+           style="display:block"
+           data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+           data-ad-slot="1234567890"
+           data-ad-format="auto"
+           data-full-width-responsive="true"></ins>
+      <script>
+           (adsbygoogle = window.adsbygoogle || []).push({});
+      </script>
     </div>
 
     <!-- Recherche & Filtres Dynamiques -->
@@ -121,6 +154,11 @@
     <div id="liste-artisans">
       <div class="empty-state">Chargement des prestataires...</div>
     </div>
+
+    <!-- FOOTER DU SITE -->
+    <footer>
+      <p>© 2026 FixTana - Tous droits réservés | <a href="politique-confidentialite.html">Mentions Légales & Confidentialité</a></p>
+    </footer>
   </div>
 
   <!-- MODALE D'INSCRIPTION ARTISAN -->
@@ -171,7 +209,7 @@
     let currentSlideIndex = 0;
     let carouselTimer = null;
 
-    // Helper pour échapper le HTML (Anti-XSS)
+    // Protection contre le code malveillant (Injection XSS)
     function escapeHTML(str) {
       if (!str) return '';
       return String(str)
@@ -196,7 +234,7 @@
       }
     }
 
-    /* CARROUSEL PUBLICITAIRE */
+    /* CARROUSEL PUBLICITAIRE INTERNE */
     async function chargerCarrouselPubs() {
       const { data: pubs, error } = await supabaseClient
         .from('publicites')
@@ -318,7 +356,7 @@
         return;
       }
 
-      liste.forEach(a => {
+      liste.forEach((a, index) => {
         const card = document.createElement('div');
         card.className = `artisan-card ${a.est_sponsorise ? 'sponso' : ''}`;
         
@@ -338,6 +376,22 @@
           </div>
         `;
         conteneur.appendChild(card);
+
+        // Insertion automatique d'un bloc AdSense tous les 4 artisans
+        if ((index + 1) % 4 === 0 && index !== liste.length - 1) {
+          const adContainer = document.createElement('div');
+          adContainer.className = 'adsense-card';
+          adContainer.innerHTML = `
+            <ins class="adsbygoogle"
+                 style="display:block"
+                 data-ad-format="fluid"
+                 data-ad-layout-key="-fb+5w+4e-db+86"
+                 data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+                 data-ad-slot="9876543210"></ins>
+          `;
+          conteneur.appendChild(adContainer);
+          (adsbygoogle = window.adsbygoogle || []).push({});
+        }
       });
     }
 
@@ -412,7 +466,7 @@
       }
     }
 
-    // Initialisation
+    // Lancement global
     initPage();
   </script>
 </body>
