@@ -121,7 +121,7 @@
 
   <div class="container">
     <h1>👑 FixTana — Administration</h1>
-    <p class="subtitle">Gestion globale en temps réel (Publicités, Statistiques, Urgences, Pharmacies et Artisans).</p>
+    <p class="subtitle">Gestion globale en temps réel (Visites, Publicités, Statistiques, Urgences, Pharmacies et Artisans).</p>
 
     <!-- BANDEAU DYNAMIQUE NOUVELLES INSCRIPTIONS (BLEU ET JAUNE) -->
     <div id="alert-pending-banner" class="alert-pending">
@@ -141,7 +141,24 @@
       <div id="alert-garde-text"></div>
     </div>
 
-    <!-- SECTION 1 : PUBLICITÉS -->
+    <!-- SECTION 1 : VISITES JOURNALIÈRES -->
+    <div class="card">
+      <h2>📈 Visites Journalières du Site</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Nombre de Visites</th>
+            <th>Tendance</th>
+          </tr>
+        </thead>
+        <tbody id="table-visites">
+          <tr><td colspan="3" class="empty-msg">Chargement du trafic...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SECTION 2 : PUBLICITÉS -->
     <div class="card">
       <h2>📢 Bannières Publicitaires</h2>
       
@@ -176,7 +193,7 @@
       </table>
     </div>
 
-    <!-- SECTION 2 : STATISTIQUES & CLICS -->
+    <!-- SECTION 3 : STATISTIQUES & CLICS -->
     <div class="card">
       <h2>📊 Statistiques de Contact (Clics Artisans)</h2>
       <table>
@@ -195,7 +212,7 @@
       </table>
     </div>
 
-    <!-- SECTION 3 : NUMÉROS D'URGENCE -->
+    <!-- SECTION 4 : NUMÉROS D'URGENCE -->
     <div class="card">
       <h2>🚨 Numéros d'Urgence</h2>
       <form id="form-urgence" onsubmit="ajouterUrgence(event)">
@@ -220,7 +237,7 @@
       </table>
     </div>
 
-    <!-- SECTION 4 : PHARMACIES DE GARDE -->
+    <!-- SECTION 5 : PHARMACIES DE GARDE -->
     <div class="card">
       <h2>💊 Pharmacies de Garde (Roulement Hebdomadaire)</h2>
       <form id="form-pharmacie" onsubmit="ajouterPharmacie(event)">
@@ -250,7 +267,7 @@
       </table>
     </div>
 
-    <!-- SECTION 5 : ARTISANS EN ATTENTE -->
+    <!-- SECTION 6 : ARTISANS EN ATTENTE -->
     <div class="card" id="card-en-attente">
       <h2>⏳ Artisans en attente de validation</h2>
       <table>
@@ -269,7 +286,7 @@
       </table>
     </div>
 
-    <!-- SECTION 6 : ARTISANS VALIDÉS & SPONSORISÉS -->
+    <!-- SECTION 7 : ARTISANS VALIDÉS & SPONSORISÉS -->
     <div class="card">
       <h2>✅ Artisans vérifiés & publiés</h2>
       <table>
@@ -389,6 +406,7 @@
     let cacheArtisans = [];
 
     async function initAdmin() {
+      await chargerVisites();
       await chargerStats();
       await chargerPubs();
       await chargerUrgences();
@@ -398,6 +416,7 @@
       // ÉCOUTE TEMPS RÉEL (REALTIME)
       supabaseClient
         .channel('admin-realtime')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'visites_journalieres' }, () => chargerVisites())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'artisans' }, () => { chargerArtisans(); chargerStats(); })
         .on('postgres_changes', { event: '*', schema: 'public', table: 'publicites' }, () => chargerPubs())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'pharmacies' }, () => chargerPharmacies())
@@ -406,7 +425,54 @@
         .subscribe();
     }
 
-    /* --- 1. GESTION DES PUBLICITÉS --- */
+    /* --- 1. SUIVI DES VISITES JOURNALIÈRES --- */
+    async function chargerVisites() {
+      const { data, error } = await supabaseClient
+        .from('visites_journalieres')
+        .select('*')
+        .order('date_visite', { ascending: false })
+        .limit(14);
+
+      const tbody = document.getElementById('table-visites');
+      if (error || !data) {
+        tbody.innerHTML = '<tr><td colspan="3" class="empty-msg">Erreur lors du chargement des visites.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = '';
+
+      if (data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" class="empty-msg">Aucune visite enregistrée pour le moment.</td></tr>';
+        return;
+      }
+
+      const aujourdhuiStr = new Date().toISOString().split('T')[0];
+
+      data.forEach((v, index) => {
+        const isAujourdhui = v.date_visite === aujourdhuiStr;
+        const dateFormatee = formaterDate(v.date_visite);
+        
+        let tendance = '➖';
+        if (index < data.length - 1) {
+          const visitesVeille = data[index + 1].nb_visites;
+          if (v.nb_visites > visitesVeille) tendance = '↗️ <small style="color:#16a34a; font-weight:bold;">+En hausse</small>';
+          else if (v.nb_visites < visitesVeille) tendance = '📉 <small style="color:#dc2626; font-weight:bold;">-En baisse</small>';
+        }
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>
+            <strong>${dateFormatee}</strong>
+            ${isAujourdhui ? ' <span class="badge-status status-ok">Aujourd\'hui</span>' : ''}
+          </td>
+          <td><span class="stat-badge" style="font-size:0.95em;">👀 ${v.nb_visites} visites</span></td>
+          <td>${tendance}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    /* --- 2. GESTION DES PUBLICITÉS --- */
     async function chargerPubs() {
       const { data, error } = await supabaseClient
         .from('publicites')
@@ -510,7 +576,7 @@
       }
     }
 
-    /* --- 2. STATISTIQUES & CLICS --- */
+    /* --- 3. STATISTIQUES & CLICS --- */
     async function chargerStats() {
       const tbody = document.getElementById('table-stats');
 
@@ -556,7 +622,7 @@
       });
     }
 
-    /* --- 3. NUMÉROS D'URGENCE --- */
+    /* --- 4. NUMÉROS D'URGENCE --- */
     async function chargerUrgences() {
       const { data: urgences, error } = await supabaseClient
         .from('urgences')
@@ -632,7 +698,7 @@
       }
     }
 
-    /* --- 4. PHARMACIES DE GARDE --- */
+    /* --- 5. PHARMACIES DE GARDE --- */
     async function chargerPharmacies() {
       const { data: pharmacies, error } = await supabaseClient
         .from('pharmacies')
@@ -758,7 +824,7 @@
       }
     }
 
-    /* --- 5. ARTISANS (VALIDATION + SPONSORISATION + ALERTE DYNAMIQUE) --- */
+    /* --- 6. ARTISANS (VALIDATION + SPONSORISATION + ALERTE DYNAMIQUE) --- */
     async function chargerArtisans() {
       const { data: artisans, error } = await supabaseClient
         .from('artisans')
@@ -777,7 +843,7 @@
       const enAttente = artisans.filter(a => !a.est_verifie);
       const valides = artisans.filter(a => a.est_verifie);
 
-      // GESTION DU BANDEAU D'ALERTE EN ATTENTE (BLEU ET JAUNE)
+      // GESTION DU BANDEAU D'ALERTE EN ATTENTE
       const alertPendingBanner = document.getElementById('alert-pending-banner');
       const pendingTitle = document.getElementById('pending-count-title');
       const pendingDesc = document.getElementById('pending-count-desc');
