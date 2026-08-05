@@ -3,170 +3,120 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FixTana - Artisans & Dépannage à Antananarivo</title>
+  <title>FixTana - Artisans & Services à Tana</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     body { background-color: #f4f6f9; margin: 0; padding: 20px; color: #333; }
     .container { max-width: 600px; margin: 0 auto; }
     
-    /* En-tête */
     .header { text-align: center; margin-bottom: 20px; }
-    h1 { font-size: 1.8em; color: #1e293b; margin: 0 0 10px 0; }
+    h1 { font-size: 1.8em; color: #1e293b; margin: 0 0 5px 0; }
+    p.sub { color: #64748b; font-size: 0.9em; margin: 0 0 15px 0; }
     
-    /* Navigation rapide */
-    .nav-bar {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 12px;
-      margin-top: 10px;
-      flex-wrap: wrap;
-    }
+    .nav-links { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+    .nav-links a { text-decoration: none; font-size: 0.85em; font-weight: bold; padding: 8px 12px; background: #e2e8f0; color: #1e293b; border-radius: 20px; }
+    .nav-links a.urgent { background: #fee2e2; color: #991b1b; }
+
+    /* Bannière Pub */
+    .ad-container { background: #fffbeb; border: 1px dashed #f59e0b; border-radius: 12px; padding: 12px; margin: 15px 0; text-align: center; position: relative; overflow: hidden; }
+    .ad-badge { position: absolute; top: 5px; right: 8px; font-size: 0.65em; background: #fef3c7; color: #b45309; padding: 2px 6px; border-radius: 4px; font-weight: bold; }
+    .ad-container img { max-width: 100%; height: auto; border-radius: 8px; margin-top: 5px; }
+    .ad-container a { text-decoration: none; color: inherit; display: block; }
+    .ad-title { font-weight: bold; font-size: 0.95em; color: #78350f; margin-top: 5px; }
+    .ad-desc { font-size: 0.8em; color: #92400e; margin-top: 2px; }
+
+    /* Barre de recherche & Filtres */
+    .search-box { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.95em; margin-bottom: 15px; outline: none; }
+    .filter-tags { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px; }
+    .tag { background: white; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 15px; font-size: 0.8em; cursor: pointer; white-space: nowrap; }
+    .tag.active { background: #2563eb; color: white; border-color: #2563eb; }
+
+    /* Carte Artisan */
+    .artisan-card { background: white; border-radius: 12px; padding: 16px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; }
+    .artisan-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px; }
+    .artisan-name { font-weight: bold; font-size: 1.1em; color: #0f172a; }
+    .artisan-metier { background: #eff6ff; color: #1d4ed8; font-size: 0.75em; padding: 3px 8px; border-radius: 10px; font-weight: bold; }
+    .artisan-quartier { font-size: 0.85em; color: #64748b; margin-bottom: 10px; }
+    .artisan-desc { font-size: 0.85em; color: #334155; margin-bottom: 12px; line-height: 1.4; }
     
-    .nav-btn {
-      display: inline-block;
-      padding: 8px 14px;
-      border-radius: 20px;
-      font-size: 0.85em;
-      font-weight: 600;
-      text-decoration: none;
-      transition: all 0.2s ease;
-    }
-    
-    .btn-artisan {
-      background-color: #e0e7ff;
-      color: #3730a3;
-      border: 1px solid #c7d2fe;
-    }
-    .btn-artisan:hover { background-color: #c7d2fe; }
+    .actions-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .btn-action { text-align: center; padding: 10px; border-radius: 8px; text-decoration: none; font-size: 0.85em; font-weight: bold; transition: 0.2s; }
+    .btn-call { background: #2563eb; color: white; }
+    .btn-wa { background: #16a34a; color: white; }
 
-    .btn-urgence {
-      background-color: #fee2e2;
-      color: #991b1b;
-      border: 1px solid #fca5a5;
-    }
-    .btn-urgence:hover { background-color: #fca5a5; }
-
-    /* Zone de Recherche et Filtres */
-    .filter-box {
-      background: white;
-      padding: 15px;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-      margin-bottom: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    
-    .filter-box input, .filter-box select {
-      width: 100%;
-      padding: 10px 12px;
-      border: 1px solid #cbd5e1;
-      border-radius: 8px;
-      font-size: 0.95em;
-      outline: none;
-    }
-
-    .filter-box input:focus, .filter-box select:focus {
-      border-color: #2563eb;
-    }
-
-    .filter-row {
-      display: flex;
-      gap: 10px;
-    }
-
-    /* Cartes Artisans */
-    .artisan-card {
-      background: white;
-      border-radius: 12px;
-      padding: 18px;
-      margin-bottom: 15px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    }
-    
-    .artisan-header { display: flex; justify-content: space-between; align-items: flex-start; }
-    .artisan-name { font-size: 1.2em; font-weight: bold; margin: 0 0 5px 0; color: #0f172a; }
-    .badge-check { color: #16a34a; font-size: 0.9em; }
-    
-    .meta-info { font-size: 0.9em; color: #475569; margin-bottom: 8px; }
-    .tag-quartier { background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 12px; font-weight: 500; font-size: 0.85em; }
-    
-    .artisan-desc { font-size: 0.9em; color: #64748b; margin-bottom: 15px; }
-
-    /* Boutons de Contact */
-    .btn-group { display: flex; gap: 10px; }
-    .btn {
-      flex: 1;
-      padding: 10px;
-      border: none;
-      border-radius: 8px;
-      font-weight: bold;
-      font-size: 0.9em;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      text-decoration: none;
-      color: white;
-    }
-    .btn-call { background-color: #16a34a; }
-    .btn-call:hover { background-color: #15803d; }
-    .btn-wa { background-color: #25d366; }
-    .btn-wa:hover { background-color: #1eb857; }
-
-    .empty-state { text-align: center; color: #64748b; padding: 30px 10px; }
+    .empty-state { text-align: center; color: #64748b; padding: 30px; background: white; border-radius: 10px; border: 1px dashed #cbd5e1; }
   </style>
 </head>
 <body>
 
   <div class="container">
-    <!-- EN-TÊTE ET MENUS RAPIDES -->
     <div class="header">
-      <h1>🛠️ FixTana - Dépannage à Tana</h1>
+      <h1>🛠️ FixTana</h1>
+      <p class="sub">Trouvez les meilleurs artisans de confiance à Antananarivo</p>
       
-      <div class="nav-bar">
-        <a href="inscription.html" class="nav-btn btn-artisan">
-          💼 Vous êtes artisan ? Inscrivez-vous
-        </a>
-        <a href="urgences.html" class="nav-btn btn-urgence">
-          🚨 Urgences & Pharmacies
-        </a>
+      <div class="nav-links">
+        <a href="urgences.html" class="urgent">🚨 Urgences & Pharmacies</a>
+        <a href="admin.html">👑 Espace Admin</a>
       </div>
     </div>
 
-    <!-- BARRE DE RECHERCHE ET FILTRES -->
-    <div class="filter-box">
-      <input type="text" id="search-input" placeholder="🔍 Rechercher un nom, métier, service..." oninput="filtrerArtisans()">
-      
-      <div class="filter-row">
-        <select id="select-metier" onchange="filtrerArtisans()">
-          <option value="">Tous les métiers</option>
-        </select>
-        
-        <select id="select-quartier" onchange="filtrerArtisans()">
-          <option value="">Tous les quartiers</option>
-        </select>
-      </div>
+    <!-- Emplacement Publicitaire Haut -->
+    <div id="emplacement-pub-haut"></div>
+
+    <!-- Recherche & Filtres -->
+    <input type="text" id="search-input" class="search-box" placeholder="Rechercher (ex: Plombier, Analakely...)" oninput="filtrerArtisans()">
+    
+    <div class="filter-tags" id="tags-container">
+      <div class="tag active" onclick="filtrerMetier('TOUS', this)">Tous</div>
+      <div class="tag" onclick="filtrerMetier('Plombier', this)">Plombier</div>
+      <div class="tag" onclick="filtrerMetier('Électricien', this)">Électricien</div>
+      <div class="tag" onclick="filtrerMetier('Mécanicien', this)">Mécanicien</div>
+      <div class="tag" onclick="filtrerMetier('Menuisier', this)">Menuisier</div>
     </div>
 
-    <!-- LISTE DES ARTISANS -->
+    <!-- Liste des Artisans -->
     <div id="liste-artisans">
-      <div class="empty-state">Chargement des artisans...</div>
+      <div class="empty-state">Chargement des prestataires...</div>
     </div>
   </div>
 
   <script>
-    // ⚠️ Assurez-vous d'avoir votre vraie clé anon public ci-dessous
     const SUPABASE_URL = 'https://xfqzlifauzlmtzaidixb.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhmcXpsaWZhdXpsbXR6YWlkaXhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3NTkxMTIsImV4cCI6MjEwMTMzNTExMn0.AmBdkYq70S9QntL13EcmFSJaxASh-x4gu6T1Mkhxsvk';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhmcXpsaWZhdXpsbXR6YWlkaXhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3NTkxMTIsImV4cCI6MjEwMTMzNTExMn0.AmBdkYq70S9QntL13EcmFSJaxASh-x4gu6T1Mkhxsvk'; // ⚠️ Mettez votre clé anon
 
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    
+
     let tousLesArtisans = [];
+    let metierFiltre = 'TOUS';
+
+    async function initPage() {
+      await chargerPub();
+      await chargerArtisans();
+    }
+
+    async function chargerPub() {
+      const { data } = await supabaseClient
+        .from('publicites')
+        .select('*')
+        .eq('est_actif', true)
+        .limit(1);
+
+      const conteneur = document.getElementById('emplacement-pub-haut');
+      if (!conteneur || !data || data.length === 0) return;
+
+      const pub = data[0];
+      conteneur.innerHTML = `
+        <div class="ad-container">
+          <span class="ad-badge">Sponsorisé</span>
+          <a href="${pub.lien_url || '#'}" target="_blank" rel="noopener">
+            ${pub.image_url ? `<img src="${pub.image_url}" alt="${pub.titre}">` : ''}
+            <div class="ad-title">${pub.titre}</div>
+            ${pub.description ? `<div class="ad-desc">${pub.description}</div>` : ''}
+          </a>
+        </div>
+      `;
+    }
 
     async function chargerArtisans() {
       const { data, error } = await supabaseClient
@@ -175,82 +125,37 @@
         .eq('est_verifie', true)
         .order('nom', { ascending: true });
 
-      if (error) {
-        console.error("Erreur chargement:", error);
-        document.getElementById('liste-artisans').innerHTML = '<div class="empty-state">Impossible de charger les données.</div>';
+      if (error || !data) {
+        document.getElementById('liste-artisans').innerHTML = '<div class="empty-state">Erreur lors du chargement des données.</div>';
         return;
       }
 
       tousLesArtisans = data;
-      remplirSelects();
       afficherArtisans(tousLesArtisans);
     }
 
-    function remplirSelects() {
-      const métiers = [...new Set(tousLesArtisans.map(a => a.metier))].filter(Boolean).sort();
-      const quartiers = [...new Set(tousLesArtisans.map(a => a.quartier))].filter(Boolean).sort();
-
-      const selectMetier = document.getElementById('select-metier');
-      selectMetier.innerHTML = '<option value="">Tous les métiers</option>';
-      métiers.forEach(m => selectMetier.innerHTML += `<option value="${m}">${m}</option>`);
-
-      const selectQuartier = document.getElementById('select-quartier');
-      selectQuartier.innerHTML = '<option value="">Tous les quartiers</option>';
-      quartiers.forEach(q => selectQuartier.innerHTML += `<option value="${q}">${q}</option>`);
-    }
-
-    function filtrerArtisans() {
-      const recherche = document.getElementById('search-input').value.toLowerCase();
-      const metierFiltre = document.getElementById('select-metier').value;
-      const quartierFiltre = document.getElementById('select-quartier').value;
-
-      const resultat = tousLesArtisans.filter(artisan => {
-        const correspondRecherche = 
-          (artisan.nom && artisan.nom.toLowerCase().includes(recherche)) ||
-          (artisan.description && artisan.description.toLowerCase().includes(recherche)) ||
-          (artisan.metier && artisan.metier.toLowerCase().includes(recherche));
-
-        const correspondMetier = metierFiltre === "" || artisan.metier === metierFiltre;
-        const correspondQuartier = quartierFiltre === "" || artisan.quartier === quartierFiltre;
-
-        return correspondRecherche && correspondMetier && correspondQuartier;
-      });
-
-      afficherArtisans(resultat);
-    }
-
-    function afficherArtisans(artisans) {
+    function afficherArtisans(liste) {
       const conteneur = document.getElementById('liste-artisans');
       conteneur.innerHTML = '';
 
-      if (artisans.length === 0) {
-        conteneur.innerHTML = '<div class="empty-state">Aucun artisan trouvé pour ces critères.</div>';
+      if (liste.length === 0) {
+        conteneur.innerHTML = '<div class="empty-state">Aucun artisan ne correspond à votre recherche.</div>';
         return;
       }
 
-      artisans.forEach(artisan => {
-        const waClean = artisan.whatsapp ? artisan.whatsapp.replace(/[^0-9]/g, '') : '';
-        const waLink = waClean ? `https://wa.me/${waClean}?text=Bonjour%20${encodeURIComponent(artisan.nom)},%20je%20vous%20contacte%20depuis%20FixTana.` : '#';
-
+      liste.forEach(a => {
         const card = document.createElement('div');
         card.className = 'artisan-card';
         card.innerHTML = `
           <div class="artisan-header">
-            <h2 class="artisan-name">${artisan.nom} ${artisan.est_verifie ? '<span class="badge-check">✅</span>' : ''}</h2>
+            <div class="artisan-name">${a.nom}</div>
+            <span class="artisan-metier">${a.metier}</span>
           </div>
-          <div class="meta-info">
-            <strong>Métier :</strong> ${artisan.metier} | <span class="tag-quartier">${artisan.quartier}</span>
-          </div>
-          <div class="artisan-desc">${artisan.description || ''}</div>
-          <div class="btn-group">
-            <a href="tel:${artisan.telephone}" class="btn btn-call" onclick="enregistrerClic(${artisan.id}, 'appel')">
-              📞 Appeler
-            </a>
-            ${waClean ? `
-              <a href="${waLink}" target="_blank" class="btn btn-wa" onclick="enregistrerClic(${artisan.id}, 'whatsapp')">
-                💬 WhatsApp
-              </a>
-            ` : ''}
+          <div class="artisan-quartier">📍 ${a.quartier}</div>
+          ${a.description ? `<div class="artisan-desc">${a.description}</div>` : ''}
+          <div class="actions-grid">
+            <a href="tel:${a.telephone}" class="btn-action btn-call" onclick="enregistrerClic(${a.id}, 'appel')">📞 Appeler</a>
+            ${a.whatsapp ? `<a href="https://wa.me/${a.whatsapp.replace(/\+/g, '')}" target="_blank" class="btn-action btn-wa" onclick="enregistrerClic(${a.id}, 'whatsapp')">💬 WhatsApp</a>` : ''}
           </div>
         `;
         conteneur.appendChild(card);
@@ -258,12 +163,32 @@
     }
 
     async function enregistrerClic(artisanId, typeAction) {
-      await supabaseClient.from('clics_contact').insert([
-        { artisan_id: artisanId, type_action: typeAction }
-      ]);
+      await supabaseClient.from('clics_contact').insert([{ artisan_id: artisanId, type_action: typeAction }]);
     }
 
-    chargerArtisans();
+    function filtrerArtisans() {
+      const recherche = document.getElementById('search-input').value.toLowerCase();
+      
+      const resultats = tousLesArtisans.filter(a => {
+        const correspondRecherche = a.nom.toLowerCase().includes(recherche) || 
+                                     a.metier.toLowerCase().includes(recherche) || 
+                                     a.quartier.toLowerCase().includes(recherche);
+        const correspondMetier = (metierFiltre === 'TOUS') || (a.metier === metierFiltre);
+        
+        return correspondRecherche && correspondMetier;
+      });
+
+      afficherArtisans(resultats);
+    }
+
+    function filtrerMetier(metier, elem) {
+      metierFiltre = metier;
+      document.querySelectorAll('.filter-tags .tag').forEach(t => t.classList.remove('active'));
+      elem.classList.add('active');
+      filtrerArtisans();
+    }
+
+    initPage();
   </script>
 </body>
 </html>
