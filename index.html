@@ -162,7 +162,11 @@
     let currentSlideIndex = 0;
     let carouselTimer = null;
 
+    async function comptabiliserVisite() {
+      await supabaseClient.rpc('enregistrer_visite');
+      
     async function initPage() {
+      comptabiliserVisite();
       await chargerCarrouselPubs();
       await chargerArtisans();
 
