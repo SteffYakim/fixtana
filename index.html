@@ -28,6 +28,86 @@
     .ad-title { font-weight: bold; font-size: 0.95em; color: #78350f; margin-top: 5px; }
     .ad-desc { font-size: 0.8em; color: #92400e; margin-top: 2px; }
 
+    /* CONTENEUR DU CARROUSEL PUB */
+.carousel-container {
+  position: relative;
+  max-width: 100%;
+  margin: 0 0 20px 0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+}
+
+/* CARTE PUB INDIVIDUELLE */
+.pub-slide {
+  display: none; /* Masqué par défaut */
+  padding: 15px;
+  text-decoration: none;
+  color: #78350f;
+  transition: opacity 0.4s ease-in-out;
+}
+
+.pub-slide.active {
+  display: block; /* Visible quand active */
+}
+
+.pub-tag {
+  font-size: 0.7em;
+  text-transform: uppercase;
+  font-weight: bold;
+  color: #b45309;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.pub-slide img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.pub-title {
+  font-weight: bold;
+  font-size: 1.05em;
+  color: #92400e;
+  margin-bottom: 4px;
+}
+
+.pub-desc {
+  font-size: 0.85em;
+  color: #a16207;
+  margin: 0;
+}
+
+/* INDICATEURS / PUCES EN BAS DU CARROUSEL */
+.carousel-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  padding-bottom: 10px;
+  background: #fffbeb;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  background-color: #fcd34d;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.dot.active-dot {
+  background-color: #b45309;
+  width: 18px;
+  border-radius: 10px;
+}
     /* Barre de recherche & Filtres */
     .search-box { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.95em; margin-bottom: 15px; outline: none; }
     .filter-tags { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px; }
