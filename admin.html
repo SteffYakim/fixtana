@@ -53,12 +53,13 @@
     .stat-badge { background: #e0f2fe; color: #0369a1; padding: 4px 8px; border-radius: 6px; font-weight: bold; font-size: 0.85em; }
     .stat-wa { background: #dcfce7; color: #15803d; }
 
-    .actions-cell { display: flex; gap: 6px; align-items: center; }
     .btn { padding: 6px 12px; border: none; border-radius: 6px; font-weight: 600; font-size: 0.85em; cursor: pointer; transition: 0.2s; }
     .btn-green { background-color: #16a34a; color: white; }
     .btn-green:hover { background-color: #15803d; }
     .btn-primary { background-color: #2563eb; color: white; }
     .btn-primary:hover { background-color: #1d4ed8; }
+    .btn-star { background-color: #f59e0b; color: white; }
+    .btn-star:hover { background-color: #d97706; }
     .btn-danger { background-color: #ef4444; color: white; }
     .btn-danger:hover { background-color: #dc2626; }
     .btn-cancel { background-color: #94a3b8; color: white; }
@@ -219,7 +220,7 @@
       </table>
     </div>
 
-    <!-- SECTION 6 : ARTISANS VALIDÉS -->
+    <!-- SECTION 6 : ARTISANS VALIDÉS & SPONSORISÉS -->
     <div class="card">
       <h2>✅ Artisans vérifiés & publiés</h2>
       <table>
@@ -708,7 +709,7 @@
       }
     }
 
-    /* --- 5. ARTISANS --- */
+    /* --- 5. ARTISANS (VALIDATION + SPONSORISATION) --- */
     async function chargerArtisans() {
       const { data: artisans, error } = await supabaseClient
         .from('artisans')
@@ -752,12 +753,22 @@
       } else {
         valides.forEach(a => {
           const tr = document.createElement('tr');
+          const isSponso = a.est_sponsorise === true;
+
           tr.innerHTML = `
-            <td><strong>${a.nom}</strong></td>
+            <td>
+              <strong>${a.nom}</strong>
+              ${isSponso ? '<br><small style="color:#d97706; font-weight:bold;">⭐ Sponsorisé</small>' : ''}
+            </td>
             <td>${a.metier}</td>
             <td>${a.quartier}</td>
             <td>${a.telephone}</td>
             <td style="text-align: right; white-space: nowrap;">
+              <button class="btn ${isSponso ? 'btn-danger' : 'btn-star'}" 
+                      title="${isSponso ? 'Retirer du haut de liste' : 'Mettre en haut de liste'}" 
+                      onclick="toggleSponsor(${a.id}, ${!isSponso})">
+                ${isSponso ? '⭐ Retirer' : '⭐ Sponsoriser'}
+              </button>
               <button class="btn btn-primary" title="Modifier" onclick="ouvrirEditArtisan(${a.id})">✏️</button>
               <button class="btn btn-danger" title="Supprimer" onclick="supprimerArtisan(${a.id})">🗑️</button>
             </td>
@@ -765,6 +776,14 @@
           tbodyValides.appendChild(tr);
         });
       }
+    }
+
+    async function toggleSponsor(id, nouveauStatut) {
+      await supabaseClient
+        .from('artisans')
+        .update({ est_sponsorise: nouveauStatut })
+        .eq('id', id);
+      chargerArtisans();
     }
 
     function ouvrirEditArtisan(id) {
