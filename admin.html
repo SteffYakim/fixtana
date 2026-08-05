@@ -322,54 +322,101 @@
     }
 
     /* --- PUBLICITÉS --- */
-    async function chargerPubs() {
-      const { data: pubs } = await supabaseClient.from('publicites').select('*').order('created_at', { ascending: false });
-      const tbody = document.getElementById('table-pubs');
-      tbody.innerHTML = '';
+    /* --- GESTION DES PUBLICITÉS (CORRIGÉE & SÉCURISÉE) --- */
+async function chargerPubs() {
+  try {
+    const { data: pubs, error } = await supabaseClient
+      .from('publicites')
+      .select('*')
+      .order('created_at', { ascending: false });
 
-      if (!pubs || pubs.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" class="empty-msg">Aucune publicité enregistrée.</td></tr>';
-        return;
-      }
-
-      pubs.forEach(p => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td><strong>${p.titre}</strong><br><small style="color:#64748b">${p.description || ''}</small></td>
-          <td><small><a href="${p.lien_url}" target="_blank">${p.lien_url || '-'}</a></small></td>
-          <td>
-            <button class="btn ${p.est_actif ? 'btn-validate' : 'btn-delete'}" onclick="togglePub(${p.id}, ${!p.est_actif})">
-              ${p.est_actif ? '🟢 Active' : '🔴 Masquée'}
-            </button>
-          </td>
-          <td class="actions-cell">
-            <button class="btn btn-delete" onclick="supprimerPub(${p.id})">🗑️</button>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
+    if (error) {
+      console.error("Erreur de chargement des pubs :", error);
+      return;
     }
 
-    async function ajouterPub(e) {
-  e.preventDefault();
-  
-  const titre = document.getElementById('pub-titre').value;
-  const image_url = document.getElementById('pub-image').value;
-  const lien_url = document.getElementById('pub-lien').value;
-  const description = document.getElementById('pub-desc').value;
+    const tbody = document.getElementById('table-pubs');
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
 
-  // Envoi à Supabase avec vérification d'erreur
+    if (!pubs || pubs.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" class="empty-msg">Aucune publicité enregistrée.</td></tr>';
+      return;
+    }
+
+    pubs.forEach(p => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><strong>${p.titre}</strong><br><small style="color:#64748b">${p.description || ''}</small></td>
+        <td><small><a href="${p.lien_url || '#'}" target="_blank">${p.lien_url || '-'}</a></small></td>
+        <td>
+          <button class="btn ${p.est_actif ? 'btn-validate' : 'btn-delete'}" onclick="togglePub(${p.id}, ${!p.est_actif})">
+            ${p.est_actif ? '🟢 Active' : '🔴 Masquée'}
+          </button>
+        </td>
+        <td class="actions-cell">
+          <button class="btn btn-delete" onclick="supprimerPub(${p.id})">🗑️</button>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+  } catch (err) {
+    console.error("Erreur critique chargement pub:", err);
+  }
+}
+
+async function ajouterPub(e) {
+  // 1. Empêcher le rechargement de la page
+  if (e) e.preventDefault();
+
+  // 2. Récupération des valeurs
+  const titreInput = document.getElementById('pub-titre');
+  const imageInput = document.getElementById('pub-image');
+  const lienInput = document.getElementById('pub-lien');
+  const descInput = document.getElementById('pub-desc');
+
+  if (!titreInput || !titreInput.value.trim()) {
+    alert("⚠️ Veuillez indiquer au moins le nom de l'annonceur.");
+    return;
+  }
+
+  const titre = titreInput.value.trim();
+  const image_url = imageInput ? imageInput.value.trim() : '';
+  const lien_url = lienInput ? lienInput.value.trim() : '';
+  const description = descInput ? descInput.value.trim() : '';
+
+  // 3. Envoi vers Supabase
   const { data, error } = await supabaseClient
     .from('publicites')
-    .insert([{ titre, image_url, lien_url, description, est_actif: true }]);
+    .insert([{
+      titre: titre,
+      image_url: image_url || null,
+      lien_url: lien_url || null,
+      description: description || null,
+      est_actif: true
+    }]);
 
+  // 4. Traitement du retour
   if (error) {
-    alert("❌ Erreur lors de l'enregistrement de la pub : " + error.message);
-    console.error("Détails de l'erreur :", error);
+    alert("❌ Erreur Supabase : " + error.message);
+    console.error("Détail Erreur Supabase:", error);
   } else {
-    alert("✅ Publicité enregistrée avec succès !");
+    alert("✅ La publicité a bien été enregistrée !");
     document.getElementById('form-pub').reset();
-    chargerPubs(); // Recharge le tableau des pubs
+    await chargerPubs();
+  }
+}
+
+async function togglePub(id, statut) {
+  await supabaseClient.from('publicites').update({ est_actif: statut }).eq('id', id);
+  chargerPubs();
+}
+
+async function supprimerPub(id) {
+  if (confirm("Supprimer cette pub ?")) {
+    await supabaseClient.from('publicites').delete().eq('id', id);
+    chargerPubs();
   }
 }
     /* --- URGENCES --- */
