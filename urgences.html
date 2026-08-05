@@ -22,9 +22,88 @@
     .ad-container a { text-decoration: none; color: inherit; display: block; }
     .ad-title { font-weight: bold; font-size: 0.95em; color: #78350f; margin-top: 5px; }
     .ad-desc { font-size: 0.8em; color: #92400e; margin-top: 2px; }
-
     .section-title { font-size: 1.2em; color: #1e293b; margin: 25px 0 10px; display: flex; align-items: center; gap: 8px; }
+/* CONTENEUR DU CARROUSEL PUB */
+.carousel-container {
+  position: relative;
+  max-width: 100%;
+  margin: 0 0 20px 0;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+}
 
+/* CARTE PUB INDIVIDUELLE */
+.pub-slide {
+  display: none; /* Masqué par défaut */
+  padding: 15px;
+  text-decoration: none;
+  color: #78350f;
+  transition: opacity 0.4s ease-in-out;
+}
+
+.pub-slide.active {
+  display: block; /* Visible quand active */
+}
+
+.pub-tag {
+  font-size: 0.7em;
+  text-transform: uppercase;
+  font-weight: bold;
+  color: #b45309;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.pub-slide img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.pub-title {
+  font-weight: bold;
+  font-size: 1.05em;
+  color: #92400e;
+  margin-bottom: 4px;
+}
+
+.pub-desc {
+  font-size: 0.85em;
+  color: #a16207;
+  margin: 0;
+}
+
+/* INDICATEURS / PUCES EN BAS DU CARROUSEL */
+.carousel-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  padding-bottom: 10px;
+  background: #fffbeb;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  background-color: #fcd34d;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.dot.active-dot {
+  background-color: #b45309;
+  width: 18px;
+  border-radius: 10px;
+}
+    
     /* Grille Numéros d'urgence */
     .emergency-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
     .emergency-card { background: #fee2e2; border: 1px solid #fca5a5; padding: 15px 10px; border-radius: 10px; text-align: center; }
