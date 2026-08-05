@@ -112,10 +112,19 @@
     let carouselTimer = null;
 
     async function initPage() {
-      await chargerCarrouselPubs();
-      await chargerUrgences();
-      await chargerPharmacies();
-    }
+  // 1. Chargement initial
+  await chargerCarrouselPubs();
+  await chargerUrgences();
+  await chargerPharmacies();
+
+  // 2. Écoute EN TEMPS RÉEL des changements
+  supabaseClient
+    .channel('urgences-changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'publicites' }, () => chargerCarrouselPubs())
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'urgences' }, () => chargerUrgences())
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'pharmacies' }, () => chargerPharmacies())
+    .subscribe();
+}
 
     /* GESTION DU CARROUSEL DE PUBS */
     async function chargerCarrouselPubs() {
