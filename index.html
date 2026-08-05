@@ -18,42 +18,13 @@
     .nav-links a, .nav-links button { text-decoration: none; font-size: 0.85em; font-weight: bold; padding: 8px 14px; border-radius: 20px; border: none; cursor: pointer; transition: 0.2s; }
     .nav-links a.urgent { background: #fee2e2; color: #991b1b; }
     .nav-links button.register { background: #dcfce7; color: #15803d; }
-    .nav-links button.register:hover { background: #bbf7d0; }
 
     /* CARROUSEL PUBLICITAIRE */
-    .carousel-container {
-      position: relative;
-      max-width: 100%;
-      margin: 0 0 20px 0;
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-      background: #fffbeb;
-      border: 1px solid #fde68a;
-    }
-    .pub-slide {
-      display: none;
-      padding: 15px;
-      text-decoration: none;
-      color: #78350f;
-    }
+    .carousel-container { position: relative; max-width: 100%; margin: 0 0 20px 0; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); background: #fffbeb; border: 1px solid #fde68a; }
+    .pub-slide { display: none; padding: 15px; text-decoration: none; color: #78350f; }
     .pub-slide.active { display: block; }
-    .pub-tag {
-      font-size: 0.7em;
-      text-transform: uppercase;
-      font-weight: bold;
-      color: #b45309;
-      margin-bottom: 6px;
-      display: block;
-    }
-    .pub-slide img {
-      width: 100%;
-      height: 120px;
-      object-fit: cover;
-      border-radius: 8px;
-      margin-bottom: 8px;
-      display: block;
-    }
+    .pub-tag { font-size: 0.7em; text-transform: uppercase; font-weight: bold; color: #b45309; margin-bottom: 6px; display: block; }
+    .pub-slide img { width: 100%; height: 120px; object-fit: cover; border-radius: 8px; margin-bottom: 8px; display: block; }
     .pub-title { font-weight: bold; font-size: 1.05em; color: #92400e; margin-bottom: 4px; }
     .pub-desc { font-size: 0.85em; color: #a16207; margin: 0; }
     .carousel-dots { display: flex; justify-content: center; gap: 6px; padding-bottom: 10px; background: #fffbeb; }
@@ -67,7 +38,27 @@
     .tag.active { background: #2563eb; color: white; border-color: #2563eb; font-weight: bold; }
 
     /* Cartes Artisans */
-    .artisan-card { background: white; border-radius: 12px; padding: 16px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; }
+    .artisan-card { background: white; border-radius: 12px; padding: 16px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; position: relative; }
+    
+    /* STYLE SPÉCIAL SPONSORISÉ */
+    .artisan-card.sponsored {
+      border: 2px solid #f59e0b;
+      background: #fffdf5;
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
+    }
+    .badge-sponsored {
+      background: #f59e0b;
+      color: white;
+      font-size: 0.7em;
+      font-weight: bold;
+      padding: 3px 8px;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: inline-block;
+      margin-bottom: 6px;
+    }
+
     .artisan-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px; }
     .artisan-name { font-weight: bold; font-size: 1.1em; color: #0f172a; }
     .artisan-metier { background: #eff6ff; color: #1d4ed8; font-size: 0.75em; padding: 3px 8px; border-radius: 10px; font-weight: bold; }
@@ -114,7 +105,7 @@
     <!-- Recherche -->
     <input type="text" id="search-input" class="search-box" placeholder="Rechercher (ex: Plombier, Analakely...)" oninput="filtrerArtisans()">
     
-    <!-- CONTENEUR DES FILTRES DE MÉTIERS (GÉNÉRÉ EN JAVASCRIPT) -->
+    <!-- CONTENEUR DES FILTRES DE MÉTIERS -->
     <div class="filter-tags" id="tags-container"></div>
 
     <!-- Liste des Artisans -->
@@ -162,7 +153,7 @@
 
   <script>
     const SUPABASE_URL = 'https://xfqzlifauzlmtzaidixb.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhmcXpsaWZhdXpsbXR6YWlkaXhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3NTkxMTIsImV4cCI6MjEwMTMzNTExMn0.AmBdkYq70S9QntL13EcmFSJaxASh-x4gu6T1Mkhxsvk'; // ⚠️ Remplacez par votre clé anon
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhmcXpsaWZhdXpsbXR6YWlkaXhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3NTkxMTIsImV4cCI6MjEwMTMzNTExMn0.AmBdkYq70S9QntL13EcmFSJaxASh-x4gu6T1Mkhxsvk';
 
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -172,19 +163,18 @@
     let carouselTimer = null;
 
     async function initPage() {
-  // 1. Chargement initial
-  await chargerCarrouselPubs();
-  await chargerArtisans();
+      await chargerCarrouselPubs();
+      await chargerArtisans();
 
-  // 2. Écoute EN TEMPS RÉEL des changements
-  supabaseClient
-    .channel('index-changes')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'artisans' }, () => chargerArtisans())
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'publicites' }, () => chargerCarrouselPubs())
-    .subscribe();
-}
+      // Temps réel
+      supabaseClient
+        .channel('index-realtime')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'artisans' }, () => chargerArtisans())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'publicites' }, () => chargerCarrouselPubs())
+        .subscribe();
+    }
 
-    /* 1. GESTION DU CARROUSEL DE PUBS */
+    /* 1. CARROUSEL DE PUBS */
     async function chargerCarrouselPubs() {
       const { data: pubs, error } = await supabaseClient
         .from('publicites')
@@ -214,7 +204,7 @@
         let imgHTML = p.image_url ? `<img src="${p.image_url}" alt="${p.titre}">` : '';
 
         slide.innerHTML = `
-          <span class="pub-tag">📢 Sponsorisé</span>
+          <span class="pub-tag">📢 Bannières Publicitaire</span>
           ${imgHTML}
           <div class="pub-title">${p.titre}</div>
           ${p.description ? `<p class="pub-desc">${p.description}</p>` : ''}
@@ -255,12 +245,13 @@
       }, 5000);
     }
 
-    /* 2. GESTION DES ARTISANS & FILTRES DYNAMIQUES */
+    /* 2. ARTISANS (TRIÉ AVEC SPONSORISÉS EN PREMIER) */
     async function chargerArtisans() {
       const { data, error } = await supabaseClient
         .from('artisans')
         .select('*')
         .eq('est_verifie', true)
+        .order('est_sponsorise', { ascending: false }) // ⭐ SPONSORISÉS EN HAUT
         .order('nom', { ascending: true });
 
       if (error || !data) {
@@ -277,19 +268,15 @@
       const container = document.getElementById('tags-container');
       if (!container) return;
 
-      // Extraire automatiquement tous les métiers uniques
       const metiersUniques = [...new Set(artisans.map(a => a.metier).filter(Boolean))].sort();
-
       container.innerHTML = '';
 
-      // Bouton "Tous"
       const tagTous = document.createElement('div');
       tagTous.className = `tag ${metierFiltre === 'TOUS' ? 'active' : ''}`;
       tagTous.innerText = 'Tous';
       tagTous.onclick = function() { filtrerMetier('TOUS', this); };
       container.appendChild(tagTous);
 
-      // Génération automatique des autres boutons
       metiersUniques.forEach(metier => {
         const tag = document.createElement('div');
         tag.className = `tag ${metierFiltre === metier ? 'active' : ''}`;
@@ -309,9 +296,12 @@
       }
 
       liste.forEach(a => {
+        const isSponsored = a.est_sponsorise === true;
         const card = document.createElement('div');
-        card.className = 'artisan-card';
+        card.className = `artisan-card ${isSponsored ? 'sponsored' : ''}`;
+        
         card.innerHTML = `
+          ${isSponsored ? '<span class="badge-sponsored">⭐ Sponsorisé</span>' : ''}
           <div class="artisan-header">
             <div class="artisan-name">${a.nom}</div>
             <span class="artisan-metier">${a.metier}</span>
@@ -363,10 +353,10 @@
       const whatsapp = document.getElementById('ins-wa').value;
       const description = document.getElementById('ins-desc').value;
 
-      const { error } = await supabaseClient.from('artisans').insert([{ nom, metier, quartier, telephone, whatsapp, description, est_verifie: false }]);
+      const { error } = await supabaseClient.from('artisans').insert([{ nom, metier, quartier, telephone, whatsapp, description, est_verifie: false, est_sponsorise: false }]);
 
       if (!error) {
-        alert("Merci ! Votre demande a été envoyée avec succès. Elle sera vérifiée et publiée très rapidement.");
+        alert("Merci ! Votre demande a été envoyée avec succès.");
         fermerModalInscription();
       } else {
         alert("Erreur lors de l'envoi : " + error.message);
