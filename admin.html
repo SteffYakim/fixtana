@@ -13,7 +13,7 @@
     h1 { color: #0f172a; margin-bottom: 5px; font-size: 1.8em; }
     .subtitle { color: #64748b; font-size: 0.9em; margin-bottom: 25px; }
 
-    /* BANDEAU DYNAMIQUE PRESTATAIRES EN ATTENTE (BLEU / JAUNE) */
+    /* BANDEAU DYNAMIQUE PRESTATAIRES EN ATTENTE */
     .alert-pending {
       background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%);
       color: #fef08a;
@@ -21,7 +21,7 @@
       padding: 15px 20px;
       border-radius: 10px;
       margin-bottom: 20px;
-      display: none; /* Masqué par défaut */
+      display: none;
       align-items: center;
       justify-content: space-between;
       box-shadow: 0 4px 12px rgba(30, 58, 138, 0.25);
@@ -123,7 +123,7 @@
     <h1>👑 FixTana — Administration</h1>
     <p class="subtitle">Gestion globale en temps réel (Visites, Publicités, Statistiques, Urgences, Pharmacies et Artisans).</p>
 
-    <!-- BANDEAU DYNAMIQUE NOUVELLES INSCRIPTIONS (BLEU ET JAUNE) -->
+    <!-- BANDEAU DYNAMIQUE NOUVELLES INSCRIPTIONS -->
     <div id="alert-pending-banner" class="alert-pending">
       <div class="alert-pending-content">
         <span class="alert-pending-icon">🔔</span>
@@ -395,8 +395,28 @@
   </div>
 
   <script>
+    // 🔐 MOT DE PASSE POUR ACCÉDER À L'ADMINISTRATION
+    const MOT_DE_PASSE_ADMIN = "FixTana2026!"; 
+
+    function verifierAccesAdmin() {
+      let passSession = sessionStorage.getItem('admin_authenticated');
+      if (passSession !== 'true') {
+        const saisie = prompt("🔒 Accès Administrateur FixTana\nVeuillez saisir le mot de passe :");
+        if (saisie === MOT_DE_PASSE_ADMIN) {
+          sessionStorage.setItem('admin_authenticated', 'true');
+        } else {
+          alert("❌ Mot de passe incorrect.");
+          document.body.innerHTML = "<h2 style='text-align:center; margin-top:50px; color:#ef4444;'>🚫 Accès non autorisé</h2>";
+          throw new Error("Accès refusé");
+        }
+      }
+    }
+
+    // Vérification du mot de passe au chargement de la page
+    verifierAccesAdmin();
+
     const SUPABASE_URL = 'https://xfqzlifauzlmtzaidixb.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhmcXpsaWZhdXpsbXR6YWlkaXhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3NTkxMTIsImV4cCI6MjEwMTMzNTExMn0.AmBdkYq70S9QntL13EcmFSJaxASh-x4gu6T1Mkhxsvk'; // ⚠️ À remplacer par votre clé anon Supabase
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhmcXpsaWZhdXpsbXR6YWlkaXhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3NTkxMTIsImV4cCI6MjEwMTMzNTExMn0.AmBdkYq70S9QntL13EcmFSJaxASh-x4gu6T1Mkhxsvk';
 
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -404,6 +424,17 @@
     let cacheUrgences = [];
     let cachePharmacies = [];
     let cacheArtisans = [];
+
+    // Protection contre l'injection de code malveillant HTML (XSS)
+    function escapeHTML(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
 
     async function initAdmin() {
       await chargerVisites();
@@ -496,8 +527,8 @@
       data.forEach(p => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td><strong>${p.titre}</strong><br><small style="color:#64748b">${p.description || ''}</small></td>
-          <td><small>${p.lien_url ? `<a href="${p.lien_url}" target="_blank" style="color:#2563eb;">${p.lien_url}</a>` : '-'}</small></td>
+          <td><strong>${escapeHTML(p.titre)}</strong><br><small style="color:#64748b">${escapeHTML(p.description || '')}</small></td>
+          <td><small>${p.lien_url ? `<a href="${escapeHTML(p.lien_url)}" target="_blank" style="color:#2563eb;">${escapeHTML(p.lien_url)}</a>` : '-'}</small></td>
           <td>
             <button class="btn ${p.est_actif ? 'btn-green' : 'btn-danger'}" onclick="basculerStatutPub(${p.id}, ${p.est_actif})">
               ${p.est_actif ? '🟢 Active' : '🔴 Masquée'}
@@ -515,10 +546,10 @@
     async function ajouterOuModifierPub(e) {
       e.preventDefault();
       const id = document.getElementById('pub-id-edition').value;
-      const titre = document.getElementById('pub-titre').value;
-      const image_url = document.getElementById('pub-image').value;
-      const lien_url = document.getElementById('pub-lien').value;
-      const description = document.getElementById('pub-desc').value;
+      const titre = document.getElementById('pub-titre').value.trim();
+      const image_url = document.getElementById('pub-image').value.trim();
+      const lien_url = document.getElementById('pub-lien').value.trim();
+      const description = document.getElementById('pub-desc').value.trim();
 
       if (id) {
         const { error } = await supabaseClient
@@ -612,8 +643,8 @@
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td><strong>${a.nom}</strong></td>
-          <td>${a.metier}</td>
+          <td><strong>${escapeHTML(a.nom)}</strong></td>
+          <td>${escapeHTML(a.metier)}</td>
           <td><span class="stat-badge">${appels}</span></td>
           <td><span class="stat-badge stat-wa">${wa}</span></td>
           <td><strong>${appels + wa} clics</strong></td>
@@ -641,8 +672,8 @@
       urgences.forEach(u => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td><strong>${u.nom}</strong></td>
-          <td><span style="font-size:1.1em; font-weight:bold; color:#dc2626;">${u.telephone}</span></td>
+          <td><strong>${escapeHTML(u.nom)}</strong></td>
+          <td><span style="font-size:1.1em; font-weight:bold; color:#dc2626;">${escapeHTML(u.telephone)}</span></td>
           <td style="text-align: right; white-space: nowrap;">
             <button class="btn btn-primary" title="Modifier" onclick="ouvrirEditUrgence(${u.id})">✏️</button>
             <button class="btn btn-danger" title="Supprimer" onclick="supprimerUrgence(${u.id})">🗑️</button>
@@ -654,8 +685,8 @@
 
     async function ajouterUrgence(e) {
       e.preventDefault();
-      const nom = document.getElementById('urg-nom').value;
-      const telephone = document.getElementById('urg-tel').value;
+      const nom = document.getElementById('urg-nom').value.trim();
+      const telephone = document.getElementById('urg-tel').value.trim();
 
       const { error } = await supabaseClient.from('urgences').insert([{ nom, telephone }]);
 
@@ -678,8 +709,8 @@
 
     async function sauvegarderUrgence() {
       const id = document.getElementById('edit-urg-id').value;
-      const nom = document.getElementById('edit-urg-nom').value;
-      const telephone = document.getElementById('edit-urg-tel').value;
+      const nom = document.getElementById('edit-urg-nom').value.trim();
+      const telephone = document.getElementById('edit-urg-tel').value.trim();
 
       const { error } = await supabaseClient.from('urgences').update({ nom, telephone }).eq('id', id);
 
@@ -729,11 +760,11 @@
 
           if (diffJours < 0) {
             statutBadge = '<span class="badge-status status-expired">🔴 Expirée</span>';
-            alertesText.push(`• <strong>${p.nom}</strong> : La garde a expiré le ${formaterDate(p.date_fin_garde)}.`);
+            alertesText.push(`• <strong>${escapeHTML(p.nom)}</strong> : La garde a expiré le ${formaterDate(p.date_fin_garde)}.`);
           } else if (diffJours <= 2) {
             const libelleFin = diffJours === 0 ? "aujourd'hui" : `dans ${diffJours} j`;
             statutBadge = `<span class="badge-status status-warning">⏳ Fin ${libelleFin}</span>`;
-            alertesText.push(`• <strong>${p.nom}</strong> : La garde se termine ${libelleFin} (${formaterDate(p.date_fin_garde)}).`);
+            alertesText.push(`• <strong>${escapeHTML(p.nom)}</strong> : La garde se termine ${libelleFin} (${formaterDate(p.date_fin_garde)}).`);
           }
         }
 
@@ -743,8 +774,8 @@
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td><strong>${p.nom}</strong></td>
-          <td>${p.quartier}<br><small style="color:#64748b">${p.telephone || '-'}</small></td>
+          <td><strong>${escapeHTML(p.nom)}</strong></td>
+          <td>${escapeHTML(p.quartier)}<br><small style="color:#64748b">${escapeHTML(p.telephone || '-')}</small></td>
           <td><small>${periodeStr}</small></td>
           <td>${statutBadge}</td>
           <td style="text-align: right; white-space: nowrap;">
@@ -766,9 +797,9 @@
 
     async function ajouterPharmacie(event) {
       event.preventDefault();
-      const nom = document.getElementById('ph-nom').value;
-      const quartier = document.getElementById('ph-quartier').value;
-      const telephone = document.getElementById('ph-tel').value;
+      const nom = document.getElementById('ph-nom').value.trim();
+      const quartier = document.getElementById('ph-quartier').value.trim();
+      const telephone = document.getElementById('ph-tel').value.trim();
       const date_debut_garde = document.getElementById('ph-debut').value || null;
       const date_fin_garde = document.getElementById('ph-fin').value || null;
 
@@ -798,9 +829,9 @@
 
     async function sauvegarderPharmacie() {
       const id = document.getElementById('edit-ph-id').value;
-      const nom = document.getElementById('edit-ph-nom').value;
-      const quartier = document.getElementById('edit-ph-quartier').value;
-      const telephone = document.getElementById('edit-ph-tel').value;
+      const nom = document.getElementById('edit-ph-nom').value.trim();
+      const quartier = document.getElementById('edit-ph-quartier').value.trim();
+      const telephone = document.getElementById('edit-ph-tel').value.trim();
       const date_debut_garde = document.getElementById('edit-ph-debut').value || null;
       const date_fin_garde = document.getElementById('edit-ph-fin').value || null;
 
@@ -843,7 +874,7 @@
       const enAttente = artisans.filter(a => !a.est_verifie);
       const valides = artisans.filter(a => a.est_verifie);
 
-      // GESTION DU BANDEAU D'ALERTE EN ATTENTE
+      // BANDEAU D'ALERTE EN ATTENTE
       const alertPendingBanner = document.getElementById('alert-pending-banner');
       const pendingTitle = document.getElementById('pending-count-title');
       const pendingDesc = document.getElementById('pending-count-desc');
@@ -863,10 +894,10 @@
         enAttente.forEach(a => {
           const tr = document.createElement('tr');
           tr.innerHTML = `
-            <td><strong>${a.nom}</strong></td>
-            <td>${a.metier}</td>
-            <td>${a.quartier}</td>
-            <td>${a.telephone}</td>
+            <td><strong>${escapeHTML(a.nom)}</strong></td>
+            <td>${escapeHTML(a.metier)}</td>
+            <td>${escapeHTML(a.quartier)}</td>
+            <td>${escapeHTML(a.telephone)}</td>
             <td style="text-align: right; white-space: nowrap;">
               <button class="btn btn-green" title="Valider" onclick="validerArtisan(${a.id})">✅</button>
               <button class="btn btn-primary" title="Modifier" onclick="ouvrirEditArtisan(${a.id})">✏️</button>
@@ -886,12 +917,12 @@
 
           tr.innerHTML = `
             <td>
-              <strong>${a.nom}</strong>
+              <strong>${escapeHTML(a.nom)}</strong>
               ${isSponso ? '<br><small style="color:#d97706; font-weight:bold;">⭐ Sponsorisé</small>' : ''}
             </td>
-            <td>${a.metier}</td>
-            <td>${a.quartier}</td>
-            <td>${a.telephone}</td>
+            <td>${escapeHTML(a.metier)}</td>
+            <td>${escapeHTML(a.quartier)}</td>
+            <td>${escapeHTML(a.telephone)}</td>
             <td style="text-align: right; white-space: nowrap;">
               <button class="btn ${isSponso ? 'btn-danger' : 'btn-star'}" 
                       title="${isSponso ? 'Retirer du haut de liste' : 'Mettre en haut de liste'}" 
@@ -937,12 +968,12 @@
 
     async function sauvegarderArtisan() {
       const id = document.getElementById('edit-art-id').value;
-      const nom = document.getElementById('edit-art-nom').value;
-      const metier = document.getElementById('edit-art-metier').value;
-      const quartier = document.getElementById('edit-art-quartier').value;
-      const telephone = document.getElementById('edit-art-tel').value;
-      const whatsapp = document.getElementById('edit-art-wa').value;
-      const description = document.getElementById('edit-art-desc').value;
+      const nom = document.getElementById('edit-art-nom').value.trim();
+      const metier = document.getElementById('edit-art-metier').value.trim();
+      const quartier = document.getElementById('edit-art-quartier').value.trim();
+      const telephone = document.getElementById('edit-art-tel').value.trim();
+      const whatsapp = document.getElementById('edit-art-wa').value.trim();
+      const description = document.getElementById('edit-art-desc').value.trim();
 
       const { error } = await supabaseClient
         .from('artisans')
@@ -984,6 +1015,7 @@
       return `${parts[2]}/${parts[1]}/${parts[0]}`;
     }
 
+    // Lancement de l'initialisation
     initAdmin();
   </script>
 </body>
