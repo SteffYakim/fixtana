@@ -13,7 +13,44 @@
     h1 { color: #0f172a; margin-bottom: 5px; font-size: 1.8em; }
     .subtitle { color: #64748b; font-size: 0.9em; margin-bottom: 25px; }
 
-    /* Alertes & Bannières */
+    /* BANDEAU DYNAMIQUE PRESTATAIRES EN ATTENTE (BLEU / JAUNE) */
+    .alert-pending {
+      background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%);
+      color: #fef08a;
+      border-left: 6px solid #f59e0b;
+      padding: 15px 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      display: none; /* Masqué par défaut */
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 12px rgba(30, 58, 138, 0.25);
+      animation: pulseAlert 2s infinite ease-in-out;
+    }
+    .alert-pending-content { display: flex; align-items: center; gap: 12px; }
+    .alert-pending-icon { font-size: 1.6em; }
+    .alert-pending-text h4 { margin: 0 0 2px 0; color: #ffffff; font-size: 1.05em; }
+    .alert-pending-text p { margin: 0; color: #fef08a; font-size: 0.88em; }
+    .alert-pending-btn {
+      background: #f59e0b;
+      color: #0f172a;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 0.85em;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .alert-pending-btn:hover { background: #d97706; }
+
+    @keyframes pulseAlert {
+      0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+      70% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+    }
+
+    /* Alertes Pharmacies */
     .alert-banner {
       background-color: #fef3c7;
       border-left: 5px solid #f59e0b;
@@ -85,6 +122,18 @@
   <div class="container">
     <h1>👑 FixTana — Administration</h1>
     <p class="subtitle">Gestion globale en temps réel (Publicités, Statistiques, Urgences, Pharmacies et Artisans).</p>
+
+    <!-- BANDEAU DYNAMIQUE NOUVELLES INSCRIPTIONS (BLEU ET JAUNE) -->
+    <div id="alert-pending-banner" class="alert-pending">
+      <div class="alert-pending-content">
+        <span class="alert-pending-icon">🔔</span>
+        <div class="alert-pending-text">
+          <h4 id="pending-count-title">Demande d'inscription reçue !</h4>
+          <p id="pending-count-desc">Des prestataires attendent votre validation pour apparaître sur le site.</p>
+        </div>
+      </div>
+      <button class="alert-pending-btn" onclick="scrollToPending()">Examiner les demandes 👇</button>
+    </div>
 
     <!-- BANNIÈRE DE RAPPEL DE GARDE PHARMACIE -->
     <div id="alert-garde" class="alert-banner">
@@ -202,7 +251,7 @@
     </div>
 
     <!-- SECTION 5 : ARTISANS EN ATTENTE -->
-    <div class="card">
+    <div class="card" id="card-en-attente">
       <h2>⏳ Artisans en attente de validation</h2>
       <table>
         <thead>
@@ -709,7 +758,7 @@
       }
     }
 
-    /* --- 5. ARTISANS (VALIDATION + SPONSORISATION) --- */
+    /* --- 5. ARTISANS (VALIDATION + SPONSORISATION + ALERTE DYNAMIQUE) --- */
     async function chargerArtisans() {
       const { data: artisans, error } = await supabaseClient
         .from('artisans')
@@ -727,6 +776,20 @@
       cacheArtisans = artisans;
       const enAttente = artisans.filter(a => !a.est_verifie);
       const valides = artisans.filter(a => a.est_verifie);
+
+      // GESTION DU BANDEAU D'ALERTE EN ATTENTE (BLEU ET JAUNE)
+      const alertPendingBanner = document.getElementById('alert-pending-banner');
+      const pendingTitle = document.getElementById('pending-count-title');
+      const pendingDesc = document.getElementById('pending-count-desc');
+
+      if (enAttente.length > 0) {
+        const countMsg = enAttente.length === 1 ? '1 prestataire attend' : `${enAttente.length} prestataires attendent`;
+        pendingTitle.innerText = `🔔 Nouvelle demande d'inscription ! (${enAttente.length})`;
+        pendingDesc.innerText = `Actuellement ${countMsg} votre validation.`;
+        alertPendingBanner.style.display = 'flex';
+      } else {
+        alertPendingBanner.style.display = 'none';
+      }
 
       if (enAttente.length === 0) {
         tbodyAttente.innerHTML = '<tr><td colspan="5" class="empty-msg">Aucune demande en attente.</td></tr>';
@@ -775,6 +838,13 @@
           `;
           tbodyValides.appendChild(tr);
         });
+      }
+    }
+
+    function scrollToPending() {
+      const element = document.getElementById('card-en-attente');
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
       }
     }
 
