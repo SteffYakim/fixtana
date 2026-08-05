@@ -298,12 +298,23 @@
     let cacheArtisans = [];
 
     async function initAdmin() {
-      await chargerStats();
-      await chargerPubs();
-      await chargerUrgences();
-      await chargerPharmacies();
-      await chargerArtisans();
-    }
+  // 1. Chargement initial des données
+  await chargerStats();
+  await chargerPubs();
+  await chargerUrgences();
+  await chargerPharmacies();
+  await chargerArtisans();
+
+  // 2. Écoute EN TEMPS RÉEL des changements
+  supabaseClient
+    .channel('admin-changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'artisans' }, () => { chargerArtisans(); chargerStats(); })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'publicites' }, () => chargerPubs())
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'pharmacies' }, () => chargerPharmacies())
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'urgences' }, () => chargerUrgences())
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'clics_contact' }, () => chargerStats())
+    .subscribe();
+}
 
     /* --- STATISTIQUES --- */
     async function chargerStats() {
