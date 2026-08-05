@@ -13,29 +13,29 @@
     h1 { color: #0f172a; margin-bottom: 5px; font-size: 1.8em; }
     .subtitle { color: #64748b; font-size: 0.9em; margin-bottom: 25px; }
 
-    /* Alertes & Rappels */
+    /* Alertes & Bannières */
     .alert-banner {
       background-color: #fef3c7;
       border-left: 5px solid #f59e0b;
       color: #92400e;
       padding: 15px;
       border-radius: 8px;
-      margin-bottom: 15px;
+      margin-bottom: 20px;
       display: none;
       font-size: 0.95em;
     }
     .alert-banner h4 { margin: 0 0 5px 0; font-size: 1.05em; }
 
-    /* Alerte spécifique aux artisans en attente */
-    .alert-banner-pending {
-      background-color: #eff6ff;
-      border-left: 5px solid #2563eb;
-      color: #1e40af;
+    /* Cartes */
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 25px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      border: 1px solid #e2e8f0;
     }
-    .alert-banner-pending h4 { color: #1e3a8a; }
-
-    /* Cartes / Sections */
-    .card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 25px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0; }
+    
     h2 { font-size: 1.2em; margin-top: 0; color: #1e293b; display: flex; align-items: center; gap: 8px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; }
 
     /* Tableaux */
@@ -54,18 +54,18 @@
     .stat-wa { background: #dcfce7; color: #15803d; }
 
     .actions-cell { display: flex; gap: 6px; align-items: center; }
-    .btn { padding: 6px 10px; border: none; border-radius: 6px; font-weight: 600; font-size: 0.85em; cursor: pointer; transition: 0.2s; }
-    .btn-validate { background-color: #16a34a; color: white; }
-    .btn-validate:hover { background-color: #15803d; }
-    .btn-edit { background-color: #3b82f6; color: white; }
-    .btn-edit:hover { background-color: #2563eb; }
-    .btn-delete { background-color: #ef4444; color: white; }
-    .btn-delete:hover { background-color: #dc2626; }
+    .btn { padding: 6px 12px; border: none; border-radius: 6px; font-weight: 600; font-size: 0.85em; cursor: pointer; transition: 0.2s; }
+    .btn-green { background-color: #16a34a; color: white; }
+    .btn-green:hover { background-color: #15803d; }
+    .btn-primary { background-color: #2563eb; color: white; }
+    .btn-primary:hover { background-color: #1d4ed8; }
+    .btn-danger { background-color: #ef4444; color: white; }
+    .btn-danger:hover { background-color: #dc2626; }
     .btn-cancel { background-color: #94a3b8; color: white; }
 
     /* Formulaires */
-    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 15px; }
-    .form-grid input { padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9em; outline: none; }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 10px; }
+    .form-grid input, .form-grid textarea { padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9em; outline: none; }
     
     .empty-msg { text-align: center; color: #94a3b8; padding: 20px 0; font-style: italic; }
 
@@ -83,21 +83,50 @@
 
   <div class="container">
     <h1>👑 FixTana — Administration</h1>
-    <p class="subtitle">Gestion globale des numéros d'urgence, des pharmacies, des artisans, des pubs et suivi des clics.</p>
+    <p class="subtitle">Gestion globale en temps réel (Publicités, Statistiques, Urgences, Pharmacies et Artisans).</p>
 
-    <!-- BANNIÈRE 1 : RAPPEL DEMANDES EN ATTENTE -->
-    <div id="alert-pending" class="alert-banner alert-banner-pending">
-      <h4>⏳ Demandes de prestataires en attente !</h4>
-      <div id="alert-pending-text"></div>
-    </div>
-
-    <!-- BANNIÈRE 2 : RAPPEL DE GARDE PHARMACIES -->
+    <!-- BANNIÈRE DE RAPPEL DE GARDE PHARMACIE -->
     <div id="alert-garde" class="alert-banner">
       <h4>⏰ Rappel Mises à jour Pharmacies</h4>
       <div id="alert-garde-text"></div>
     </div>
 
-    <!-- SECTION 0 : STATISTIQUES & CLICS -->
+    <!-- SECTION 1 : PUBLICITÉS -->
+    <div class="card">
+      <h2>📢 Bannières Publicitaires</h2>
+      
+      <form id="form-pub" onsubmit="ajouterOuModifierPub(event)" style="margin-bottom: 20px;">
+        <input type="hidden" id="pub-id-edition" value="">
+        
+        <div class="form-grid">
+          <input type="text" id="pub-titre" placeholder="Nom de l'annonceur *" required>
+          <input type="url" id="pub-image" placeholder="Lien URL de l'image">
+          <input type="url" id="pub-lien" placeholder="Lien URL de redirection">
+          <input type="text" id="pub-desc" placeholder="Texte promotionnel">
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+          <button type="submit" id="btn-soumettre-pub" class="btn btn-green" style="flex: 1; padding: 10px;">+ Enregistrer la Pub</button>
+          <button type="button" id="btn-annuler-pub" class="btn btn-danger" onclick="reinitialiserFormulairePub()" style="display: none; padding: 10px;">Annuler</button>
+        </div>
+      </form>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Annonceur & Contenu</th>
+            <th>Lien Redirection</th>
+            <th>Statut</th>
+            <th style="text-align: right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="table-pubs">
+          <tr><td colspan="4" class="empty-msg">Chargement des publicités...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SECTION 2 : STATISTIQUES & CLICS -->
     <div class="card">
       <h2>📊 Statistiques de Contact (Clics Artisans)</h2>
       <table>
@@ -116,35 +145,7 @@
       </table>
     </div>
 
-    <!-- SECTION 1 : GESTION DES PUBLICITÉS -->
-    <div class="card">
-      <h2>📢 Bannières Publicitaires</h2>
-      <form id="form-pub" onsubmit="ajouterPub(event)">
-        <div class="form-grid">
-          <input type="text" id="pub-titre" placeholder="Nom de l'annonceur *" required>
-          <input type="url" id="pub-image" placeholder="Lien URL de l'image">
-          <input type="url" id="pub-lien" placeholder="Lien URL de redirection">
-          <input type="text" id="pub-desc" placeholder="Texte promotionnel">
-        </div>
-        <button type="submit" class="btn btn-validate" style="width: 100%; padding: 8px; margin-top: 5px;">+ Enregistrer la Pub</button>
-      </form>
-
-      <table>
-        <thead>
-          <tr>
-            <th>Annonceur</th>
-            <th>Lien</th>
-            <th>Statut</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="table-pubs">
-          <tr><td colspan="4" class="empty-msg">Chargement des pubs...</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- SECTION 2 : GESTION DES NUMÉROS D'URGENCE -->
+    <!-- SECTION 3 : NUMÉROS D'URGENCE -->
     <div class="card">
       <h2>🚨 Numéros d'Urgence</h2>
       <form id="form-urgence" onsubmit="ajouterUrgence(event)">
@@ -152,7 +153,7 @@
           <input type="text" id="urg-nom" placeholder="Service (ex: SAMU, Pompiers) *" required>
           <input type="text" id="urg-tel" placeholder="Numéro d'urgence *" required>
         </div>
-        <button type="submit" class="btn btn-validate" style="width: 100%; padding: 8px; margin-top: 5px;">+ Ajouter un numéro d'urgence</button>
+        <button type="submit" class="btn btn-green" style="width: 100%; padding: 8px; margin-top: 5px;">+ Ajouter un numéro d'urgence</button>
       </form>
 
       <table>
@@ -160,18 +161,18 @@
           <tr>
             <th>Service d'Urgence</th>
             <th>Numéro d'Appel</th>
-            <th>Actions</th>
+            <th style="text-align: right;">Actions</th>
           </tr>
         </thead>
         <tbody id="table-urgences">
-          <tr><td colspan="3" class="empty-msg">Chargement des numéros d'urgence...</td></tr>
+          <tr><td colspan="3" class="empty-msg">Chargement des numéros...</td></tr>
         </tbody>
       </table>
     </div>
 
-    <!-- SECTION 3 : GESTION DES PHARMACIES -->
+    <!-- SECTION 4 : PHARMACIES DE GARDE -->
     <div class="card">
-      <h2>💊 Pharmacies de Garde</h2>
+      <h2>💊 Pharmacies de Garde (Roulement Hebdomadaire)</h2>
       <form id="form-pharmacie" onsubmit="ajouterPharmacie(event)">
         <div class="form-grid">
           <input type="text" id="ph-nom" placeholder="Nom pharmacie *" required>
@@ -180,7 +181,7 @@
           <input type="date" id="ph-debut" title="Début de garde">
           <input type="date" id="ph-fin" title="Fin de garde">
         </div>
-        <button type="submit" class="btn btn-validate" style="width: 100%; padding: 8px; margin-top: 5px;">+ Enregistrer la pharmacie</button>
+        <button type="submit" class="btn btn-green" style="width: 100%; padding: 8px; margin-top: 5px;">+ Enregistrer la pharmacie</button>
       </form>
 
       <table>
@@ -190,7 +191,7 @@
             <th>Quartier / Tel</th>
             <th>Période de Garde</th>
             <th>Statut Échéance</th>
-            <th>Actions</th>
+            <th style="text-align: right;">Actions</th>
           </tr>
         </thead>
         <tbody id="table-pharmacies">
@@ -199,8 +200,8 @@
       </table>
     </div>
 
-    <!-- SECTION 4 : DEMANDES D'ARTISANS EN ATTENTE -->
-    <div class="card" id="section-en-attente">
+    <!-- SECTION 5 : ARTISANS EN ATTENTE -->
+    <div class="card">
       <h2>⏳ Artisans en attente de validation</h2>
       <table>
         <thead>
@@ -209,7 +210,7 @@
             <th>Métier</th>
             <th>Quartier</th>
             <th>Téléphone</th>
-            <th>Actions</th>
+            <th style="text-align: right;">Actions</th>
           </tr>
         </thead>
         <tbody id="table-en-attente">
@@ -218,7 +219,7 @@
       </table>
     </div>
 
-    <!-- SECTION 5 : ARTISANS VALIDÉS -->
+    <!-- SECTION 6 : ARTISANS VALIDÉS -->
     <div class="card">
       <h2>✅ Artisans vérifiés & publiés</h2>
       <table>
@@ -228,7 +229,7 @@
             <th>Métier</th>
             <th>Quartier</th>
             <th>Téléphone</th>
-            <th>Actions</th>
+            <th style="text-align: right;">Actions</th>
           </tr>
         </thead>
         <tbody id="table-valides">
@@ -243,11 +244,17 @@
     <div class="modal-content">
       <h3>✏️ Modifier l'Urgence</h3>
       <input type="hidden" id="edit-urg-id">
-      <div class="form-group"><label>Nom du service</label><input type="text" id="edit-urg-nom"></div>
-      <div class="form-group"><label>Numéro de téléphone</label><input type="text" id="edit-urg-tel"></div>
+      <div class="form-group">
+        <label>Nom du service</label>
+        <input type="text" id="edit-urg-nom">
+      </div>
+      <div class="form-group">
+        <label>Numéro de téléphone</label>
+        <input type="text" id="edit-urg-tel">
+      </div>
       <div class="modal-buttons">
         <button class="btn btn-cancel" onclick="fermerModales()">Annuler</button>
-        <button class="btn btn-validate" onclick="sauvegarderUrgence()">Enregistrer</button>
+        <button class="btn btn-green" onclick="sauvegarderUrgence()">Enregistrer</button>
       </div>
     </div>
   </div>
@@ -257,14 +264,29 @@
     <div class="modal-content">
       <h3>✏️ Modifier la Pharmacie</h3>
       <input type="hidden" id="edit-ph-id">
-      <div class="form-group"><label>Nom de la pharmacie</label><input type="text" id="edit-ph-nom"></div>
-      <div class="form-group"><label>Quartier</label><input type="text" id="edit-ph-quartier"></div>
-      <div class="form-group"><label>Téléphone</label><input type="text" id="edit-ph-tel"></div>
-      <div class="form-group"><label>Début de la garde</label><input type="date" id="edit-ph-debut"></div>
-      <div class="form-group"><label>Fin de la garde</label><input type="date" id="edit-ph-fin"></div>
+      <div class="form-group">
+        <label>Nom de la pharmacie</label>
+        <input type="text" id="edit-ph-nom">
+      </div>
+      <div class="form-group">
+        <label>Quartier</label>
+        <input type="text" id="edit-ph-quartier">
+      </div>
+      <div class="form-group">
+        <label>Téléphone</label>
+        <input type="text" id="edit-ph-tel">
+      </div>
+      <div class="form-group">
+        <label>Début de la garde</label>
+        <input type="date" id="edit-ph-debut">
+      </div>
+      <div class="form-group">
+        <label>Fin de la garde</label>
+        <input type="date" id="edit-ph-fin">
+      </div>
       <div class="modal-buttons">
         <button class="btn btn-cancel" onclick="fermerModales()">Annuler</button>
-        <button class="btn btn-validate" onclick="sauvegarderPharmacie()">Enregistrer</button>
+        <button class="btn btn-green" onclick="sauvegarderPharmacie()">Enregistrer</button>
       </div>
     </div>
   </div>
@@ -274,51 +296,174 @@
     <div class="modal-content">
       <h3>✏️ Modifier le Prestataire</h3>
       <input type="hidden" id="edit-art-id">
-      <div class="form-group"><label>Nom complet</label><input type="text" id="edit-art-nom"></div>
-      <div class="form-group"><label>Métier</label><input type="text" id="edit-art-metier"></div>
-      <div class="form-group"><label>Quartier</label><input type="text" id="edit-art-quartier"></div>
-      <div class="form-group"><label>Téléphone</label><input type="text" id="edit-art-tel"></div>
-      <div class="form-group"><label>WhatsApp</label><input type="text" id="edit-art-wa"></div>
-      <div class="form-group"><label>Description</label><textarea id="edit-art-desc" rows="3"></textarea></div>
+      <div class="form-group">
+        <label>Nom complet</label>
+        <input type="text" id="edit-art-nom">
+      </div>
+      <div class="form-group">
+        <label>Métier</label>
+        <input type="text" id="edit-art-metier">
+      </div>
+      <div class="form-group">
+        <label>Quartier</label>
+        <input type="text" id="edit-art-quartier">
+      </div>
+      <div class="form-group">
+        <label>Téléphone</label>
+        <input type="text" id="edit-art-tel">
+      </div>
+      <div class="form-group">
+        <label>WhatsApp</label>
+        <input type="text" id="edit-art-wa">
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea id="edit-art-desc" rows="3"></textarea>
+      </div>
       <div class="modal-buttons">
         <button class="btn btn-cancel" onclick="fermerModales()">Annuler</button>
-        <button class="btn btn-validate" onclick="sauvegarderArtisan()">Enregistrer</button>
+        <button class="btn btn-green" onclick="sauvegarderArtisan()">Enregistrer</button>
       </div>
     </div>
   </div>
 
   <script>
     const SUPABASE_URL = 'https://xfqzlifauzlmtzaidixb.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhmcXpsaWZhdXpsbXR6YWlkaXhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3NTkxMTIsImV4cCI6MjEwMTMzNTExMn0.AmBdkYq70S9QntL13EcmFSJaxASh-x4gu6T1Mkhxsvk';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhmcXpsaWZhdXpsbXR6YWlkaXhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3NTkxMTIsImV4cCI6MjEwMTMzNTExMn0.AmBdkYq70S9QntL13EcmFSJaxASh-x4gu6T1Mkhxsvk'; // ⚠️ À remplacer par votre clé anon Supabase
 
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+    let listePubsCache = [];
     let cacheUrgences = [];
     let cachePharmacies = [];
     let cacheArtisans = [];
 
     async function initAdmin() {
-  // 1. Chargement initial des données
-  await chargerStats();
-  await chargerPubs();
-  await chargerUrgences();
-  await chargerPharmacies();
-  await chargerArtisans();
+      await chargerStats();
+      await chargerPubs();
+      await chargerUrgences();
+      await chargerPharmacies();
+      await chargerArtisans();
 
-  // 2. Écoute EN TEMPS RÉEL des changements
-  supabaseClient
-    .channel('admin-changes')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'artisans' }, () => { chargerArtisans(); chargerStats(); })
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'publicites' }, () => chargerPubs())
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'pharmacies' }, () => chargerPharmacies())
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'urgences' }, () => chargerUrgences())
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'clics_contact' }, () => chargerStats())
-    .subscribe();
-}
+      // ÉCOUTE TEMPS RÉEL (REALTIME)
+      supabaseClient
+        .channel('admin-realtime')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'artisans' }, () => { chargerArtisans(); chargerStats(); })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'publicites' }, () => chargerPubs())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'pharmacies' }, () => chargerPharmacies())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'urgences' }, () => chargerUrgences())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'clics_contact' }, () => chargerStats())
+        .subscribe();
+    }
 
-    /* --- STATISTIQUES --- */
+    /* --- 1. GESTION DES PUBLICITÉS --- */
+    async function chargerPubs() {
+      const { data, error } = await supabaseClient
+        .from('publicites')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      const tbody = document.getElementById('table-pubs');
+      if (error || !data) {
+        tbody.innerHTML = '<tr><td colspan="4" class="empty-msg">Erreur de chargement.</td></tr>';
+        return;
+      }
+
+      listePubsCache = data;
+      tbody.innerHTML = '';
+
+      if (data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="empty-msg">Aucune publicité enregistrée.</td></tr>';
+        return;
+      }
+
+      data.forEach(p => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${p.titre}</strong><br><small style="color:#64748b">${p.description || ''}</small></td>
+          <td><small>${p.lien_url ? `<a href="${p.lien_url}" target="_blank" style="color:#2563eb;">${p.lien_url}</a>` : '-'}</small></td>
+          <td>
+            <button class="btn ${p.est_actif ? 'btn-green' : 'btn-danger'}" onclick="basculerStatutPub(${p.id}, ${p.est_actif})">
+              ${p.est_actif ? '🟢 Active' : '🔴 Masquée'}
+            </button>
+          </td>
+          <td style="text-align: right; white-space: nowrap;">
+            <button class="btn btn-primary" onclick="editerPub(${p.id})" title="Modifier">✏️</button>
+            <button class="btn btn-danger" onclick="supprimerPub(${p.id})" title="Supprimer">🗑️</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function ajouterOuModifierPub(e) {
+      e.preventDefault();
+      const id = document.getElementById('pub-id-edition').value;
+      const titre = document.getElementById('pub-titre').value;
+      const image_url = document.getElementById('pub-image').value;
+      const lien_url = document.getElementById('pub-lien').value;
+      const description = document.getElementById('pub-desc').value;
+
+      if (id) {
+        const { error } = await supabaseClient
+          .from('publicites')
+          .update({ titre, image_url, lien_url, description })
+          .eq('id', id);
+        if (error) alert("Erreur : " + error.message);
+      } else {
+        const { error } = await supabaseClient
+          .from('publicites')
+          .insert([{ titre, image_url, lien_url, description, est_actif: true }]);
+        if (error) alert("Erreur : " + error.message);
+      }
+
+      reinitialiserFormulairePub();
+      chargerPubs();
+    }
+
+    function editerPub(id) {
+      const pub = listePubsCache.find(p => p.id === id);
+      if (!pub) return;
+
+      document.getElementById('pub-id-edition').value = pub.id;
+      document.getElementById('pub-titre').value = pub.titre || '';
+      document.getElementById('pub-image').value = pub.image_url || '';
+      document.getElementById('pub-lien').value = pub.lien_url || '';
+      document.getElementById('pub-desc').value = pub.description || '';
+
+      const btnSubmit = document.getElementById('btn-soumettre-pub');
+      btnSubmit.innerText = "💾 Mettre à jour la Pub";
+      btnSubmit.className = "btn btn-primary";
+
+      document.getElementById('btn-annuler-pub').style.display = "block";
+      window.scrollTo({ top: document.getElementById('form-pub').offsetTop - 50, behavior: 'smooth' });
+    }
+
+    function reinitialiserFormulairePub() {
+      document.getElementById('form-pub').reset();
+      document.getElementById('pub-id-edition').value = '';
+      const btnSubmit = document.getElementById('btn-soumettre-pub');
+      btnSubmit.innerText = "+ Enregistrer la Pub";
+      btnSubmit.className = "btn btn-green";
+      document.getElementById('btn-annuler-pub').style.display = "none";
+    }
+
+    async function basculerStatutPub(id, statutActuel) {
+      await supabaseClient.from('publicites').update({ est_actif: !statutActuel }).eq('id', id);
+      chargerPubs();
+    }
+
+    async function supprimerPub(id) {
+      if (confirm("Supprimer cette publicité ?")) {
+        await supabaseClient.from('publicites').delete().eq('id', id);
+        chargerPubs();
+      }
+    }
+
+    /* --- 2. STATISTIQUES & CLICS --- */
     async function chargerStats() {
       const tbody = document.getElementById('table-stats');
+
       const [resArtisans, resClics] = await Promise.all([
         supabaseClient.from('artisans').select('id, nom, metier'),
         supabaseClient.from('clics_contact').select('artisan_id, type_action')
@@ -331,8 +476,13 @@
 
       const artisans = resArtisans.data || [];
       const clics = resClics.data || [];
-      const statsMap = {};
 
+      if (artisans.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">Aucun artisan enregistré.</td></tr>';
+        return;
+      }
+
+      const statsMap = {};
       clics.forEach(c => {
         if (!statsMap[c.artisan_id]) statsMap[c.artisan_id] = { appel: 0, whatsapp: 0 };
         if (c.type_action === 'appel') statsMap[c.artisan_id].appel++;
@@ -343,6 +493,7 @@
       artisans.forEach(a => {
         const appels = statsMap[a.id]?.appel || 0;
         const wa = statsMap[a.id]?.whatsapp || 0;
+
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td><strong>${a.nom}</strong></td>
@@ -355,70 +506,17 @@
       });
     }
 
-    /* --- PUBLICITÉS --- */
-    async function chargerPubs() {
-      const { data: pubs } = await supabaseClient.from('publicites').select('*').order('created_at', { ascending: false });
-      const tbody = document.getElementById('table-pubs');
-      tbody.innerHTML = '';
-
-      if (!pubs || pubs.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" class="empty-msg">Aucune publicité enregistrée.</td></tr>';
-        return;
-      }
-
-      pubs.forEach(p => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td><strong>${p.titre}</strong><br><small style="color:#64748b">${p.description || ''}</small></td>
-          <td><small><a href="${p.lien_url}" target="_blank">${p.lien_url || '-'}</a></small></td>
-          <td>
-            <button class="btn ${p.est_actif ? 'btn-validate' : 'btn-delete'}" onclick="togglePub(${p.id}, ${!p.est_actif})">
-              ${p.est_actif ? '🟢 Active' : '🔴 Masquée'}
-            </button>
-          </td>
-          <td class="actions-cell">
-            <button class="btn btn-delete" onclick="supprimerPub(${p.id})">🗑️</button>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    async function ajouterPub(e) {
-      e.preventDefault();
-      const titre = document.getElementById('pub-titre').value;
-      const image_url = document.getElementById('pub-image').value;
-      const lien_url = document.getElementById('pub-lien').value;
-      const description = document.getElementById('pub-desc').value;
-
-      const { error } = await supabaseClient.from('publicites').insert([{ titre, image_url, lien_url, description, est_actif: true }]);
-      if (error) {
-        alert("Erreur lors de l'enregistrement de la pub : " + error.message);
-      } else {
-        document.getElementById('form-pub').reset();
-        chargerPubs();
-      }
-    }
-
-    async function togglePub(id, statut) {
-      await supabaseClient.from('publicites').update({ est_actif: statut }).eq('id', id);
-      chargerPubs();
-    }
-
-    async function supprimerPub(id) {
-      if (confirm("Supprimer cette pub ?")) {
-        await supabaseClient.from('publicites').delete().eq('id', id);
-        chargerPubs();
-      }
-    }
-
-    /* --- URGENCES --- */
+    /* --- 3. NUMÉROS D'URGENCE --- */
     async function chargerUrgences() {
-      const { data: urgences } = await supabaseClient.from('urgences').select('*').order('id', { ascending: true });
+      const { data: urgences, error } = await supabaseClient
+        .from('urgences')
+        .select('*')
+        .order('id', { ascending: true });
+
       const tbody = document.getElementById('table-urgences');
       tbody.innerHTML = '';
 
-      if (!urgences || urgences.length === 0) {
+      if (error || !urgences || urgences.length === 0) {
         tbody.innerHTML = '<tr><td colspan="3" class="empty-msg">Aucun numéro d\'urgence.</td></tr>';
         return;
       }
@@ -429,9 +527,9 @@
         tr.innerHTML = `
           <td><strong>${u.nom}</strong></td>
           <td><span style="font-size:1.1em; font-weight:bold; color:#dc2626;">${u.telephone}</span></td>
-          <td class="actions-cell">
-            <button class="btn btn-edit" onclick="ouvrirEditUrgence(${u.id})">✏️</button>
-            <button class="btn btn-delete" onclick="supprimerUrgence(${u.id})">🗑️</button>
+          <td style="text-align: right; white-space: nowrap;">
+            <button class="btn btn-primary" title="Modifier" onclick="ouvrirEditUrgence(${u.id})">✏️</button>
+            <button class="btn btn-danger" title="Supprimer" onclick="supprimerUrgence(${u.id})">🗑️</button>
           </td>
         `;
         tbody.appendChild(tr);
@@ -442,9 +540,15 @@
       e.preventDefault();
       const nom = document.getElementById('urg-nom').value;
       const telephone = document.getElementById('urg-tel').value;
-      await supabaseClient.from('urgences').insert([{ nom, telephone }]);
-      document.getElementById('form-urgence').reset();
-      chargerUrgences();
+
+      const { error } = await supabaseClient.from('urgences').insert([{ nom, telephone }]);
+
+      if (!error) {
+        document.getElementById('form-urgence').reset();
+        chargerUrgences();
+      } else {
+        alert("Erreur : " + error.message);
+      }
     }
 
     function ouvrirEditUrgence(id) {
@@ -460,25 +564,35 @@
       const id = document.getElementById('edit-urg-id').value;
       const nom = document.getElementById('edit-urg-nom').value;
       const telephone = document.getElementById('edit-urg-tel').value;
-      await supabaseClient.from('urgences').update({ nom, telephone }).eq('id', id);
-      fermerModales();
-      chargerUrgences();
+
+      const { error } = await supabaseClient.from('urgences').update({ nom, telephone }).eq('id', id);
+
+      if (!error) {
+        fermerModales();
+        chargerUrgences();
+      } else {
+        alert("Erreur : " + error.message);
+      }
     }
 
     async function supprimerUrgence(id) {
-      if (confirm("Supprimer ce numéro ?")) {
+      if (confirm("Supprimer ce numéro d'urgence ?")) {
         await supabaseClient.from('urgences').delete().eq('id', id);
         chargerUrgences();
       }
     }
 
-    /* --- PHARMACIES --- */
+    /* --- 4. PHARMACIES DE GARDE --- */
     async function chargerPharmacies() {
-      const { data: pharmacies } = await supabaseClient.from('pharmacies').select('*').order('nom', { ascending: true });
+      const { data: pharmacies, error } = await supabaseClient
+        .from('pharmacies')
+        .select('*')
+        .order('nom', { ascending: true });
+
       const tbody = document.getElementById('table-pharmacies');
       tbody.innerHTML = '';
 
-      if (!pharmacies || pharmacies.length === 0) {
+      if (error || !pharmacies || pharmacies.length === 0) {
         tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">Aucune pharmacie enregistrée.</td></tr>';
         return;
       }
@@ -486,10 +600,12 @@
       cachePharmacies = pharmacies;
       const aujourdhui = new Date();
       aujourdhui.setHours(0,0,0,0);
+
       let alertesText = [];
 
       pharmacies.forEach(p => {
         let statutBadge = '<span class="badge-status status-ok">🟢 En Garde</span>';
+        
         if (p.date_fin_garde) {
           const [year, month, day] = p.date_fin_garde.split('-').map(Number);
           const dateFin = new Date(year, month - 1, day);
@@ -497,23 +613,27 @@
 
           if (diffJours < 0) {
             statutBadge = '<span class="badge-status status-expired">🔴 Expirée</span>';
-            alertesText.push(`• <strong>${p.nom}</strong> : Expirée le ${formaterDate(p.date_fin_garde)}.`);
+            alertesText.push(`• <strong>${p.nom}</strong> : La garde a expiré le ${formaterDate(p.date_fin_garde)}.`);
           } else if (diffJours <= 2) {
-            const lib = diffJours === 0 ? "aujourd'hui" : `dans ${diffJours} j`;
-            statutBadge = `<span class="badge-status status-warning">⏳ Fin ${lib}</span>`;
-            alertesText.push(`• <strong>${p.nom}</strong> : Fin ${lib} (${formaterDate(p.date_fin_garde)}).`);
+            const libelleFin = diffJours === 0 ? "aujourd'hui" : `dans ${diffJours} j`;
+            statutBadge = `<span class="badge-status status-warning">⏳ Fin ${libelleFin}</span>`;
+            alertesText.push(`• <strong>${p.nom}</strong> : La garde se termine ${libelleFin} (${formaterDate(p.date_fin_garde)}).`);
           }
         }
+
+        const periodeStr = (p.date_debut_garde && p.date_fin_garde) 
+          ? `Du ${formaterDate(p.date_debut_garde)} au ${formaterDate(p.date_fin_garde)}`
+          : 'Non définie';
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td><strong>${p.nom}</strong></td>
           <td>${p.quartier}<br><small style="color:#64748b">${p.telephone || '-'}</small></td>
-          <td><small>${(p.date_debut_garde && p.date_fin_garde) ? `Du ${formaterDate(p.date_debut_garde)} au ${formaterDate(p.date_fin_garde)}` : 'Non définie'}</small></td>
+          <td><small>${periodeStr}</small></td>
           <td>${statutBadge}</td>
-          <td class="actions-cell">
-            <button class="btn btn-edit" onclick="ouvrirEditPharmacie(${p.id})">✏️</button>
-            <button class="btn btn-delete" onclick="supprimerPharmacie(${p.id})">🗑️</button>
+          <td style="text-align: right; white-space: nowrap;">
+            <button class="btn btn-primary" title="Modifier" onclick="ouvrirEditPharmacie(${p.id})">✏️</button>
+            <button class="btn btn-danger" title="Supprimer" onclick="supprimerPharmacie(${p.id})">🗑️</button>
           </td>
         `;
         tbody.appendChild(tr);
@@ -528,17 +648,24 @@
       }
     }
 
-    async function ajouterPharmacie(e) {
-      e.preventDefault();
+    async function ajouterPharmacie(event) {
+      event.preventDefault();
       const nom = document.getElementById('ph-nom').value;
       const quartier = document.getElementById('ph-quartier').value;
       const telephone = document.getElementById('ph-tel').value;
       const date_debut_garde = document.getElementById('ph-debut').value || null;
       const date_fin_garde = document.getElementById('ph-fin').value || null;
 
-      await supabaseClient.from('pharmacies').insert([{ nom, quartier, telephone, date_debut_garde, date_fin_garde, est_de_garde: true }]);
-      document.getElementById('form-pharmacie').reset();
-      chargerPharmacies();
+      const { error } = await supabaseClient
+        .from('pharmacies')
+        .insert([{ nom, quartier, telephone, date_debut_garde, date_fin_garde, est_de_garde: true }]);
+
+      if (!error) {
+        document.getElementById('form-pharmacie').reset();
+        chargerPharmacies();
+      } else {
+        alert("Erreur lors de l'ajout : " + error.message);
+      }
     }
 
     function ouvrirEditPharmacie(id) {
@@ -561,9 +688,17 @@
       const date_debut_garde = document.getElementById('edit-ph-debut').value || null;
       const date_fin_garde = document.getElementById('edit-ph-fin').value || null;
 
-      await supabaseClient.from('pharmacies').update({ nom, quartier, telephone, date_debut_garde, date_fin_garde }).eq('id', id);
-      fermerModales();
-      chargerPharmacies();
+      const { error } = await supabaseClient
+        .from('pharmacies')
+        .update({ nom, quartier, telephone, date_debut_garde, date_fin_garde })
+        .eq('id', id);
+
+      if (!error) {
+        fermerModales();
+        chargerPharmacies();
+      } else {
+        alert("Erreur : " + error.message);
+      }
     }
 
     async function supprimerPharmacie(id) {
@@ -573,34 +708,28 @@
       }
     }
 
-    /* --- ARTISANS & GESTION DU RAPPEL TOUT EN HAUT --- */
+    /* --- 5. ARTISANS --- */
     async function chargerArtisans() {
-      const { data: artisans } = await supabaseClient.from('artisans').select('*').order('created_at', { ascending: false });
+      const { data: artisans, error } = await supabaseClient
+        .from('artisans')
+        .select('*')
+        .order('created_at', { ascending: false });
+
       const tbodyAttente = document.getElementById('table-en-attente');
       const tbodyValides = document.getElementById('table-valides');
 
       tbodyAttente.innerHTML = '';
       tbodyValides.innerHTML = '';
 
-      if (!artisans) return;
+      if (error || !artisans) return;
 
       cacheArtisans = artisans;
       const enAttente = artisans.filter(a => !a.est_verifie);
       const valides = artisans.filter(a => a.est_verifie);
 
-      // --- GESTION DE LA BANNIÈRE D'ALERTE EN HAUT ---
-      const alertPendingBanner = document.getElementById('alert-pending');
-      const alertPendingText = document.getElementById('alert-pending-text');
-
-      if (enAttente.length > 0) {
-        alertPendingText.innerHTML = `Vous avez <strong>${enAttente.length} nouvelle(s) demande(s)</strong> de prestataire(s) en attente d'approbation. <a href="#section-en-attente" style="color:#1d4ed8; font-weight:bold;">Voir les demandes ↓</a>`;
-        alertPendingBanner.style.display = 'block';
+      if (enAttente.length === 0) {
+        tbodyAttente.innerHTML = '<tr><td colspan="5" class="empty-msg">Aucune demande en attente.</td></tr>';
       } else {
-        alertPendingBanner.style.display = 'none';
-      }
-
-      if (enAttente.length === 0) tbodyAttente.innerHTML = '<tr><td colspan="5" class="empty-msg">Aucune demande en attente.</td></tr>';
-      else {
         enAttente.forEach(a => {
           const tr = document.createElement('tr');
           tr.innerHTML = `
@@ -608,18 +737,19 @@
             <td>${a.metier}</td>
             <td>${a.quartier}</td>
             <td>${a.telephone}</td>
-            <td class="actions-cell">
-              <button class="btn btn-validate" onclick="validerArtisan(${a.id})">✅ Valider</button>
-              <button class="btn btn-edit" onclick="ouvrirEditArtisan(${a.id})">✏️</button>
-              <button class="btn btn-delete" onclick="supprimerArtisan(${a.id})">🗑️</button>
+            <td style="text-align: right; white-space: nowrap;">
+              <button class="btn btn-green" title="Valider" onclick="validerArtisan(${a.id})">✅</button>
+              <button class="btn btn-primary" title="Modifier" onclick="ouvrirEditArtisan(${a.id})">✏️</button>
+              <button class="btn btn-danger" title="Supprimer" onclick="supprimerArtisan(${a.id})">🗑️</button>
             </td>
           `;
           tbodyAttente.appendChild(tr);
         });
       }
 
-      if (valides.length === 0) tbodyValides.innerHTML = '<tr><td colspan="5" class="empty-msg">Aucun artisan publié.</td></tr>';
-      else {
+      if (valides.length === 0) {
+        tbodyValides.innerHTML = '<tr><td colspan="5" class="empty-msg">Aucun artisan valide publié.</td></tr>';
+      } else {
         valides.forEach(a => {
           const tr = document.createElement('tr');
           tr.innerHTML = `
@@ -627,9 +757,9 @@
             <td>${a.metier}</td>
             <td>${a.quartier}</td>
             <td>${a.telephone}</td>
-            <td class="actions-cell">
-              <button class="btn btn-edit" onclick="ouvrirEditArtisan(${a.id})">✏️</button>
-              <button class="btn btn-delete" onclick="supprimerArtisan(${a.id})">🗑️</button>
+            <td style="text-align: right; white-space: nowrap;">
+              <button class="btn btn-primary" title="Modifier" onclick="ouvrirEditArtisan(${a.id})">✏️</button>
+              <button class="btn btn-danger" title="Supprimer" onclick="supprimerArtisan(${a.id})">🗑️</button>
             </td>
           `;
           tbodyValides.appendChild(tr);
@@ -659,10 +789,18 @@
       const whatsapp = document.getElementById('edit-art-wa').value;
       const description = document.getElementById('edit-art-desc').value;
 
-      await supabaseClient.from('artisans').update({ nom, metier, quartier, telephone, whatsapp, description }).eq('id', id);
-      fermerModales();
-      chargerArtisans();
-      chargerStats();
+      const { error } = await supabaseClient
+        .from('artisans')
+        .update({ nom, metier, quartier, telephone, whatsapp, description })
+        .eq('id', id);
+
+      if (!error) {
+        fermerModales();
+        chargerArtisans();
+        chargerStats();
+      } else {
+        alert("Erreur : " + error.message);
+      }
     }
 
     async function validerArtisan(id) {
