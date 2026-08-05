@@ -172,9 +172,17 @@
     let carouselTimer = null;
 
     async function initPage() {
-      await chargerCarrouselPubs();
-      await chargerArtisans();
-    }
+  // 1. Chargement initial
+  await chargerCarrouselPubs();
+  await chargerArtisans();
+
+  // 2. Écoute EN TEMPS RÉEL des changements
+  supabaseClient
+    .channel('index-changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'artisans' }, () => chargerArtisans())
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'publicites' }, () => chargerCarrouselPubs())
+    .subscribe();
+}
 
     /* 1. GESTION DU CARROUSEL DE PUBS */
     async function chargerCarrouselPubs() {
