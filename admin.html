@@ -50,6 +50,9 @@
     .status-warning { background: #fef3c7; color: #b45309; }
     .status-expired { background: #fee2e2; color: #b91c1c; }
 
+    .stat-badge { background: #e0f2fe; color: #0369a1; padding: 4px 8px; border-radius: 6px; font-weight: bold; font-size: 0.85em; }
+    .stat-wa { background: #dcfce7; color: #15803d; }
+
     .actions-cell { display: flex; gap: 6px; align-items: center; }
     .btn { padding: 6px 10px; border: none; border-radius: 6px; font-weight: 600; font-size: 0.85em; cursor: pointer; transition: 0.2s; }
     .btn-validate { background-color: #16a34a; color: white; }
@@ -80,7 +83,7 @@
 
   <div class="container">
     <h1>👑 FixTana — Administration</h1>
-    <p class="subtitle">Gestion globale des numéros d'urgence, des pharmacies et des artisans.</p>
+    <p class="subtitle">Gestion globale des numéros d'urgence, des pharmacies, des artisans et suivi des clics.</p>
 
     <!-- BANNIÈRE DE RAPPEL DE GARDE -->
     <div id="alert-garde" class="alert-banner">
@@ -88,7 +91,26 @@
       <div id="alert-garde-text"></div>
     </div>
 
-    <!-- SECTION 0 : GESTION DES NUMÉROS D'URGENCE -->
+    <!-- SECTION 0 : STATISTIQUES & CLICS -->
+    <div class="card">
+      <h2>📊 Statistiques de Contact (Clics Artisans)</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Artisan / Prestataire</th>
+            <th>Métier</th>
+            <th>📞 Clics Appel</th>
+            <th>💬 Clics WhatsApp</th>
+            <th>Total Interprété</th>
+          </tr>
+        </thead>
+        <tbody id="table-stats">
+          <tr><td colspan="5" class="empty-msg">Chargement des statistiques...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SECTION 1 : GESTION DES NUMÉROS D'URGENCE -->
     <div class="card">
       <h2>🚨 Numéros d'Urgence</h2>
       <form id="form-urgence" onsubmit="ajouterUrgence(event)">
@@ -113,7 +135,7 @@
       </table>
     </div>
 
-    <!-- SECTION 1 : GESTION DES PHARMACIES -->
+    <!-- SECTION 2 : GESTION DES PHARMACIES -->
     <div class="card">
       <h2>💊 Pharmacies de Garde (Roulement Hebdomadaire)</h2>
       <form id="form-pharmacie" onsubmit="ajouterPharmacie(event)">
@@ -143,7 +165,7 @@
       </table>
     </div>
 
-    <!-- SECTION 2 : DEMANDES D'ARTISANS EN ATTENTE -->
+    <!-- SECTION 3 : DEMANDES D'ARTISANS EN ATTENTE -->
     <div class="card">
       <h2>⏳ Artisans en attente de validation</h2>
       <table>
@@ -162,7 +184,7 @@
       </table>
     </div>
 
-    <!-- SECTION 3 : ARTISANS VALIDÉS -->
+    <!-- SECTION 4 : ARTISANS VALIDÉS -->
     <div class="card">
       <h2>✅ Artisans vérifiés & publiés</h2>
       <table>
@@ -281,9 +303,61 @@
     let cacheArtisans = [];
 
     async function initAdmin() {
+      await chargerStats();
       await chargerUrgences();
       await chargerPharmacies();
       await chargerArtisans();
+    }
+
+    /* --- STATISTIQUES ET CLICS --- */
+    async function chargerStats() {
+      const tbody = document.getElementById('table-stats');
+
+      // Récupération simultanée des artisans et des clics
+      const [resArtisans, resClics] = await Promise.all([
+        supabaseClient.from('artisans').select('id, nom, metier'),
+        supabaseClient.from('clics_contact').select('artisan_id, type_action')
+      ]);
+
+      if (resArtisans.error || resClics.error) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">Impossible de charger les données statistiques.</td></tr>';
+        return;
+      }
+
+      const artisans = resArtisans.data || [];
+      const clics = resClics.data || [];
+
+      if (artisans.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">Aucun artisan répertorié.</td></tr>';
+        return;
+      }
+
+      // Construction de la carte de clics par id d'artisan
+      const statsMap = {};
+      clics.forEach(c => {
+        if (!statsMap[c.artisan_id]) {
+          statsMap[c.artisan_id] = { appel: 0, whatsapp: 0 };
+        }
+        if (c.type_action === 'appel') statsMap[c.artisan_id].appel++;
+        if (c.type_action === 'whatsapp') statsMap[c.artisan_id].whatsapp++;
+      });
+
+      tbody.innerHTML = '';
+      artisans.forEach(a => {
+        const appels = statsMap[a.id]?.appel || 0;
+        const wa = statsMap[a.id]?.whatsapp || 0;
+        const total = appels + wa;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${a.nom}</strong></td>
+          <td>${a.metier}</td>
+          <td><span class="stat-badge">${appels}</span></td>
+          <td><span class="stat-badge stat-wa">${wa}</span></td>
+          <td><strong>${total} clics</strong></td>
+        `;
+        tbody.appendChild(tr);
+      });
     }
 
     /* --- GESTION DES URGENCES --- */
@@ -578,6 +652,7 @@
       if (!error) {
         fermerModales();
         chargerArtisans();
+        chargerStats();
       } else {
         alert("Erreur de modification : " + error.message);
       }
@@ -592,6 +667,7 @@
       if (confirm("Supprimer cet artisan ?")) {
         await supabaseClient.from('artisans').delete().eq('id', id);
         chargerArtisans();
+        chargerStats();
       }
     }
 
