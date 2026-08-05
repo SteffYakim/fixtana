@@ -14,9 +14,11 @@
     h1 { font-size: 1.8em; color: #1e293b; margin: 0 0 5px 0; }
     p.sub { color: #64748b; font-size: 0.9em; margin: 0 0 15px 0; }
     
-    .nav-links { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
-    .nav-links a { text-decoration: none; font-size: 0.85em; font-weight: bold; padding: 8px 12px; background: #e2e8f0; color: #1e293b; border-radius: 20px; }
+    .nav-links { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+    .nav-links a, .nav-links button { text-decoration: none; font-size: 0.85em; font-weight: bold; padding: 8px 14px; border-radius: 20px; border: none; cursor: pointer; transition: 0.2s; }
     .nav-links a.urgent { background: #fee2e2; color: #991b1b; }
+    .nav-links button.register { background: #dcfce7; color: #15803d; }
+    .nav-links button.register:hover { background: #bbf7d0; }
 
     /* Bannière Pub */
     .ad-container { background: #fffbeb; border: 1px dashed #f59e0b; border-radius: 12px; padding: 12px; margin: 15px 0; text-align: center; position: relative; overflow: hidden; }
@@ -46,6 +48,17 @@
     .btn-wa { background: #16a34a; color: white; }
 
     .empty-state { text-align: center; color: #64748b; padding: 30px; background: white; border-radius: 10px; border: 1px dashed #cbd5e1; }
+
+    /* Modale Inscription */
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; padding: 15px; }
+    .modal-content { background: white; padding: 25px; border-radius: 12px; width: 100%; max-width: 450px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+    .modal-content h2 { margin-top: 0; color: #0f172a; font-size: 1.3em; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; }
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; font-size: 0.85em; font-weight: 600; color: #475569; margin-bottom: 4px; }
+    .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9em; outline: none; }
+    .modal-buttons { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+    .btn-submit { background: #16a34a; color: white; border: none; padding: 10px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+    .btn-cancel { background: #94a3b8; color: white; border: none; padding: 10px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -57,7 +70,7 @@
       
       <div class="nav-links">
         <a href="urgences.html" class="urgent">🚨 Urgences & Pharmacies</a>
-        <a href="admin.html">👑 Espace Admin</a>
+        <button class="register" onclick="ouvrirModalInscription()">➕ Devenir Prestataire</button>
       </div>
     </div>
 
@@ -78,6 +91,43 @@
     <!-- Liste des Artisans -->
     <div id="liste-artisans">
       <div class="empty-state">Chargement des prestataires...</div>
+    </div>
+  </div>
+
+  <!-- MODALE D'INSCRIPTION ARTISAN -->
+  <div id="modalInscription" class="modal">
+    <div class="modal-content">
+      <h2>📝 Inscription Prestataire / Artisan</h2>
+      <form id="form-inscription" onsubmit="soumettreInscription(event)">
+        <div class="form-group">
+          <label>Nom complet / Nom de l'entreprise *</label>
+          <input type="text" id="ins-nom" required placeholder="Ex: Jean Rakoto">
+        </div>
+        <div class="form-group">
+          <label>Métier / Activité *</label>
+          <input type="text" id="ins-metier" required placeholder="Ex: Plombier, Électricien...">
+        </div>
+        <div class="form-group">
+          <label>Quartier d'intervention *</label>
+          <input type="text" id="ins-quartier" required placeholder="Ex: Analakely, Ankorondrano...">
+        </div>
+        <div class="form-group">
+          <label>Numéro Téléphone *</label>
+          <input type="tel" id="ins-tel" required placeholder="Ex: 034 00 000 00">
+        </div>
+        <div class="form-group">
+          <label>Numéro WhatsApp (facultatif)</label>
+          <input type="tel" id="ins-wa" placeholder="Ex: 261340000000">
+        </div>
+        <div class="form-group">
+          <label>Courte description de vos services</label>
+          <textarea id="ins-desc" rows="3" placeholder="Présentez brièvement vos compétences..."></textarea>
+        </div>
+        <div class="modal-buttons">
+          <button type="button" class="btn-cancel" onclick="fermerModalInscription()">Annuler</button>
+          <button type="submit" class="btn-submit">Envoyer ma demande</button>
+        </div>
+      </form>
     </div>
   </div>
 
@@ -186,6 +236,43 @@
       document.querySelectorAll('.filter-tags .tag').forEach(t => t.classList.remove('active'));
       elem.classList.add('active');
       filtrerArtisans();
+    }
+
+    /* GESTION DE LA MODALE D'INSCRIPTION */
+    function ouvrirModalInscription() {
+      document.getElementById('modalInscription').style.display = 'flex';
+    }
+
+    function fermerModalInscription() {
+      document.getElementById('modalInscription').style.display = 'none';
+      document.getElementById('form-inscription').reset();
+    }
+
+    async function soumettreInscription(e) {
+      e.preventDefault();
+      const nom = document.getElementById('ins-nom').value;
+      const metier = document.getElementById('ins-metier').value;
+      const quartier = document.getElementById('ins-quartier').value;
+      const telephone = document.getElementById('ins-tel').value;
+      const whatsapp = document.getElementById('ins-wa').value;
+      const description = document.getElementById('ins-desc').value;
+
+      const { error } = await supabaseClient.from('artisans').insert([{
+        nom,
+        metier,
+        quartier,
+        telephone,
+        whatsapp,
+        description,
+        est_verifie: false // En attente de votre validation dans admin.html
+      }]);
+
+      if (!error) {
+        alert("Merci ! Votre demande d'inscription a été envoyée. Elle sera vérifiée et publiée très rapidement.");
+        fermerModalInscription();
+      } else {
+        alert("Une erreur est survenue lors de l'envoi : " + error.message);
+      }
     }
 
     initPage();
