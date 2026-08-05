@@ -818,6 +818,896 @@
     function ouvrirEditPharmacie(id) {
       const p = cachePharmacies.find(item => item.id === id);
       if (!p) return;
+      <!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FixTana - Administration</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- CDN SheetJS pour l'exportation Excel / CSV -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #f8fafc; margin: 0; padding: 20px; color: #1e293b; }
+    .container { max-width: 1050px; margin: 0 auto; }
+    
+    h1 { color: #0f172a; margin-bottom: 5px; font-size: 1.8em; }
+    .subtitle { color: #64748b; font-size: 0.9em; margin-bottom: 25px; }
+
+    /* BANDEAU DYNAMIQUE PRESTATAIRES EN ATTENTE */
+    .alert-pending {
+      background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%);
+      color: #fef08a;
+      border-left: 6px solid #f59e0b;
+      padding: 15px 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 12px rgba(30, 58, 138, 0.25);
+      animation: pulseAlert 2s infinite ease-in-out;
+    }
+    .alert-pending-content { display: flex; align-items: center; gap: 12px; }
+    .alert-pending-icon { font-size: 1.6em; }
+    .alert-pending-text h4 { margin: 0 0 2px 0; color: #ffffff; font-size: 1.05em; }
+    .alert-pending-text p { margin: 0; color: #fef08a; font-size: 0.88em; }
+    .alert-pending-btn {
+      background: #f59e0b;
+      color: #0f172a;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 0.85em;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .alert-pending-btn:hover { background: #d97706; }
+
+    @keyframes pulseAlert {
+      0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+      70% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+    }
+
+    /* Alertes Pharmacies */
+    .alert-banner {
+      background-color: #fef3c7;
+      border-left: 5px solid #f59e0b;
+      color: #92400e;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      display: none;
+      font-size: 0.95em;
+    }
+    .alert-banner h4 { margin: 0 0 5px 0; font-size: 1.05em; }
+
+    /* Cartes */
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 25px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      border: 1px solid #e2e8f0;
+    }
+    
+    .card-header-flex {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #f1f5f9;
+      padding-bottom: 10px;
+      margin-bottom: 15px;
+    }
+
+    h2 { font-size: 1.2em; margin: 0; color: #1e293b; display: flex; align-items: center; gap: 8px; }
+
+    /* Tableaux */
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9em; }
+    th, td { text-align: left; padding: 12px; border-bottom: 1px solid #e2e8f0; }
+    th { background-color: #f8fafc; color: #475569; font-weight: 600; }
+    tr:hover { background-color: #f8fafc; }
+
+    /* Badges & Boutons */
+    .badge-status { padding: 4px 8px; border-radius: 12px; font-weight: bold; font-size: 0.8em; display: inline-block; }
+    .status-ok { background: #dcfce7; color: #15803d; }
+    .status-warning { background: #fef3c7; color: #b45309; }
+    .status-expired { background: #fee2e2; color: #b91c1c; }
+
+    .stat-badge { background: #e0f2fe; color: #0369a1; padding: 4px 8px; border-radius: 6px; font-weight: bold; font-size: 0.85em; }
+    .stat-wa { background: #dcfce7; color: #15803d; }
+
+    .btn { padding: 6px 12px; border: none; border-radius: 6px; font-weight: 600; font-size: 0.85em; cursor: pointer; transition: 0.2s; }
+    .btn-green { background-color: #16a34a; color: white; }
+    .btn-green:hover { background-color: #15803d; }
+    .btn-primary { background-color: #2563eb; color: white; }
+    .btn-primary:hover { background-color: #1d4ed8; }
+    .btn-star { background-color: #f59e0b; color: white; }
+    .btn-star:hover { background-color: #d97706; }
+    .btn-danger { background-color: #ef4444; color: white; }
+    .btn-danger:hover { background-color: #dc2626; }
+    .btn-cancel { background-color: #94a3b8; color: white; }
+    .btn-excel { background-color: #0284c7; color: white; }
+    .btn-excel:hover { background-color: #0369a1; }
+
+    /* Formulaires */
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 10px; }
+    .form-grid input, .form-grid textarea { padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9em; outline: none; }
+    
+    .empty-msg { text-align: center; color: #94a3b8; padding: 20px 0; font-style: italic; }
+
+    /* Modales */
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
+    .modal-content { background: white; padding: 25px; border-radius: 12px; width: 100%; max-width: 450px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+    .modal-content h3 { margin-top: 0; color: #0f172a; font-size: 1.2em; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; }
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; font-size: 0.85em; font-weight: 600; color: #475569; margin-bottom: 4px; }
+    .form-group input, .form-group textarea { width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9em; }
+    .modal-buttons { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>👑 FixTana — Administration</h1>
+    <p class="subtitle">Gestion globale en temps réel (Visites, Publicités, Statistiques, Urgences, Pharmacies et Artisans).</p>
+
+    <!-- BANDEAU DYNAMIQUE NOUVELLES INSCRIPTIONS -->
+    <div id="alert-pending-banner" class="alert-pending">
+      <div class="alert-pending-content">
+        <span class="alert-pending-icon">🔔</span>
+        <div class="alert-pending-text">
+          <h4 id="pending-count-title">Demande d'inscription reçue !</h4>
+          <p id="pending-count-desc">Des prestataires attendent votre validation pour apparaître sur le site.</p>
+        </div>
+      </div>
+      <button class="alert-pending-btn" onclick="scrollToPending()">Examiner les demandes 👇</button>
+    </div>
+
+    <!-- BANNIÈRE DE RAPPEL DE GARDE PHARMACIE -->
+    <div id="alert-garde" class="alert-banner">
+      <h4>⏰ Rappel Mises à jour Pharmacies</h4>
+      <div id="alert-garde-text"></div>
+    </div>
+
+    <!-- SECTION 1 : VISITES JOURNALIÈRES -->
+    <div class="card">
+      <div class="card-header-flex">
+        <h2>📈 Visites Journalières du Site</h2>
+        <button class="btn btn-excel" onclick="exporterVisitesXLSX()">📥 Exporter Visites (Excel)</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Nombre de Visites</th>
+            <th>Tendance</th>
+          </tr>
+        </thead>
+        <tbody id="table-visites">
+          <tr><td colspan="3" class="empty-msg">Chargement du trafic...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SECTION 2 : PUBLICITÉS -->
+    <div class="card">
+      <h2>📢 Bannières Publicitaires</h2>
+      
+      <form id="form-pub" onsubmit="ajouterOuModifierPub(event)" style="margin-bottom: 20px;">
+        <input type="hidden" id="pub-id-edition" value="">
+        
+        <div class="form-grid">
+          <input type="text" id="pub-titre" placeholder="Nom de l'annonceur *" required>
+          <input type="url" id="pub-image" placeholder="Lien URL de l'image">
+          <input type="url" id="pub-lien" placeholder="Lien URL de redirection">
+          <input type="text" id="pub-desc" placeholder="Texte promotionnel">
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+          <button type="submit" id="btn-soumettre-pub" class="btn btn-green" style="flex: 1; padding: 10px;">+ Enregistrer la Pub</button>
+          <button type="button" id="btn-annuler-pub" class="btn btn-danger" onclick="reinitialiserFormulairePub()" style="display: none; padding: 10px;">Annuler</button>
+        </div>
+      </form>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Annonceur & Contenu</th>
+            <th>Lien Redirection</th>
+            <th>Statut</th>
+            <th style="text-align: right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="table-pubs">
+          <tr><td colspan="4" class="empty-msg">Chargement des publicités...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SECTION 3 : STATISTIQUES & CLICS -->
+    <div class="card">
+      <div class="card-header-flex">
+        <h2>📊 Statistiques de Contact (Clics Artisans)</h2>
+        <button class="btn btn-green" onclick="exporterClicsXLSX()">📥 Exporter Rapport Clics (Excel)</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Artisan / Prestataire</th>
+            <th>Métier</th>
+            <th>📞 Clics Appel</th>
+            <th>💬 Clics WhatsApp</th>
+            <th>Total Interprété</th>
+          </tr>
+        </thead>
+        <tbody id="table-stats">
+          <tr><td colspan="5" class="empty-msg">Chargement des statistiques...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SECTION 4 : NUMÉROS D'URGENCE -->
+    <div class="card">
+      <h2>🚨 Numéros d'Urgence</h2>
+      <form id="form-urgence" onsubmit="ajouterUrgence(event)">
+        <div class="form-grid">
+          <input type="text" id="urg-nom" placeholder="Service (ex: SAMU, Pompiers) *" required>
+          <input type="text" id="urg-tel" placeholder="Numéro d'urgence *" required>
+        </div>
+        <button type="submit" class="btn btn-green" style="width: 100%; padding: 8px; margin-top: 5px;">+ Ajouter un numéro d'urgence</button>
+      </form>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Service d'Urgence</th>
+            <th>Numéro d'Appel</th>
+            <th style="text-align: right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="table-urgences">
+          <tr><td colspan="3" class="empty-msg">Chargement des numéros...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SECTION 5 : PHARMACIES DE GARDE -->
+    <div class="card">
+      <h2>💊 Pharmacies de Garde (Roulement Hebdomadaire)</h2>
+      <form id="form-pharmacie" onsubmit="ajouterPharmacie(event)">
+        <div class="form-grid">
+          <input type="text" id="ph-nom" placeholder="Nom pharmacie *" required>
+          <input type="text" id="ph-quartier" placeholder="Quartier *" required>
+          <input type="tel" id="ph-tel" placeholder="Téléphone">
+          <input type="date" id="ph-debut" title="Début de garde">
+          <input type="date" id="ph-fin" title="Fin de garde">
+        </div>
+        <button type="submit" class="btn btn-green" style="width: 100%; padding: 8px; margin-top: 5px;">+ Enregistrer la pharmacie</button>
+      </form>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Pharmacie</th>
+            <th>Quartier / Tel</th>
+            <th>Période de Garde</th>
+            <th>Statut Échéance</th>
+            <th style="text-align: right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="table-pharmacies">
+          <tr><td colspan="5" class="empty-msg">Chargement des pharmacies...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SECTION 6 : ARTISANS EN ATTENTE -->
+    <div class="card" id="card-en-attente">
+      <h2>⏳ Artisans en attente de validation</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Nom</th>
+            <th>Métier</th>
+            <th>Quartier</th>
+            <th>Téléphone</th>
+            <th style="text-align: right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="table-en-attente">
+          <tr><td colspan="5" class="empty-msg">Chargement...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SECTION 7 : ARTISANS VALIDÉS & SPONSORISÉS -->
+    <div class="card">
+      <h2>✅ Artisans vérifiés & publiés</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Nom</th>
+            <th>Métier</th>
+            <th>Quartier</th>
+            <th>Téléphone</th>
+            <th style="text-align: right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="table-valides">
+          <tr><td colspan="5" class="empty-msg">Chargement...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- MODALE MODIFIER URGENCE -->
+  <div id="modalUrgence" class="modal">
+    <div class="modal-content">
+      <h3>✏️ Modifier l'Urgence</h3>
+      <input type="hidden" id="edit-urg-id">
+      <div class="form-group">
+        <label>Nom du service</label>
+        <input type="text" id="edit-urg-nom">
+      </div>
+      <div class="form-group">
+        <label>Numéro de téléphone</label>
+        <input type="text" id="edit-urg-tel">
+      </div>
+      <div class="modal-buttons">
+        <button class="btn btn-cancel" onclick="fermerModales()">Annuler</button>
+        <button class="btn btn-green" onclick="sauvegarderUrgence()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODALE MODIFIER PHARMACIE -->
+  <div id="modalPharmacie" class="modal">
+    <div class="modal-content">
+      <h3>✏️ Modifier la Pharmacie</h3>
+      <input type="hidden" id="edit-ph-id">
+      <div class="form-group">
+        <label>Nom de la pharmacie</label>
+        <input type="text" id="edit-ph-nom">
+      </div>
+      <div class="form-group">
+        <label>Quartier</label>
+        <input type="text" id="edit-ph-quartier">
+      </div>
+      <div class="form-group">
+        <label>Téléphone</label>
+        <input type="text" id="edit-ph-tel">
+      </div>
+      <div class="form-group">
+        <label>Début de la garde</label>
+        <input type="date" id="edit-ph-debut">
+      </div>
+      <div class="form-group">
+        <label>Fin de la garde</label>
+        <input type="date" id="edit-ph-fin">
+      </div>
+      <div class="modal-buttons">
+        <button class="btn btn-cancel" onclick="fermerModales()">Annuler</button>
+        <button class="btn btn-green" onclick="sauvegarderPharmacie()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODALE MODIFIER ARTISAN -->
+  <div id="modalArtisan" class="modal">
+    <div class="modal-content">
+      <h3>✏️ Modifier le Prestataire</h3>
+      <input type="hidden" id="edit-art-id">
+      <div class="form-group">
+        <label>Nom complet</label>
+        <input type="text" id="edit-art-nom">
+      </div>
+      <div class="form-group">
+        <label>Métier</label>
+        <input type="text" id="edit-art-metier">
+      </div>
+      <div class="form-group">
+        <label>Quartier</label>
+        <input type="text" id="edit-art-quartier">
+      </div>
+      <div class="form-group">
+        <label>Téléphone</label>
+        <input type="text" id="edit-art-tel">
+      </div>
+      <div class="form-group">
+        <label>WhatsApp</label>
+        <input type="text" id="edit-art-wa">
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea id="edit-art-desc" rows="3"></textarea>
+      </div>
+      <div class="modal-buttons">
+        <button class="btn btn-cancel" onclick="fermerModales()">Annuler</button>
+        <button class="btn btn-green" onclick="sauvegarderArtisan()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 🔐 MOT DE PASSE POUR ACCÉDER À L'ADMINISTRATION
+    const MOT_DE_PASSE_ADMIN = "Yastef44045"; 
+
+    function verifierAccesAdmin() {
+      let passSession = sessionStorage.getItem('admin_authenticated');
+      if (passSession !== 'true') {
+        const saisie = prompt("🔒 Accès Administrateur FixTana\nVeuillez saisir le mot de passe :");
+        if (saisie === MOT_DE_PASSE_ADMIN) {
+          sessionStorage.setItem('admin_authenticated', 'true');
+        } else {
+          alert("❌ Mot de passe incorrect.");
+          document.body.innerHTML = "<h2 style='text-align:center; margin-top:50px; color:#ef4444;'>🚫 Accès non autorisé</h2>";
+          throw new Error("Accès refusé");
+        }
+      }
+    }
+
+    // Vérification du mot de passe au chargement de la page
+    verifierAccesAdmin();
+
+    const SUPABASE_URL = 'https://xfqzlifauzlmtzaidixb.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhmcXpsaWZhdXpsbXR6YWlkaXhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3NTkxMTIsImV4cCI6MjEwMTMzNTExMn0.AmBdkYq70S9QntL13EcmFSJaxASh-x4gu6T1Mkhxsvk';
+
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let cacheVisites = [];
+    let listePubsCache = [];
+    let cacheUrgences = [];
+    let cachePharmacies = [];
+    let cacheArtisans = [];
+    let cacheClics = [];
+
+    // Protection contre l'injection de code malveillant HTML (XSS)
+    function escapeHTML(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    async function initAdmin() {
+      await chargerVisites();
+      await chargerStats();
+      await chargerPubs();
+      await chargerUrgences();
+      await chargerPharmacies();
+      await chargerArtisans();
+
+      // ÉCOUTE TEMPS RÉEL (REALTIME)
+      supabaseClient
+        .channel('admin-realtime')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'visites_journalieres' }, () => chargerVisites())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'artisans' }, () => { chargerArtisans(); chargerStats(); })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'publicites' }, () => chargerPubs())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'pharmacies' }, () => chargerPharmacies())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'urgences' }, () => chargerUrgences())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'clics_contact' }, () => chargerStats())
+        .subscribe();
+    }
+
+    /* --- 1. SUIVI DES VISITES JOURNALIÈRES --- */
+    async function chargerVisites() {
+      const { data, error } = await supabaseClient
+        .from('visites_journalieres')
+        .select('*')
+        .order('date_visite', { ascending: false })
+        .limit(14);
+
+      const tbody = document.getElementById('table-visites');
+      if (error || !data) {
+        tbody.innerHTML = '<tr><td colspan="3" class="empty-msg">Erreur lors du chargement des visites.</td></tr>';
+        return;
+      }
+
+      cacheVisites = data;
+      tbody.innerHTML = '';
+
+      if (data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" class="empty-msg">Aucune visite enregistrée pour le moment.</td></tr>';
+        return;
+      }
+
+      const aujourdhuiStr = new Date().toISOString().split('T')[0];
+
+      data.forEach((v, index) => {
+        const isAujourdhui = v.date_visite === aujourdhuiStr;
+        const dateFormatee = formaterDate(v.date_visite);
+        
+        let tendance = '➖';
+        if (index < data.length - 1) {
+          const visitesVeille = data[index + 1].nb_visites;
+          if (v.nb_visites > visitesVeille) tendance = '↗️ <small style="color:#16a34a; font-weight:bold;">+En hausse</small>';
+          else if (v.nb_visites < visitesVeille) tendance = '📉 <small style="color:#dc2626; font-weight:bold;">-En baisse</small>';
+        }
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>
+            <strong>${dateFormatee}</strong>
+            ${isAujourdhui ? ' <span class="badge-status status-ok">Aujourd\'hui</span>' : ''}
+          </td>
+          <td><span class="stat-badge" style="font-size:0.95em;">👀 ${v.nb_visites} visites</span></td>
+          <td>${tendance}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    /* --- EXPORTATION EXCEL DES VISITES --- */
+    function exporterVisitesXLSX() {
+      if (!cacheVisites || cacheVisites.length === 0) {
+        alert("Aucune donnée de visite à exporter.");
+        return;
+      }
+      const dataPropre = cacheVisites.map(v => ({
+        "Date": v.date_visite,
+        "Nombre de Visites": v.nb_visites
+      }));
+      const ws = XLSX.utils.json_to_sheet(dataPropre);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Visites Journalières");
+      XLSX.writeFile(wb, `FixTana_Rapport_Visites_${new Date().toISOString().split('T')[0]}.xlsx`);
+    }
+
+    /* --- 2. GESTION DES PUBLICITÉS --- */
+    async function chargerPubs() {
+      const { data, error } = await supabaseClient
+        .from('publicites')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      const tbody = document.getElementById('table-pubs');
+      if (error || !data) {
+        tbody.innerHTML = '<tr><td colspan="4" class="empty-msg">Erreur de chargement.</td></tr>';
+        return;
+      }
+
+      listePubsCache = data;
+      tbody.innerHTML = '';
+
+      if (data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="empty-msg">Aucune publicité enregistrée.</td></tr>';
+        return;
+      }
+
+      data.forEach(p => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${escapeHTML(p.titre)}</strong><br><small style="color:#64748b">${escapeHTML(p.description || '')}</small></td>
+          <td><small>${p.lien_url ? `<a href="${escapeHTML(p.lien_url)}" target="_blank" style="color:#2563eb;">${escapeHTML(p.lien_url)}</a>` : '-'}</small></td>
+          <td>
+            <button class="btn ${p.est_actif ? 'btn-green' : 'btn-danger'}" onclick="basculerStatutPub(${p.id}, ${p.est_actif})">
+              ${p.est_actif ? '🟢 Active' : '🔴 Masquée'}
+            </button>
+          </td>
+          <td style="text-align: right; white-space: nowrap;">
+            <button class="btn btn-primary" onclick="editerPub(${p.id})" title="Modifier">✏️</button>
+            <button class="btn btn-danger" onclick="supprimerPub(${p.id})" title="Supprimer">🗑️</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function ajouterOuModifierPub(e) {
+      e.preventDefault();
+      const id = document.getElementById('pub-id-edition').value;
+      const titre = document.getElementById('pub-titre').value.trim();
+      const image_url = document.getElementById('pub-image').value.trim();
+      const lien_url = document.getElementById('pub-lien').value.trim();
+      const description = document.getElementById('pub-desc').value.trim();
+
+      if (id) {
+        const { error } = await supabaseClient
+          .from('publicites')
+          .update({ titre, image_url, lien_url, description })
+          .eq('id', id);
+        if (error) alert("Erreur : " + error.message);
+      } else {
+        const { error } = await supabaseClient
+          .from('publicites')
+          .insert([{ titre, image_url, lien_url, description, est_actif: true }]);
+        if (error) alert("Erreur : " + error.message);
+      }
+
+      reinitialiserFormulairePub();
+      chargerPubs();
+    }
+
+    function editerPub(id) {
+      const pub = listePubsCache.find(p => p.id === id);
+      if (!pub) return;
+
+      document.getElementById('pub-id-edition').value = pub.id;
+      document.getElementById('pub-titre').value = pub.titre || '';
+      document.getElementById('pub-image').value = pub.image_url || '';
+      document.getElementById('pub-lien').value = pub.lien_url || '';
+      document.getElementById('pub-desc').value = pub.description || '';
+
+      const btnSubmit = document.getElementById('btn-soumettre-pub');
+      btnSubmit.innerText = "💾 Mettre à jour la Pub";
+      btnSubmit.className = "btn btn-primary";
+
+      document.getElementById('btn-annuler-pub').style.display = "block";
+      window.scrollTo({ top: document.getElementById('form-pub').offsetTop - 50, behavior: 'smooth' });
+    }
+
+    function reinitialiserFormulairePub() {
+      document.getElementById('form-pub').reset();
+      document.getElementById('pub-id-edition').value = '';
+      const btnSubmit = document.getElementById('btn-soumettre-pub');
+      btnSubmit.innerText = "+ Enregistrer la Pub";
+      btnSubmit.className = "btn btn-green";
+      document.getElementById('btn-annuler-pub').style.display = "none";
+    }
+
+    async function basculerStatutPub(id, statutActuel) {
+      await supabaseClient.from('publicites').update({ est_actif: !statutActuel }).eq('id', id);
+      chargerPubs();
+    }
+
+    async function supprimerPub(id) {
+      if (confirm("Supprimer cette publicité ?")) {
+        await supabaseClient.from('publicites').delete().eq('id', id);
+        chargerPubs();
+      }
+    }
+
+    /* --- 3. STATISTIQUES & CLICS --- */
+    async function chargerStats() {
+      const tbody = document.getElementById('table-stats');
+
+      const [resArtisans, resClics] = await Promise.all([
+        supabaseClient.from('artisans').select('id, nom, metier, quartier, telephone'),
+        supabaseClient.from('clics_contact').select('artisan_id, type_action')
+      ]);
+
+      if (resArtisans.error || resClics.error) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">Impossible de charger les statistiques.</td></tr>';
+        return;
+      }
+
+      const artisans = resArtisans.data || [];
+      const clics = resClics.data || [];
+      cacheClics = clics;
+
+      if (artisans.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">Aucun artisan enregistré.</td></tr>';
+        return;
+      }
+
+      const statsMap = {};
+      clics.forEach(c => {
+        if (!statsMap[c.artisan_id]) statsMap[c.artisan_id] = { appel: 0, whatsapp: 0 };
+        if (c.type_action === 'appel') statsMap[c.artisan_id].appel++;
+        if (c.type_action === 'whatsapp') statsMap[c.artisan_id].whatsapp++;
+      });
+
+      tbody.innerHTML = '';
+      artisans.forEach(a => {
+        const appels = statsMap[a.id]?.appel || 0;
+        const wa = statsMap[a.id]?.whatsapp || 0;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${escapeHTML(a.nom)}</strong></td>
+          <td>${escapeHTML(a.metier)}</td>
+          <td><span class="stat-badge">${appels}</span></td>
+          <td><span class="stat-badge stat-wa">${wa}</span></td>
+          <td><strong>${appels + wa} clics</strong></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    /* --- EXPORTATION EXCEL DES CLICS ARTISANS --- */
+    function exporterClicsXLSX() {
+      if (!cacheArtisans || cacheArtisans.length === 0) {
+        alert("Aucune donnée d'artisan à exporter.");
+        return;
+      }
+
+      const rapport = cacheArtisans.map(a => {
+        const clicsArtisan = cacheClics ? cacheClics.filter(c => Number(c.artisan_id) === Number(a.id)) : [];
+        const nbAppels = clicsArtisan.filter(c => c.type_action === 'appel').length;
+        const nbWhatsapp = clicsArtisan.filter(c => c.type_action === 'whatsapp').length;
+
+        return {
+          "ID": a.id,
+          "Nom / Entreprise": a.nom,
+          "Métier": a.metier,
+          "Quartier": a.quartier,
+          "Téléphone": a.telephone,
+          "Clics Appel 📞": nbAppels,
+          "Clics WhatsApp 💬": nbWhatsapp,
+          "Total Contacts": nbAppels + nbWhatsapp,
+          "Statut": a.est_verifie ? "Validé" : "En attente",
+          "Sponsorisé": a.est_sponsorise ? "Oui" : "Non"
+        };
+      });
+
+      const ws = XLSX.utils.json_to_sheet(rapport);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Statistiques Clics");
+      XLSX.writeFile(wb, `FixTana_Rapport_Clics_${new Date().toISOString().split('T')[0]}.xlsx`);
+    }
+
+    /* --- 4. NUMÉROS D'URGENCE --- */
+    async function chargerUrgences() {
+      const { data: urgences, error } = await supabaseClient
+        .from('urgences')
+        .select('*')
+        .order('id', { ascending: true });
+
+      const tbody = document.getElementById('table-urgences');
+      tbody.innerHTML = '';
+
+      if (error || !urgences || urgences.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" class="empty-msg">Aucun numéro d\'urgence.</td></tr>';
+        return;
+      }
+
+      cacheUrgences = urgences;
+      urgences.forEach(u => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${escapeHTML(u.nom)}</strong></td>
+          <td><span style="font-size:1.1em; font-weight:bold; color:#dc2626;">${escapeHTML(u.telephone)}</span></td>
+          <td style="text-align: right; white-space: nowrap;">
+            <button class="btn btn-primary" title="Modifier" onclick="ouvrirEditUrgence(${u.id})">✏️</button>
+            <button class="btn btn-danger" title="Supprimer" onclick="supprimerUrgence(${u.id})">🗑️</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function ajouterUrgence(e) {
+      e.preventDefault();
+      const nom = document.getElementById('urg-nom').value.trim();
+      const telephone = document.getElementById('urg-tel').value.trim();
+
+      const { error } = await supabaseClient.from('urgences').insert([{ nom, telephone }]);
+
+      if (!error) {
+        document.getElementById('form-urgence').reset();
+        chargerUrgences();
+      } else {
+        alert("Erreur : " + error.message);
+      }
+    }
+
+    function ouvrirEditUrgence(id) {
+      const u = cacheUrgences.find(i => i.id === id);
+      if (!u) return;
+      document.getElementById('edit-urg-id').value = u.id;
+      document.getElementById('edit-urg-nom').value = u.nom || '';
+      document.getElementById('edit-urg-tel').value = u.telephone || '';
+      document.getElementById('modalUrgence').style.display = 'flex';
+    }
+
+    async function sauvegarderUrgence() {
+      const id = document.getElementById('edit-urg-id').value;
+      const nom = document.getElementById('edit-urg-nom').value.trim();
+      const telephone = document.getElementById('edit-urg-tel').value.trim();
+
+      const { error } = await supabaseClient.from('urgences').update({ nom, telephone }).eq('id', id);
+
+      if (!error) {
+        fermerModales();
+        chargerUrgences();
+      } else {
+        alert("Erreur : " + error.message);
+      }
+    }
+
+    async function supprimerUrgence(id) {
+      if (confirm("Supprimer ce numéro d'urgence ?")) {
+        await supabaseClient.from('urgences').delete().eq('id', id);
+        chargerUrgences();
+      }
+    }
+
+    /* --- 5. PHARMACIES DE GARDE --- */
+    async function chargerPharmacies() {
+      const { data: pharmacies, error } = await supabaseClient
+        .from('pharmacies')
+        .select('*')
+        .order('nom', { ascending: true });
+
+      const tbody = document.getElementById('table-pharmacies');
+      tbody.innerHTML = '';
+
+      if (error || !pharmacies || pharmacies.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">Aucune pharmacie enregistrée.</td></tr>';
+        return;
+      }
+
+      cachePharmacies = pharmacies;
+      const aujourdhui = new Date();
+      aujourdhui.setHours(0,0,0,0);
+
+      let alertesText = [];
+
+      pharmacies.forEach(p => {
+        let statutBadge = '<span class="badge-status status-ok">🟢 En Garde</span>';
+        
+        if (p.date_fin_garde) {
+          const [year, month, day] = p.date_fin_garde.split('-').map(Number);
+          const dateFin = new Date(year, month - 1, day);
+          const diffJours = Math.round((dateFin - aujourdhui) / (1000 * 60 * 60 * 24));
+
+          if (diffJours < 0) {
+            statutBadge = '<span class="badge-status status-expired">🔴 Expirée</span>';
+            alertesText.push(`• <strong>${escapeHTML(p.nom)}</strong> : La garde a expiré le ${formaterDate(p.date_fin_garde)}.`);
+          } else if (diffJours <= 2) {
+            const libelleFin = diffJours === 0 ? "aujourd'hui" : `dans ${diffJours} j`;
+            statutBadge = `<span class="badge-status status-warning">⏳ Fin ${libelleFin}</span>`;
+            alertesText.push(`• <strong>${escapeHTML(p.nom)}</strong> : La garde se termine ${libelleFin} (${formaterDate(p.date_fin_garde)}).`);
+          }
+        }
+
+        const periodeStr = (p.date_debut_garde && p.date_fin_garde) 
+          ? `Du ${formaterDate(p.date_debut_garde)} au ${formaterDate(p.date_fin_garde)}`
+          : 'Non définie';
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${escapeHTML(p.nom)}</strong></td>
+          <td>${escapeHTML(p.quartier)}<br><small style="color:#64748b">${escapeHTML(p.telephone || '-')}</small></td>
+          <td><small>${periodeStr}</small></td>
+          <td>${statutBadge}</td>
+          <td style="text-align: right; white-space: nowrap;">
+            <button class="btn btn-primary" title="Modifier" onclick="ouvrirEditPharmacie(${p.id})">✏️</button>
+            <button class="btn btn-danger" title="Supprimer" onclick="supprimerPharmacie(${p.id})">🗑️</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      const alertBanner = document.getElementById('alert-garde');
+      if (alertesText.length > 0) {
+        document.getElementById('alert-garde-text').innerHTML = alertesText.join('<br>');
+        alertBanner.style.display = 'block';
+      } else {
+        alertBanner.style.display = 'none';
+      }
+    }
+
+    async function ajouterPharmacie(event) {
+      event.preventDefault();
+      const nom = document.getElementById('ph-nom').value.trim();
+      const quartier = document.getElementById('ph-quartier').value.trim();
+      const telephone = document.getElementById('ph-tel').value.trim();
+      const date_debut_garde = document.getElementById('ph-debut').value || null;
+      const date_fin_garde = document.getElementById('ph-fin').value || null;
+
+      const { error } = await supabaseClient
+        .from('pharmacies')
+        .insert([{ nom, quartier, telephone, date_debut_garde, date_fin_garde, est_de_garde: true }]);
+
+      if (!error) {
+        document.getElementById('form-pharmacie').reset();
+        chargerPharmacies();
+      } else {
+        alert("Erreur lors de l'ajout : " + error.message);
+      }
+    }
+function ouvrirEditPharmacie(id) {
+      const p = cachePharmacies.find(item => item.id === id);
+      if (!p) return;
       document.getElementById('edit-ph-id').value = p.id;
       document.getElementById('edit-ph-nom').value = p.nom || '';
       document.getElementById('edit-ph-quartier').value = p.quartier || '';
