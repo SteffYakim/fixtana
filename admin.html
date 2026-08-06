@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FixTana - Administration</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- CDN SheetJS pour l'exportation Excel / CSV -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -14,6 +13,37 @@
     
     h1 { color: #0f172a; margin-bottom: 5px; font-size: 1.8em; }
     .subtitle { color: #64748b; font-size: 0.9em; margin-bottom: 25px; }
+
+    /* CARTES STATISTIQUES FINANCIÈRES */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+    .kpi-card {
+      background: white;
+      padding: 18px 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      border: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    .kpi-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5em;
+    }
+    .kpi-green { background: #dcfce7; color: #15803d; }
+    .kpi-blue { background: #e0f2fe; color: #0369a1; }
+    .kpi-data h3 { margin: 0; font-size: 0.8em; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+    .kpi-data p { margin: 4px 0 0 0; font-size: 1.4em; font-weight: bold; color: #0f172a; }
 
     /* BANDEAU DYNAMIQUE PRESTATAIRES EN ATTENTE */
     .alert-pending {
@@ -134,7 +164,25 @@
 
   <div class="container">
     <h1>👑 FixTana — Administration</h1>
-    <p class="subtitle">Gestion globale en temps réel (Visites, Publicités, Statistiques, Urgences, Pharmacies et Artisans).</p>
+    <p class="subtitle">Gestion globale en temps réel (Visites, Publicités, Revenus, Urgences, Pharmacies et Artisans).</p>
+
+    <!-- KPI REVENUS PUBLICITAIRES -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-icon kpi-green">📅</div>
+        <div class="kpi-data">
+          <h3>Revenus Pubs du mois</h3>
+          <p id="kpi-revenus-mois">0 Ar</p>
+        </div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon kpi-blue">💰</div>
+        <div class="kpi-data">
+          <h3>Total Généré (Cumulé)</h3>
+          <p id="kpi-revenus-total">0 Ar</p>
+        </div>
+      </div>
+    </div>
 
     <!-- BANDEAU DYNAMIQUE NOUVELLES INSCRIPTIONS -->
     <div id="alert-pending-banner" class="alert-pending">
@@ -180,15 +228,16 @@
       </table>
     </div>
 
-    <!-- SECTION 2 : PUBLICITÉS -->
+    <!-- SECTION 2 : PUBLICITÉS & FINANCES -->
     <div class="card">
-      <h2>📢 Bannières Publicitaires</h2>
+      <h2>📢 Bannières Publicitaires & Suivi Financier</h2>
       
       <form id="form-pub" onsubmit="ajouterOuModifierPub(event)" style="margin-bottom: 20px;">
         <input type="hidden" id="pub-id-edition" value="">
         
         <div class="form-grid">
           <input type="text" id="pub-titre" placeholder="Nom de l'annonceur *" required>
+          <input type="number" id="pub-prix" placeholder="Prix de la campagne (Ar)" min="0" step="500">
           <input type="url" id="pub-image" placeholder="Lien URL de l'image">
           <input type="url" id="pub-lien" placeholder="Lien URL de redirection">
           <input type="text" id="pub-desc" placeholder="Texte promotionnel">
@@ -206,6 +255,7 @@
         <thead>
           <tr>
             <th>Annonceur & Contenu</th>
+            <th>Montant</th>
             <th>Lien Redirection</th>
             <th>Période de Diffusion</th>
             <th>Statut Échéance</th>
@@ -213,7 +263,7 @@
           </tr>
         </thead>
         <tbody id="table-pubs">
-          <tr><td colspan="5" class="empty-msg">Chargement des publicités...</td></tr>
+          <tr><td colspan="6" class="empty-msg">Chargement des publicités...</td></tr>
         </tbody>
       </table>
     </div>
@@ -423,7 +473,6 @@
   </div>
 
   <script>
-    // 🔐 MOT DE PASSE POUR ACCÉDER À L'ADMINISTRATION
     const MOT_DE_PASSE_ADMIN = "Yastef44045"; 
 
     function verifierAccesAdmin() {
@@ -440,7 +489,6 @@
       }
     }
 
-    // Vérification du mot de passe au chargement de la page
     verifierAccesAdmin();
 
     const SUPABASE_URL = 'https://xfqzlifauzlmtzaidixb.supabase.co';
@@ -455,7 +503,6 @@
     let cacheArtisans = [];
     let cacheClics = [];
 
-    // Protection contre l'injection de code malveillant HTML (XSS)
     function escapeHTML(str) {
       if (!str) return '';
       return String(str)
@@ -466,6 +513,11 @@
         .replace(/'/g, '&#039;');
     }
 
+    function formaterPrix(montant) {
+      if (!montant || isNaN(montant)) return '0 Ar';
+      return Number(montant).toLocaleString('fr-FR') + ' Ar';
+    }
+
     async function initAdmin() {
       await chargerVisites();
       await chargerStats();
@@ -474,7 +526,6 @@
       await chargerPharmacies();
       await chargerArtisans();
 
-      // ÉCOUTE TEMPS RÉEL (REALTIME)
       supabaseClient
         .channel('admin-realtime')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'visites_journalieres' }, () => chargerVisites())
@@ -486,7 +537,7 @@
         .subscribe();
     }
 
-    /* --- 1. SUIVI DES VISITES JOURNALIÈRES --- */
+    /* --- 1. VISITES --- */
     async function chargerVisites() {
       const { data, error } = await supabaseClient
         .from('visites_journalieres')
@@ -534,7 +585,6 @@
       });
     }
 
-    /* --- EXPORTATION EXCEL DES VISITES --- */
     function exporterVisitesXLSX() {
       if (!cacheVisites || cacheVisites.length === 0) {
         alert("Aucune donnée de visite à exporter.");
@@ -550,7 +600,7 @@
       XLSX.writeFile(wb, `FixTana_Rapport_Visites_${new Date().toISOString().split('T')[0]}.xlsx`);
     }
 
-    /* --- 2. GESTION DES PUBLICITÉS ET DE LEUR ÉCHÉANCE --- */
+    /* --- 2. GESTION DES PUBLICITÉS & FINANCES --- */
     async function chargerPubs() {
       const { data, error } = await supabaseClient
         .from('publicites')
@@ -560,15 +610,44 @@
       const tbody = document.getElementById('table-pubs');
       if (error || !data) {
         console.error("Erreur Supabase Pubs:", error);
-        tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">Erreur de chargement.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-msg">Erreur de chargement.</td></tr>';
         return;
       }
 
       listePubsCache = data;
       tbody.innerHTML = '';
 
+      // --- CALCUL DU CHIFFRE D'AFFAIRES ---
+      const maintenant = new Date();
+      const anneeCourante = maintenant.getFullYear();
+      const moisCourant = maintenant.getMonth(); // 0 à 11
+
+      let totalCumule = 0;
+      let totalMoisCourant = 0;
+
+      data.forEach(p => {
+        const prixPub = Number(p.prix) || 0;
+        totalCumule += prixPub;
+
+        if (p.created_at) {
+          const dateCreation = new Date(p.created_at);
+          if (dateCreation.getFullYear() === anneeCourante && dateCreation.getMonth() === moisCourant) {
+            totalMoisCourant += prixPub;
+          }
+        } else if (p.date_debut) {
+          const [y, m] = p.date_debut.split('-').map(Number);
+          if (y === anneeCourante && (m - 1) === moisCourant) {
+            totalMoisCourant += prixPub;
+          }
+        }
+      });
+
+      // Mettre à jour les KPI
+      document.getElementById('kpi-revenus-mois').innerText = formaterPrix(totalMoisCourant);
+      document.getElementById('kpi-revenus-total').innerText = formaterPrix(totalCumule);
+
       if (data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">Aucune publicité enregistrée.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-msg">Aucune publicité enregistrée.</td></tr>';
         document.getElementById('alert-pub').style.display = 'none';
         return;
       }
@@ -605,6 +684,7 @@
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td><strong>${escapeHTML(p.titre)}</strong><br><small style="color:#64748b">${escapeHTML(p.description || '')}</small></td>
+          <td><strong style="color:#16a34a;">${formaterPrix(p.prix)}</strong></td>
           <td><small>${p.lien_url ? `<a href="${escapeHTML(p.lien_url)}" target="_blank" style="color:#2563eb;">${escapeHTML(p.lien_url)}</a>` : '-'}</small></td>
           <td><small>${periodeStr}</small></td>
           <td>
@@ -620,7 +700,6 @@
         tbody.appendChild(tr);
       });
 
-      // Gestion d'affichage du bandeau d'alerte pour les publicités
       const alertPubBanner = document.getElementById('alert-pub');
       if (alertPubBanner) {
         if (alertesPubText.length > 0) {
@@ -637,6 +716,7 @@
       
       const id = document.getElementById('pub-id-edition').value;
       const titre = document.getElementById('pub-titre').value.trim();
+      const prix = parseFloat(document.getElementById('pub-prix').value) || 0;
       const image_url = document.getElementById('pub-image').value.trim();
       const lien_url = document.getElementById('pub-lien').value.trim();
       const description = document.getElementById('pub-desc').value.trim();
@@ -645,6 +725,7 @@
 
       const payload = {
         titre: titre,
+        prix: prix,
         image_url: image_url || null,
         lien_url: lien_url || null,
         description: description || null,
@@ -685,6 +766,7 @@
 
       document.getElementById('pub-id-edition').value = pub.id;
       document.getElementById('pub-titre').value = pub.titre || '';
+      document.getElementById('pub-prix').value = pub.prix || '';
       document.getElementById('pub-image').value = pub.image_url || '';
       document.getElementById('pub-lien').value = pub.lien_url || '';
       document.getElementById('pub-desc').value = pub.description || '';
@@ -767,7 +849,6 @@
       });
     }
 
-    /* --- EXPORTATION EXCEL DES CLICS ARTISANS --- */
     function exporterClicsXLSX() {
       if (!cacheArtisans || cacheArtisans.length === 0) {
         alert("Aucune donnée d'artisan à exporter.");
@@ -799,7 +880,7 @@
       XLSX.writeFile(wb, `FixTana_Rapport_Clics_${new Date().toISOString().split('T')[0]}.xlsx`);
     }
 
-    /* --- 4. NUMÉROS D'URGENCE --- */
+    /* --- 4. URGENCES --- */
     async function chargerUrgences() {
       const { data: urgences, error } = await supabaseClient
         .from('urgences')
@@ -875,7 +956,7 @@
       }
     }
 
-    /* --- 5. PHARMACIES DE GARDE --- */
+    /* --- 5. PHARMACIES --- */
     async function chargerPharmacies() {
       const { data: pharmacies, error } = await supabaseClient
         .from('pharmacies')
@@ -1001,7 +1082,7 @@
       }
     }
 
-    /* --- 6. ARTISANS (VALIDATION + SPONSORISATION + ALERTE DYNAMIQUE) --- */
+    /* --- 6. ARTISANS --- */
     async function chargerArtisans() {
       const { data: artisans, error } = await supabaseClient
         .from('artisans')
@@ -1020,7 +1101,6 @@
       const enAttente = artisans.filter(a => !a.est_verifie);
       const valides = artisans.filter(a => a.est_verifie);
 
-      // BANDEAU D'ALERTE EN ATTENTE
       const alertPendingBanner = document.getElementById('alert-pending-banner');
       const pendingTitle = document.getElementById('pending-count-title');
       const pendingDesc = document.getElementById('pending-count-desc');
@@ -1161,7 +1241,6 @@
       return `${parts[2]}/${parts[1]}/${parts[0]}`;
     }
 
-    // Lancement de l'initialisation
     initAdmin();
   </script>
 </body>
