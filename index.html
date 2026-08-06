@@ -236,103 +236,134 @@
 
     /* CARROUSEL PUBLICITAIRE INTERNE */
     async function chargerCarrouselPubs() {
-  const { data: pubs, error } = await supabaseClient
-    .from('publicites')
-    .select('*')
-    .eq('est_actif', true)
-    .order('created_at', { ascending: false });
+      const { data: pubs, error } = await supabaseClient
+        .from('publicites')
+        .select('*')
+        .eq('est_actif', true)
+        .order('created_at', { ascending: false });
 
-  const wrapper = document.getElementById('pub-carousel-wrapper');
-  const slidesContainer = document.getElementById('pub-slides-container');
-  const dotsContainer = document.getElementById('pub-dots-container');
+      const wrapper = document.getElementById('pub-carousel-wrapper');
+      const slidesContainer = document.getElementById('pub-slides-container');
+      const dotsContainer = document.getElementById('pub-dots-container');
 
-  if (error || !pubs || pubs.length === 0) {
-    if (wrapper) wrapper.style.display = 'none';
-    return;
-  }
+      if (error || !pubs || pubs.length === 0) {
+        if (wrapper) wrapper.style.display = 'none';
+        return;
+      }
 
-  // --- FILTRAGE PAR DATES DE VALIDITÉ (DÉBUT & FIN) ---
-  const aujourdhui = new Date();
-  aujourdhui.setHours(0, 0, 0, 0);
+      // --- FILTRAGE PAR DATES DE VALIDITÉ (DÉBUT & FIN) ---
+      const aujourdhui = new Date();
+      aujourdhui.setHours(0, 0, 0, 0);
 
-  const pubsValides = pubs.filter(p => {
-    // Si une date de début est programmée dans le futur, ne pas afficher
-    if (p.date_debut) {
-      const [y, m, d] = p.date_debut.split('-').map(Number);
-      const dateDebut = new Date(y, m - 1, d);
-      if (dateDebut > aujourdhui) return false;
+      const pubsValides = pubs.filter(p => {
+        if (p.date_debut) {
+          const [y, m, d] = p.date_debut.split('-').map(Number);
+          const dateDebut = new Date(y, m - 1, d);
+          if (dateDebut > aujourdhui) return false;
+        }
+
+        if (p.date_fin) {
+          const [y, m, d] = p.date_fin.split('-').map(Number);
+          const dateFin = new Date(y, m - 1, d);
+          if (dateFin < aujourdhui) return false;
+        }
+
+        return true;
+      });
+
+      if (pubsValides.length === 0) {
+        if (wrapper) wrapper.style.display = 'none';
+        return;
+      }
+
+      // --- AFFICHAGE DU CARROUSEL AVEC LES PUBS VALIDES ---
+      wrapper.style.display = 'block';
+      slidesContainer.innerHTML = '';
+      dotsContainer.innerHTML = '';
+
+      pubsValides.forEach((p, index) => {
+        const slide = document.createElement('a');
+        slide.className = `pub-slide ${index === 0 ? 'active' : ''}`;
+        slide.href = escapeHTML(p.lien_url) || '#';
+        if (p.lien_url) slide.target = '_blank';
+
+        // TRACKING : Enregistrement du clic sur la bannière
+        slide.onclick = () => enregistrerEventPub(p.id, 'clic');
+
+        const imgHTML = p.image_url ? `<img src="${escapeHTML(p.image_url)}" alt="${escapeHTML(p.titre)}">` : '';
+
+        slide.innerHTML = `
+          <span class="pub-tag">📢 Sponsorisé</span>
+          ${imgHTML}
+          <div class="pub-title">${escapeHTML(p.titre)}</div>
+          ${p.description ? `<p class="pub-desc">${escapeHTML(p.description)}</p>` : ''}
+        `;
+        slidesContainer.appendChild(slide);
+
+        // TRACKING : Enregistrement de l'impression (vue) de la bannière
+        enregistrerEventPub(p.id, 'impression');
+
+        if (pubsValides.length > 1) {
+          const dot = document.createElement('span');
+          dot.className = `dot ${index === 0 ? 'active-dot' : ''}`;
+          dot.onclick = () => afficherSlide(index);
+          dotsContainer.appendChild(dot);
+        }
+      });
+
+      if (pubsValides.length > 1) {
+        lancerAutoPlay(pubsValides.length);
+      }
     }
 
-    // Si la date de fin est dépassée (expirée), ne pas afficher dans le carrousel !
-    if (p.date_fin) {
-      const [y, m, d] = p.date_fin.split('-').map(Number);
-      const dateFin = new Date(y, m - 1, d);
-      if (dateFin < aujourdhui) return false;
+    // Fonction globale pour tracker les impressions et clics des bannières
+    async function enregistrerEventPub(pubId, eventType) {
+      try {
+        // 1. Ajouter la ligne dans l'historique des événements
+        await supabaseClient
+          .from('publicites_events')
+          .insert([{ pub_id: pubId, event_type: eventType }]);
+
+        // 2. Mettre à jour le compteur global correspondant dans la table publicites
+        const champ = eventType === 'clic' ? 'nb_clics' : 'nb_impressions';
+        const { data: current } = await supabaseClient
+          .from('publicites')
+          .select(champ)
+          .eq('id', pubId)
+          .single();
+
+        const valeurActuelle = current ? (current[champ] || 0) : 0;
+        
+        await supabaseClient
+          .from('publicites')
+          .update({ [champ]: valeurActuelle + 1 })
+          .eq('id', pubId);
+      } catch (err) {
+        console.error("Erreur tracking pub:", err);
+      }
     }
 
-    return true;
-  });
+    function afficherSlide(index) {
+      const slides = document.querySelectorAll('.pub-slide');
+      const dots = document.querySelectorAll('.dot');
+      if (slides.length === 0) return;
 
-  // Si aucune publicité n'est valide actuellement
-  if (pubsValides.length === 0) {
-    if (wrapper) wrapper.style.display = 'none';
-    return;
-  }
+      slides.forEach(s => s.classList.remove('active'));
+      dots.forEach(d => d.classList.remove('active-dot'));
 
-  // --- AFFICHAGE DU CARROUSEL AVEC LES PUBS VALIDES ---
-  wrapper.style.display = 'block';
-  slidesContainer.innerHTML = '';
-  dotsContainer.innerHTML = '';
-
-  pubsValides.forEach((p, index) => {
-    const slide = document.createElement('a');
-    slide.className = `pub-slide ${index === 0 ? 'active' : ''}`;
-    slide.href = escapeHTML(p.lien_url) || '#';
-    if (p.lien_url) slide.target = '_blank';
-
-    const imgHTML = p.image_url ? `<img src="${escapeHTML(p.image_url)}" alt="${escapeHTML(p.titre)}">` : '';
-
-    slide.innerHTML = `
-      <span class="pub-tag">📢 Sponsorisé</span>
-      ${imgHTML}
-      <div class="pub-title">${escapeHTML(p.titre)}</div>
-      ${p.description ? `<p class="pub-desc">${escapeHTML(p.description)}</p>` : ''}
-    `;
-    slidesContainer.appendChild(slide);
-
-    if (pubsValides.length > 1) {
-      const dot = document.createElement('span');
-      dot.className = `dot ${index === 0 ? 'active-dot' : ''}`;
-      dot.onclick = () => afficherSlide(index);
-      dotsContainer.appendChild(dot);
+      currentSlideIndex = index;
+      if (slides[currentSlideIndex]) slides[currentSlideIndex].classList.add('active');
+      if (dots[currentSlideIndex]) dots[currentSlideIndex].classList.add('active-dot');
     }
-  });
 
-  if (pubsValides.length > 1) {
-    lancerAutoPlay(pubsValides.length);
-  }
-}
+    function lancerAutoPlay(totalSlides) {
+      if (carouselTimer) clearInterval(carouselTimer);
+      carouselTimer = setInterval(() => {
+        currentSlideIndex = (currentSlideIndex + 1) % totalSlides;
+        afficherSlide(currentSlideIndex);
+      }, 5000);
+    }
 
-function afficherSlide(index) {
-  const slides = document.querySelectorAll('.pub-slide');
-  const dots = document.querySelectorAll('.dot');
-  if (slides.length === 0) return;
-
-  slides.forEach(s => s.classList.remove('active'));
-  dots.forEach(d => d.classList.remove('active-dot'));
-
-  currentSlideIndex = index;
-  if (slides[currentSlideIndex]) slides[currentSlideIndex].classList.add('active');
-  if (dots[currentSlideIndex]) dots[currentSlideIndex].classList.add('active-dot');
-}
-
-function lancerAutoPlay(totalSlides) {
-  if (carouselTimer) clearInterval(carouselTimer);
-  carouselTimer = setInterval(() => {
-    currentSlideIndex = (currentSlideIndex + 1) % totalSlides;
-    afficherSlide(currentSlideIndex);
-  }, 5000);
-}
     /* ARTISANS & FILTRES */
     async function chargerArtisans() {
       const { data, error } = await supabaseClient
