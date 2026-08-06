@@ -93,7 +93,7 @@
     tr:hover { background-color: #f8fafc; }
 
     /* Badges & Boutons */
-    .badge-status { padding: 4px 8px; border-radius: 12px; font-weight: bold; font-size: 0.8em; display: inline-block; }
+    .badge-status { padding: 4px 8px; border-radius: 12px; font-weight: bold; font-size: 0.8em; display: inline-block; cursor: pointer; border: none; }
     .status-ok { background: #dcfce7; color: #15803d; }
     .status-warning { background: #fef3c7; color: #b45309; }
     .status-expired { background: #fee2e2; color: #b91c1c; }
@@ -186,6 +186,8 @@
           <input type="url" id="pub-image" placeholder="Lien URL de l'image">
           <input type="url" id="pub-lien" placeholder="Lien URL de redirection">
           <input type="text" id="pub-desc" placeholder="Texte promotionnel">
+          <input type="date" id="pub-debut" title="Début d'affichage">
+          <input type="date" id="pub-fin" title="Fin d'affichage">
         </div>
 
         <div style="display: flex; gap: 10px;">
@@ -199,12 +201,13 @@
           <tr>
             <th>Annonceur & Contenu</th>
             <th>Lien Redirection</th>
-            <th>Statut</th>
+            <th>Période de Diffusion</th>
+            <th>Statut Échéance</th>
             <th style="text-align: right;">Actions</th>
           </tr>
         </thead>
         <tbody id="table-pubs">
-          <tr><td colspan="4" class="empty-msg">Chargement des publicités...</td></tr>
+          <tr><td colspan="5" class="empty-msg">Chargement des publicités...</td></tr>
         </tbody>
       </table>
     </div>
@@ -541,7 +544,7 @@
       XLSX.writeFile(wb, `FixTana_Rapport_Visites_${new Date().toISOString().split('T')[0]}.xlsx`);
     }
 
-    /* --- 2. GESTION DES PUBLICITÉS --- */
+    /* --- 2. GESTION DES PUBLICITÉS AVEC GESTION DES PÉRIODES --- */
     async function chargerPubs() {
       const { data, error } = await supabaseClient
         .from('publicites')
@@ -550,7 +553,7 @@
 
       const tbody = document.getElementById('table-pubs');
       if (error || !data) {
-        tbody.innerHTML = '<tr><td colspan="4" class="empty-msg">Erreur de chargement.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">Erreur de chargement.</td></tr>';
         return;
       }
 
@@ -558,18 +561,43 @@
       tbody.innerHTML = '';
 
       if (data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" class="empty-msg">Aucune publicité enregistrée.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">Aucune publicité enregistrée.</td></tr>';
         return;
       }
 
+      const aujourdhui = new Date();
+      aujourdhui.setHours(0,0,0,0);
+
       data.forEach(p => {
+        let statutBadge = '<span class="badge-status status-ok">🟢 Active</span>';
+        
+        if (!p.est_actif) {
+          statutBadge = '<span class="badge-status status-expired">🔴 Desactivée</span>';
+        } else if (p.date_fin) {
+          const [year, month, day] = p.date_fin.split('-').map(Number);
+          const dateFin = new Date(year, month - 1, day);
+          const diffJours = Math.round((dateFin - aujourdhui) / (1000 * 60 * 60 * 24));
+
+          if (diffJours < 0) {
+            statutBadge = '<span class="badge-status status-expired">🔴 Expirée</span>';
+          } else if (diffJours <= 2) {
+            const libelleFin = diffJours === 0 ? "aujourd'hui" : `dans ${diffJours} j`;
+            statutBadge = `<span class="badge-status status-warning">⏳ Fin ${libelleFin}</span>`;
+          }
+        }
+
+        const periodeStr = (p.date_debut && p.date_fin) 
+          ? `Du ${formaterDate(p.date_debut)} au ${formaterDate(p.date_fin)}`
+          : (p.date_fin ? `Jusqu'au ${formaterDate(p.date_fin)}` : 'Permanente');
+
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td><strong>${escapeHTML(p.titre)}</strong><br><small style="color:#64748b">${escapeHTML(p.description || '')}</small></td>
           <td><small>${p.lien_url ? `<a href="${escapeHTML(p.lien_url)}" target="_blank" style="color:#2563eb;">${escapeHTML(p.lien_url)}</a>` : '-'}</small></td>
+          <td><small>${periodeStr}</small></td>
           <td>
-            <button class="btn ${p.est_actif ? 'btn-green' : 'btn-danger'}" onclick="basculerStatutPub(${p.id}, ${p.est_actif})">
-              ${p.est_actif ? '🟢 Active' : '🔴 Masquée'}
+            <button style="border:none; background:none; padding:0; cursor:pointer;" onclick="basculerStatutPub(${p.id}, ${p.est_actif})">
+              ${statutBadge}
             </button>
           </td>
           <td style="text-align: right; white-space: nowrap;">
@@ -588,17 +616,19 @@
       const image_url = document.getElementById('pub-image').value.trim();
       const lien_url = document.getElementById('pub-lien').value.trim();
       const description = document.getElementById('pub-desc').value.trim();
+      const date_debut = document.getElementById('pub-debut').value || null;
+      const date_fin = document.getElementById('pub-fin').value || null;
 
       if (id) {
         const { error } = await supabaseClient
           .from('publicites')
-          .update({ titre, image_url, lien_url, description })
+          .update({ titre, image_url, lien_url, description, date_debut, date_fin })
           .eq('id', id);
         if (error) alert("Erreur : " + error.message);
       } else {
         const { error } = await supabaseClient
           .from('publicites')
-          .insert([{ titre, image_url, lien_url, description, est_actif: true }]);
+          .insert([{ titre, image_url, lien_url, description, date_debut, date_fin, est_actif: true }]);
         if (error) alert("Erreur : " + error.message);
       }
 
@@ -615,6 +645,8 @@
       document.getElementById('pub-image').value = pub.image_url || '';
       document.getElementById('pub-lien').value = pub.lien_url || '';
       document.getElementById('pub-desc').value = pub.description || '';
+      document.getElementById('pub-debut').value = pub.date_debut || '';
+      document.getElementById('pub-fin').value = pub.date_fin || '';
 
       const btnSubmit = document.getElementById('btn-soumettre-pub');
       btnSubmit.innerText = "💾 Mettre à jour la Pub";
@@ -886,7 +918,7 @@
       }
     }
 
-function ouvrirEditPharmacie(id) {
+    function ouvrirEditPharmacie(id) {
       const p = cachePharmacies.find(item => item.id === id);
       if (!p) return;
       document.getElementById('edit-ph-id').value = p.id;
