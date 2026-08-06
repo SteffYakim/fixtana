@@ -236,75 +236,103 @@
 
     /* CARROUSEL PUBLICITAIRE INTERNE */
     async function chargerCarrouselPubs() {
-      const { data: pubs, error } = await supabaseClient
-        .from('publicites')
-        .select('*')
-        .eq('est_actif', true)
-        .order('created_at', { ascending: false });
+  const { data: pubs, error } = await supabaseClient
+    .from('publicites')
+    .select('*')
+    .eq('est_actif', true)
+    .order('created_at', { ascending: false });
 
-      const wrapper = document.getElementById('pub-carousel-wrapper');
-      const slidesContainer = document.getElementById('pub-slides-container');
-      const dotsContainer = document.getElementById('pub-dots-container');
+  const wrapper = document.getElementById('pub-carousel-wrapper');
+  const slidesContainer = document.getElementById('pub-slides-container');
+  const dotsContainer = document.getElementById('pub-dots-container');
 
-      if (error || !pubs || pubs.length === 0) {
-        if (wrapper) wrapper.style.display = 'none';
-        return;
-      }
+  if (error || !pubs || pubs.length === 0) {
+    if (wrapper) wrapper.style.display = 'none';
+    return;
+  }
 
-      wrapper.style.display = 'block';
-      slidesContainer.innerHTML = '';
-      dotsContainer.innerHTML = '';
+  // --- FILTRAGE PAR DATES DE VALIDITÉ (DÉBUT & FIN) ---
+  const aujourdhui = new Date();
+  aujourdhui.setHours(0, 0, 0, 0);
 
-      pubs.forEach((p, index) => {
-        const slide = document.createElement('a');
-        slide.className = `pub-slide ${index === 0 ? 'active' : ''}`;
-        slide.href = escapeHTML(p.lien_url) || '#';
-        if (p.lien_url) slide.target = '_blank';
-
-        const imgHTML = p.image_url ? `<img src="${escapeHTML(p.image_url)}" alt="${escapeHTML(p.titre)}">` : '';
-
-        slide.innerHTML = `
-          <span class="pub-tag">📢 Sponsorisé</span>
-          ${imgHTML}
-          <div class="pub-title">${escapeHTML(p.titre)}</div>
-          ${p.description ? `<p class="pub-desc">${escapeHTML(p.description)}</p>` : ''}
-        `;
-        slidesContainer.appendChild(slide);
-
-        if (pubs.length > 1) {
-          const dot = document.createElement('span');
-          dot.className = `dot ${index === 0 ? 'active-dot' : ''}`;
-          dot.onclick = () => afficherSlide(index);
-          dotsContainer.appendChild(dot);
-        }
-      });
-
-      if (pubs.length > 1) {
-        lancerAutoPlay(pubs.length);
-      }
+  const pubsValides = pubs.filter(p => {
+    // Si une date de début est programmée dans le futur, ne pas afficher
+    if (p.date_debut) {
+      const [y, m, d] = p.date_debut.split('-').map(Number);
+      const dateDebut = new Date(y, m - 1, d);
+      if (dateDebut > aujourdhui) return false;
     }
 
-    function afficherSlide(index) {
-      const slides = document.querySelectorAll('.pub-slide');
-      const dots = document.querySelectorAll('.dot');
-      if (slides.length === 0) return;
-
-      slides.forEach(s => s.classList.remove('active'));
-      dots.forEach(d => d.classList.remove('active-dot'));
-
-      currentSlideIndex = index;
-      if (slides[currentSlideIndex]) slides[currentSlideIndex].classList.add('active');
-      if (dots[currentSlideIndex]) dots[currentSlideIndex].classList.add('active-dot');
+    // Si la date de fin est dépassée (expirée), ne pas afficher dans le carrousel !
+    if (p.date_fin) {
+      const [y, m, d] = p.date_fin.split('-').map(Number);
+      const dateFin = new Date(y, m - 1, d);
+      if (dateFin < aujourdhui) return false;
     }
 
-    function lancerAutoPlay(totalSlides) {
-      if (carouselTimer) clearInterval(carouselTimer);
-      carouselTimer = setInterval(() => {
-        currentSlideIndex = (currentSlideIndex + 1) % totalSlides;
-        afficherSlide(currentSlideIndex);
-      }, 5000);
-    }
+    return true;
+  });
 
+  // Si aucune publicité n'est valide actuellement
+  if (pubsValides.length === 0) {
+    if (wrapper) wrapper.style.display = 'none';
+    return;
+  }
+
+  // --- AFFICHAGE DU CARROUSEL AVEC LES PUBS VALIDES ---
+  wrapper.style.display = 'block';
+  slidesContainer.innerHTML = '';
+  dotsContainer.innerHTML = '';
+
+  pubsValides.forEach((p, index) => {
+    const slide = document.createElement('a');
+    slide.className = `pub-slide ${index === 0 ? 'active' : ''}`;
+    slide.href = escapeHTML(p.lien_url) || '#';
+    if (p.lien_url) slide.target = '_blank';
+
+    const imgHTML = p.image_url ? `<img src="${escapeHTML(p.image_url)}" alt="${escapeHTML(p.titre)}">` : '';
+
+    slide.innerHTML = `
+      <span class="pub-tag">📢 Sponsorisé</span>
+      ${imgHTML}
+      <div class="pub-title">${escapeHTML(p.titre)}</div>
+      ${p.description ? `<p class="pub-desc">${escapeHTML(p.description)}</p>` : ''}
+    `;
+    slidesContainer.appendChild(slide);
+
+    if (pubsValides.length > 1) {
+      const dot = document.createElement('span');
+      dot.className = `dot ${index === 0 ? 'active-dot' : ''}`;
+      dot.onclick = () => afficherSlide(index);
+      dotsContainer.appendChild(dot);
+    }
+  });
+
+  if (pubsValides.length > 1) {
+    lancerAutoPlay(pubsValides.length);
+  }
+}
+
+function afficherSlide(index) {
+  const slides = document.querySelectorAll('.pub-slide');
+  const dots = document.querySelectorAll('.dot');
+  if (slides.length === 0) return;
+
+  slides.forEach(s => s.classList.remove('active'));
+  dots.forEach(d => d.classList.remove('active-dot'));
+
+  currentSlideIndex = index;
+  if (slides[currentSlideIndex]) slides[currentSlideIndex].classList.add('active');
+  if (dots[currentSlideIndex]) dots[currentSlideIndex].classList.add('active-dot');
+}
+
+function lancerAutoPlay(totalSlides) {
+  if (carouselTimer) clearInterval(carouselTimer);
+  carouselTimer = setInterval(() => {
+    currentSlideIndex = (currentSlideIndex + 1) % totalSlides;
+    afficherSlide(currentSlideIndex);
+  }, 5000);
+}
     /* ARTISANS & FILTRES */
     async function chargerArtisans() {
       const { data, error } = await supabaseClient
