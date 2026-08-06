@@ -52,14 +52,14 @@
       100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
     }
 
-    /* Alertes Pharmacies */
+    /* Alertes (Pharmacies & Pubs) */
     .alert-banner {
       background-color: #fef3c7;
       border-left: 5px solid #f59e0b;
       color: #92400e;
       padding: 15px;
       border-radius: 8px;
-      margin-bottom: 20px;
+      margin-bottom: 15px;
       display: none;
       font-size: 0.95em;
     }
@@ -152,6 +152,12 @@
     <div id="alert-garde" class="alert-banner">
       <h4>⏰ Rappel Mises à jour Pharmacies</h4>
       <div id="alert-garde-text"></div>
+    </div>
+
+    <!-- BANNIÈRE DE RAPPEL ÉCHÉANCES PUBLICITÉS -->
+    <div id="alert-pub" class="alert-banner" style="background-color: #fef2f2; border-left-color: #ef4444; color: #991b1b;">
+      <h4 style="color: #991b1b;">📢 Rappel Échéances Publicitaires</h4>
+      <div id="alert-pub-text"></div>
     </div>
 
     <!-- SECTION 1 : VISITES JOURNALIÈRES -->
@@ -544,15 +550,16 @@
       XLSX.writeFile(wb, `FixTana_Rapport_Visites_${new Date().toISOString().split('T')[0]}.xlsx`);
     }
 
-    /* --- 2. GESTION DES PUBLICITÉS AVEC GESTION DES PÉRIODES --- */
+    /* --- 2. GESTION DES PUBLICITÉS ET DE LEUR ÉCHÉANCE --- */
     async function chargerPubs() {
       const { data, error } = await supabaseClient
         .from('publicites')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('id', { ascending: false });
 
       const tbody = document.getElementById('table-pubs');
       if (error || !data) {
+        console.error("Erreur Supabase Pubs:", error);
         tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">Erreur de chargement.</td></tr>';
         return;
       }
@@ -562,11 +569,14 @@
 
       if (data.length === 0) {
         tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">Aucune publicité enregistrée.</td></tr>';
+        document.getElementById('alert-pub').style.display = 'none';
         return;
       }
 
       const aujourdhui = new Date();
       aujourdhui.setHours(0,0,0,0);
+
+      let alertesPubText = [];
 
       data.forEach(p => {
         let statutBadge = '<span class="badge-status status-ok">🟢 Active</span>';
@@ -580,9 +590,11 @@
 
           if (diffJours < 0) {
             statutBadge = '<span class="badge-status status-expired">🔴 Expirée</span>';
+            alertesPubText.push(`• <strong>${escapeHTML(p.titre)}</strong> : La publicité a expiré le ${formaterDate(p.date_fin)}.`);
           } else if (diffJours <= 2) {
             const libelleFin = diffJours === 0 ? "aujourd'hui" : `dans ${diffJours} j`;
             statutBadge = `<span class="badge-status status-warning">⏳ Fin ${libelleFin}</span>`;
+            alertesPubText.push(`• <strong>${escapeHTML(p.titre)}</strong> : La campagne se termine ${libelleFin} (${formaterDate(p.date_fin)}).`);
           }
         }
 
@@ -596,21 +608,33 @@
           <td><small>${p.lien_url ? `<a href="${escapeHTML(p.lien_url)}" target="_blank" style="color:#2563eb;">${escapeHTML(p.lien_url)}</a>` : '-'}</small></td>
           <td><small>${periodeStr}</small></td>
           <td>
-            <button style="border:none; background:none; padding:0; cursor:pointer;" onclick="basculerStatutPub(${p.id}, ${p.est_actif})">
+            <button type="button" style="border:none; background:none; padding:0; cursor:pointer;" onclick="basculerStatutPub(${p.id}, ${p.est_actif})">
               ${statutBadge}
             </button>
           </td>
           <td style="text-align: right; white-space: nowrap;">
-            <button class="btn btn-primary" onclick="editerPub(${p.id})" title="Modifier">✏️</button>
-            <button class="btn btn-danger" onclick="supprimerPub(${p.id})" title="Supprimer">🗑️</button>
+            <button type="button" class="btn btn-primary" onclick="editerPub(${p.id})" title="Modifier">✏️</button>
+            <button type="button" class="btn btn-danger" onclick="supprimerPub(${p.id})" title="Supprimer">🗑️</button>
           </td>
         `;
         tbody.appendChild(tr);
       });
+
+      // Gestion d'affichage du bandeau d'alerte pour les publicités
+      const alertPubBanner = document.getElementById('alert-pub');
+      if (alertPubBanner) {
+        if (alertesPubText.length > 0) {
+          document.getElementById('alert-pub-text').innerHTML = alertesPubText.join('<br>');
+          alertPubBanner.style.display = 'block';
+        } else {
+          alertPubBanner.style.display = 'none';
+        }
+      }
     }
 
     async function ajouterOuModifierPub(e) {
       e.preventDefault();
+      
       const id = document.getElementById('pub-id-edition').value;
       const titre = document.getElementById('pub-titre').value.trim();
       const image_url = document.getElementById('pub-image').value.trim();
@@ -619,26 +643,45 @@
       const date_debut = document.getElementById('pub-debut').value || null;
       const date_fin = document.getElementById('pub-fin').value || null;
 
+      const payload = {
+        titre: titre,
+        image_url: image_url || null,
+        lien_url: lien_url || null,
+        description: description || null,
+        date_debut: date_debut,
+        date_fin: date_fin,
+        est_actif: true
+      };
+
+      let res;
       if (id) {
-        const { error } = await supabaseClient
+        delete payload.est_actif;
+        res = await supabaseClient
           .from('publicites')
-          .update({ titre, image_url, lien_url, description, date_debut, date_fin })
+          .update(payload)
           .eq('id', id);
-        if (error) alert("Erreur : " + error.message);
       } else {
-        const { error } = await supabaseClient
+        res = await supabaseClient
           .from('publicites')
-          .insert([{ titre, image_url, lien_url, description, date_debut, date_fin, est_actif: true }]);
-        if (error) alert("Erreur : " + error.message);
+          .insert([payload]);
+      }
+
+      if (res.error) {
+        alert("❌ Erreur Supabase : " + res.error.message);
+        console.error(res.error);
+        return;
       }
 
       reinitialiserFormulairePub();
-      chargerPubs();
+      await chargerPubs();
     }
 
     function editerPub(id) {
-      const pub = listePubsCache.find(p => p.id === id);
-      if (!pub) return;
+      const pub = listePubsCache.find(p => Number(p.id) === Number(id));
+      if (!pub) {
+        console.error("Publicité non trouvée pour l'ID", id);
+        return;
+      }
 
       document.getElementById('pub-id-edition').value = pub.id;
       document.getElementById('pub-titre').value = pub.titre || '';
