@@ -4,8 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FixTana - Administration</title>
+  
+  <!-- Supabase JS Client & XLSX Export -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
   <style>
     * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     body { background-color: #f8fafc; margin: 0; padding: 20px; color: #1e293b; }
@@ -144,6 +147,10 @@
     .btn-excel { background-color: #0284c7; color: white; }
     .btn-excel:hover { background-color: #0369a1; }
 
+    /* Boutons de prolongation rapide */
+    .btn-extend { background-color: #8b5cf6; color: white; }
+    .btn-extend:hover { background-color: #7c3aed; }
+
     /* Formulaires */
     .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 10px; }
     .form-grid input, .form-grid textarea { padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9em; outline: none; }
@@ -228,7 +235,7 @@
       </table>
     </div>
 
-    <!-- SECTION 2 : PUBLICITÉS & FINANCES (AVEC SUIVI CTR ET EXPORT) -->
+    <!-- SECTION 2 : PUBLICITÉS & FINANCES (SUIVI CTR ET EXPORT) -->
     <div class="card">
       <div class="card-header-flex">
         <h2>📢 Bannières Publicitaires & Performances (CTR)</h2>
@@ -712,6 +719,7 @@
             </button>
           </td>
           <td style="text-align: right; white-space: nowrap;">
+            <button type="button" class="btn btn-extend" onclick="prolongerPubRapide(${p.id})" title="Prolonger la durée">➕ Prolonger</button>
             <button type="button" class="btn btn-primary" onclick="editerPub(${p.id})" title="Modifier">✏️</button>
             <button type="button" class="btn btn-danger" onclick="supprimerPub(${p.id})" title="Supprimer">🗑️</button>
           </td>
@@ -727,6 +735,61 @@
         } else {
           alertPubBanner.style.display = 'none';
         }
+      }
+    }
+
+    async function prolongerPubRapide(id) {
+      const pub = listePubsCache.find(p => Number(p.id) === Number(id));
+      if (!pub) return;
+
+      const choix = prompt(
+        `⏳ PROLONGER LA CAMPAGNE : "${pub.titre}"\n\n` +
+        `Choisissez la durée de prolongation à ajouter à partir de la date de fin actuelle (ou à partir d'aujourd'hui si expirée) :\n\n` +
+        `1 = +1 Semaine (7 jours)\n` +
+        `2 = +2 Semaines (14 jours)\n` +
+        `3 = +1 Mois (30 jours)\n` +
+        `4 = +3 Mois (90 jours)\n\n` +
+        `Entrez le numéro de votre choix (1, 2, 3 ou 4) :`
+      );
+
+      if (!choix) return;
+
+      let joursAAjouter = 0;
+      switch (choix.trim()) {
+        case '1': joursAAjouter = 7; break;
+        case '2': joursAAjouter = 14; break;
+        case '3': joursAAjouter = 30; break;
+        case '4': joursAAjouter = 90; break;
+        default:
+          alert("❌ Choix invalide. Veuillez saisir un chiffre entre 1 et 4.");
+          return;
+      }
+
+      let dateReference = new Date();
+      if (pub.date_fin) {
+        const [y, m, d] = pub.date_fin.split('-').map(Number);
+        const dateFinActuelle = new Date(y, m - 1, d);
+        if (dateFinActuelle > dateReference) {
+          dateReference = dateFinActuelle;
+        }
+      }
+
+      dateReference.setDate(dateReference.getDate() + joursAAjouter);
+      const nouvelleDateFinStr = dateReference.toISOString().split('T')[0];
+
+      const { error } = await supabaseClient
+        .from('publicites')
+        .update({
+          date_fin: nouvelleDateFinStr,
+          est_actif: true
+        })
+        .eq('id', id);
+
+      if (error) {
+        alert("❌ Erreur lors de la prolongation : " + error.message);
+      } else {
+        alert(`✅ Campagne prolongée jusqu'au ${formaterDate(nouvelleDateFinStr)} !`);
+        chargerPubs();
       }
     }
 
@@ -1063,11 +1126,13 @@
       });
 
       const alertBanner = document.getElementById('alert-garde');
-      if (alertesText.length > 0) {
-        document.getElementById('alert-garde-text').innerHTML = alertesText.join('<br>');
-        alertBanner.style.display = 'block';
-      } else {
-        alertBanner.style.display = 'none';
+      if (alertBanner) {
+        if (alertesText.length > 0) {
+          document.getElementById('alert-garde-text').innerHTML = alertesText.join('<br>');
+          alertBanner.style.display = 'block';
+        } else {
+          alertBanner.style.display = 'none';
+        }
       }
     }
 
