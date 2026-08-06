@@ -3,411 +3,1294 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Administration - FixTana</title>
-  
-  <!-- Supabase JS Client -->
+  <title>FixTana - Administration</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    body { background-color: #f1f5f9; margin: 0; padding: 20px; color: #1e293b; }
-    .container { max-width: 1000px; margin: 0 auto; }
-
-    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-    h1 { margin: 0; font-size: 1.5em; color: #0f172a; }
-    .btn-logout { background: #ef4444; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
-
-    /* STATISTIQUES DASHBOARD */
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
-    .stat-card { background: white; padding: 18px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); border-left: 4px solid #2563eb; }
-    .stat-card.green { border-left-color: #10b981; }
-    .stat-card.amber { border-left-color: #f59e0b; }
-    .stat-card.purple { border-left-color: #8b5cf6; }
-    .stat-val { font-size: 1.8em; font-weight: bold; margin-top: 5px; color: #0f172a; }
-    .stat-lbl { font-size: 0.85em; color: #64748b; text-transform: uppercase; font-weight: 600; }
-
-    /* SECTIONS & TABLEAUX */
-    .section-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 25px; }
-    .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-    .section-header h2 { margin: 0; font-size: 1.2em; color: #1e293b; }
-
-    .btn-add { background: #10b981; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.85em; }
-
-    table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
-    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e2e8f0; }
-    th { background: #f8fafc; color: #475569; font-weight: 600; }
+    body { background-color: #f8fafc; margin: 0; padding: 20px; color: #1e293b; }
+    .container { max-width: 1050px; margin: 0 auto; }
     
-    .badge { padding: 4px 8px; border-radius: 12px; font-size: 0.75em; font-weight: bold; display: inline-block; }
-    .badge-success { background: #dcfce7; color: #15803d; }
-    .badge-danger { background: #fee2e2; color: #991b1b; }
-    .badge-warning { background: #fef3c7; color: #b45309; }
+    h1 { color: #0f172a; margin-bottom: 5px; font-size: 1.8em; }
+    .subtitle { color: #64748b; font-size: 0.9em; margin-bottom: 25px; }
 
-    .actions-btns { display: flex; gap: 6px; }
-    .btn-sm { padding: 4px 8px; border-radius: 4px; border: none; font-size: 0.8em; cursor: pointer; font-weight: bold; }
-    .btn-edit { background: #3b82f6; color: white; }
-    .btn-delete { background: #ef4444; color: white; }
-    .btn-toggle { background: #64748b; color: white; }
+    /* CARTES STATISTIQUES FINANCIÈRES */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+    .kpi-card {
+      background: white;
+      padding: 18px 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      border: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    .kpi-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5em;
+    }
+    .kpi-green { background: #dcfce7; color: #15803d; }
+    .kpi-blue { background: #e0f2fe; color: #0369a1; }
+    .kpi-data h3 { margin: 0; font-size: 0.8em; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
+    .kpi-data p { margin: 4px 0 0 0; font-size: 1.4em; font-weight: bold; color: #0f172a; }
 
-    /* MODALE ENREGISTREMENT / ÉDITION */
-    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; padding: 15px; }
-    .modal-content { background: white; padding: 25px; border-radius: 12px; width: 100%; max-width: 500px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
-    .modal-content h3 { margin-top: 0; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; }
+    /* BANDEAU DYNAMIQUE PRESTATAIRES EN ATTENTE */
+    .alert-pending {
+      background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%);
+      color: #fef08a;
+      border-left: 6px solid #f59e0b;
+      padding: 15px 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 12px rgba(30, 58, 138, 0.25);
+      animation: pulseAlert 2s infinite ease-in-out;
+    }
+    .alert-pending-content { display: flex; align-items: center; gap: 12px; }
+    .alert-pending-icon { font-size: 1.6em; }
+    .alert-pending-text h4 { margin: 0 0 2px 0; color: #ffffff; font-size: 1.05em; }
+    .alert-pending-text p { margin: 0; color: #fef08a; font-size: 0.88em; }
+    .alert-pending-btn {
+      background: #f59e0b;
+      color: #0f172a;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 0.85em;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .alert-pending-btn:hover { background: #d97706; }
+
+    @keyframes pulseAlert {
+      0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+      70% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+    }
+
+    /* Alertes (Pharmacies & Pubs) */
+    .alert-banner {
+      background-color: #fef3c7;
+      border-left: 5px solid #f59e0b;
+      color: #92400e;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      display: none;
+      font-size: 0.95em;
+    }
+    .alert-banner h4 { margin: 0 0 5px 0; font-size: 1.05em; }
+
+    /* Cartes */
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 25px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      border: 1px solid #e2e8f0;
+    }
+    
+    .card-header-flex {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #f1f5f9;
+      padding-bottom: 10px;
+      margin-bottom: 15px;
+    }
+
+    h2 { font-size: 1.2em; margin: 0; color: #1e293b; display: flex; align-items: center; gap: 8px; }
+
+    /* Tableaux */
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9em; }
+    th, td { text-align: left; padding: 12px; border-bottom: 1px solid #e2e8f0; }
+    th { background-color: #f8fafc; color: #475569; font-weight: 600; }
+    tr:hover { background-color: #f8fafc; }
+
+    /* Badges & Boutons */
+    .badge-status { padding: 4px 8px; border-radius: 12px; font-weight: bold; font-size: 0.8em; display: inline-block; cursor: pointer; border: none; }
+    .status-ok { background: #dcfce7; color: #15803d; }
+    .status-warning { background: #fef3c7; color: #b45309; }
+    .status-expired { background: #fee2e2; color: #b91c1c; }
+
+    .stat-badge { background: #e0f2fe; color: #0369a1; padding: 4px 8px; border-radius: 6px; font-weight: bold; font-size: 0.85em; }
+    .stat-wa { background: #dcfce7; color: #15803d; }
+
+    .btn { padding: 6px 12px; border: none; border-radius: 6px; font-weight: 600; font-size: 0.85em; cursor: pointer; transition: 0.2s; }
+    .btn-green { background-color: #16a34a; color: white; }
+    .btn-green:hover { background-color: #15803d; }
+    .btn-primary { background-color: #2563eb; color: white; }
+    .btn-primary:hover { background-color: #1d4ed8; }
+    .btn-star { background-color: #f59e0b; color: white; }
+    .btn-star:hover { background-color: #d97706; }
+    .btn-danger { background-color: #ef4444; color: white; }
+    .btn-danger:hover { background-color: #dc2626; }
+    .btn-cancel { background-color: #94a3b8; color: white; }
+    .btn-excel { background-color: #0284c7; color: white; }
+    .btn-excel:hover { background-color: #0369a1; }
+
+    /* Formulaires */
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 10px; }
+    .form-grid input, .form-grid textarea { padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9em; outline: none; }
+    
+    .empty-msg { text-align: center; color: #94a3b8; padding: 20px 0; font-style: italic; }
+
+    /* Modales */
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
+    .modal-content { background: white; padding: 25px; border-radius: 12px; width: 100%; max-width: 450px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+    .modal-content h3 { margin-top: 0; color: #0f172a; font-size: 1.2em; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; }
     .form-group { margin-bottom: 12px; }
     .form-group label { display: block; font-size: 0.85em; font-weight: 600; color: #475569; margin-bottom: 4px; }
-    .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9em; outline: none; }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .form-group input, .form-group textarea { width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9em; }
     .modal-buttons { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
-
-    /* ECRAN CONNEXION */
-    #auth-screen { max-width: 380px; margin: 80px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
   </style>
 </head>
 <body>
 
-  <!-- ÉCRAN DE CONNEXION ADMIN -->
-  <div id="auth-screen">
-    <h2 style="text-align: center; margin-top: 0;">🔒 Espace Admin</h2>
-    <form onsubmit="gererConnexion(event)">
-      <div class="form-group">
-        <label>Mot de passe Administrateur</label>
-        <input type="password" id="admin-pass" required placeholder="Saisir votre mot de passe">
-      </div>
-      <button type="submit" style="width: 100%; padding: 10px; background: #2563eb; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px;">Se Connecter</button>
-    </form>
-  </div>
+  <div class="container">
+    <h1>👑 FixTana — Administration</h1>
+    <p class="subtitle">Gestion globale en temps réel (Visites, Publicités, Revenus, Urgences, Pharmacies et Artisans).</p>
 
-  <!-- TABLEAU DE BORD ADMIN (MASQUÉ PAR DÉFAUT) -->
-  <div id="admin-dashboard" class="container" style="display: none;">
-    <header>
-      <h1>⚙️ Administration FixTana</h1>
-      <button class="btn-logout" onclick="deconnexion()">Déconnexion</button>
-    </header>
-
-    <!-- STATISTIQUES GLO BALES -->
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-lbl">Visites Totales</div>
-        <div class="stat-val" id="st-visites">0</div>
+    <!-- KPI REVENUS PUBLICITAIRES -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-icon kpi-green">📅</div>
+        <div class="kpi-data">
+          <h3>Revenus Pubs du mois</h3>
+          <p id="kpi-revenus-mois">0 Ar</p>
+        </div>
       </div>
-      <div class="stat-card green">
-        <div class="stat-lbl">Artisans Vérifiés</div>
-        <div class="stat-val" id="st-artisans">0</div>
-      </div>
-      <div class="stat-card amber">
-        <div class="stat-lbl">Demandes en Attente</div>
-        <div class="stat-val" id="st-attente">0</div>
-      </div>
-      <div class="stat-card purple">
-        <div class="stat-lbl">Publicités Actives</div>
-        <div class="stat-val" id="st-pubs">0</div>
+      <div class="kpi-card">
+        <div class="kpi-icon kpi-blue">💰</div>
+        <div class="kpi-data">
+          <h3>Total Généré (Cumulé)</h3>
+          <p id="kpi-revenus-total">0 Ar</p>
+        </div>
       </div>
     </div>
 
-    <!-- GESTION DES PUBLICITÉS DU CARROUSEL -->
-    <div class="section-card">
-      <div class="section-header">
-        <h2>📢 Campagnes Publicitaires (Bannières)</h2>
-        <button class="btn-add" onclick="ouvrirModalPub()">+ Nouvelle Publicité</button>
+    <!-- BANDEAU DYNAMIQUE NOUVELLES INSCRIPTIONS -->
+    <div id="alert-pending-banner" class="alert-pending">
+      <div class="alert-pending-content">
+        <span class="alert-pending-icon">🔔</span>
+        <div class="alert-pending-text">
+          <h4 id="pending-count-title">Demande d'inscription reçue !</h4>
+          <p id="pending-count-desc">Des prestataires attendent votre validation pour apparaître sur le site.</p>
+        </div>
+      </div>
+      <button class="alert-pending-btn" onclick="scrollToPending()">Examiner les demandes 👇</button>
+    </div>
+
+    <!-- BANNIÈRE DE RAPPEL DE GARDE PHARMACIE -->
+    <div id="alert-garde" class="alert-banner">
+      <h4>⏰ Rappel Mises à jour Pharmacies</h4>
+      <div id="alert-garde-text"></div>
+    </div>
+
+    <!-- BANNIÈRE DE RAPPEL ÉCHÉANCES PUBLICITÉS -->
+    <div id="alert-pub" class="alert-banner" style="background-color: #fef2f2; border-left-color: #ef4444; color: #991b1b;">
+      <h4 style="color: #991b1b;">📢 Rappel Échéances Publicitaires</h4>
+      <div id="alert-pub-text"></div>
+    </div>
+
+    <!-- SECTION 1 : VISITES JOURNALIÈRES -->
+    <div class="card">
+      <div class="card-header-flex">
+        <h2>📈 Visites Journalières du Site</h2>
+        <button class="btn btn-excel" onclick="exporterVisitesXLSX()">📥 Exporter Visites (Excel)</button>
       </div>
       <table>
         <thead>
           <tr>
-            <th>Visuel & Titre</th>
-            <th>Période</th>
-            <th>Vues (Impressions)</th>
-            <th>Clics</th>
-            <th>CTR</th>
-            <th>Statut</th>
-            <th>Actions</th>
+            <th>Date</th>
+            <th>Nombre de Visites</th>
+            <th>Tendance</th>
           </tr>
         </thead>
-        <tbody id="tbl-pubs">
-          <tr><td colspan="7">Chargement des publicités...</td></tr>
+        <tbody id="table-visites">
+          <tr><td colspan="3" class="empty-msg">Chargement du trafic...</td></tr>
         </tbody>
       </table>
     </div>
 
-    <!-- DEMANDES D'INSCRIPTION ARTISANS EN ATTENTE -->
-    <div class="section-card">
-      <div class="section-header">
-        <h2>⏳ Artisans en attente de validation</h2>
+    <!-- SECTION 2 : PUBLICITÉS & FINANCES (AVEC SUIVI CTR ET EXPORT) -->
+    <div class="card">
+      <div class="card-header-flex">
+        <h2>📢 Bannières Publicitaires & Performances (CTR)</h2>
+        <button class="btn btn-excel" onclick="exporterRapportPubsXLSX()">📊 Exporter Bilan Annonceurs (Excel)</button>
       </div>
+      
+      <form id="form-pub" onsubmit="ajouterOuModifierPub(event)" style="margin-bottom: 20px;">
+        <input type="hidden" id="pub-id-edition" value="">
+        
+        <div class="form-grid">
+          <input type="text" id="pub-titre" placeholder="Nom de l'annonceur *" required>
+          <input type="number" id="pub-prix" placeholder="Prix de la campagne (Ar)" min="0" step="500">
+          <input type="url" id="pub-image" placeholder="Lien URL de l'image">
+          <input type="url" id="pub-lien" placeholder="Lien URL de redirection">
+          <input type="text" id="pub-desc" placeholder="Texte promotionnel">
+          <input type="date" id="pub-debut" title="Début d'affichage">
+          <input type="date" id="pub-fin" title="Fin d'affichage">
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+          <button type="submit" id="btn-soumettre-pub" class="btn btn-green" style="flex: 1; padding: 10px;">+ Enregistrer la Pub</button>
+          <button type="button" id="btn-annuler-pub" class="btn btn-danger" onclick="reinitialiserFormulairePub()" style="display: none; padding: 10px;">Annuler</button>
+        </div>
+      </form>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Annonceur</th>
+            <th>Montant</th>
+            <th>Vues (Impressions)</th>
+            <th>Clics</th>
+            <th>CTR (%)</th>
+            <th>Période</th>
+            <th>Statut</th>
+            <th style="text-align: right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="table-pubs">
+          <tr><td colspan="8" class="empty-msg">Chargement des publicités...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SECTION 3 : STATISTIQUES & CLICS ARTISANS -->
+    <div class="card">
+      <div class="card-header-flex">
+        <h2>📊 Statistiques de Contact (Clics Artisans)</h2>
+        <button class="btn btn-green" onclick="exporterClicsXLSX()">📥 Exporter Rapport Clics (Excel)</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Artisan / Prestataire</th>
+            <th>Métier</th>
+            <th>📞 Clics Appel</th>
+            <th>💬 Clics WhatsApp</th>
+            <th>Total Interprété</th>
+          </tr>
+        </thead>
+        <tbody id="table-stats">
+          <tr><td colspan="5" class="empty-msg">Chargement des statistiques...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SECTION 4 : NUMÉROS D'URGENCE -->
+    <div class="card">
+      <h2>🚨 Numéros d'Urgence</h2>
+      <form id="form-urgence" onsubmit="ajouterUrgence(event)">
+        <div class="form-grid">
+          <input type="text" id="urg-nom" placeholder="Service (ex: SAMU, Pompiers) *" required>
+          <input type="text" id="urg-tel" placeholder="Numéro d'urgence *" required>
+        </div>
+        <button type="submit" class="btn btn-green" style="width: 100%; padding: 8px; margin-top: 5px;">+ Ajouter un numéro d'urgence</button>
+      </form>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Service d'Urgence</th>
+            <th>Numéro d'Appel</th>
+            <th style="text-align: right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="table-urgences">
+          <tr><td colspan="3" class="empty-msg">Chargement des numéros...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SECTION 5 : PHARMACIES DE GARDE -->
+    <div class="card">
+      <h2>💊 Pharmacies de Garde (Roulement Hebdomadaire)</h2>
+      <form id="form-pharmacie" onsubmit="ajouterPharmacie(event)">
+        <div class="form-grid">
+          <input type="text" id="ph-nom" placeholder="Nom pharmacie *" required>
+          <input type="text" id="ph-quartier" placeholder="Quartier *" required>
+          <input type="tel" id="ph-tel" placeholder="Téléphone">
+          <input type="date" id="ph-debut" title="Début de garde">
+          <input type="date" id="ph-fin" title="Fin de garde">
+        </div>
+        <button type="submit" class="btn btn-green" style="width: 100%; padding: 8px; margin-top: 5px;">+ Enregistrer la pharmacie</button>
+      </form>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Pharmacie</th>
+            <th>Quartier / Tel</th>
+            <th>Période de Garde</th>
+            <th>Statut Échéance</th>
+            <th style="text-align: right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="table-pharmacies">
+          <tr><td colspan="5" class="empty-msg">Chargement des pharmacies...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SECTION 6 : ARTISANS EN ATTENTE -->
+    <div class="card" id="card-en-attente">
+      <h2>⏳ Artisans en attente de validation</h2>
       <table>
         <thead>
           <tr>
             <th>Nom</th>
             <th>Métier</th>
             <th>Quartier</th>
-            <th>Téléphone / WA</th>
-            <th>Actions</th>
+            <th>Téléphone</th>
+            <th style="text-align: right;">Actions</th>
           </tr>
         </thead>
-        <tbody id="tbl-artisans-attente">
-          <tr><td colspan="5">Chargement des demandes...</td></tr>
+        <tbody id="table-en-attente">
+          <tr><td colspan="5" class="empty-msg">Chargement...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SECTION 7 : ARTISANS VALIDÉS & SPONSORISÉS -->
+    <div class="card">
+      <h2>✅ Artisans vérifiés & publiés</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Nom</th>
+            <th>Métier</th>
+            <th>Quartier</th>
+            <th>Téléphone</th>
+            <th style="text-align: right;">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="table-valides">
+          <tr><td colspan="5" class="empty-msg">Chargement...</td></tr>
         </tbody>
       </table>
     </div>
   </div>
 
-  <!-- MODALE CRÉATION / ÉDITION PUBLICITÉ -->
-  <div id="modalPub" class="modal">
+  <!-- MODALE MODIFIER URGENCE -->
+  <div id="modalUrgence" class="modal">
     <div class="modal-content">
-      <h3 id="modal-pub-title">📢 Ajouter une Publicité</h3>
-      <form id="form-pub" onsubmit="sauvegarderPub(event)">
-        <input type="hidden" id="pub-id">
-        <div class="form-group">
-          <label>Titre de la publicité *</label>
-          <input type="text" id="pub-titre" required placeholder="Ex: Offre Spéciale Peinture">
-        </div>
-        <div class="form-group">
-          <label>Description courte</label>
-          <textarea id="pub-desc" rows="2" placeholder="Détails de l'offre..."></textarea>
-        </div>
-        <div class="form-group">
-          <label>URL de l'image (Bannière)</label>
-          <input type="url" id="pub-img" placeholder="https://site.com/image.jpg">
-        </div>
-        <div class="form-group">
-          <label>Lien de destination (URL Cible)</label>
-          <input type="url" id="pub-link" placeholder="https://site-du-client.com">
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Date Début</label>
-            <input type="date" id="pub-date-debut">
-          </div>
-          <div class="form-group">
-            <label>Date Fin (Expiration)</label>
-            <input type="date" id="pub-date-fin">
-          </div>
-        </div>
-        <div class="form-group">
-          <label>
-            <input type="checkbox" id="pub-actif" checked> Publicité active
-          </label>
-        </div>
-        <div class="modal-buttons">
-          <button type="button" class="btn-sm btn-toggle" onclick="fermerModalPub()">Annuler</button>
-          <button type="submit" class="btn-sm btn-add">Enregistrer</button>
-        </div>
-      </form>
+      <h3>✏️ Modifier l'Urgence</h3>
+      <input type="hidden" id="edit-urg-id">
+      <div class="form-group">
+        <label>Nom du service</label>
+        <input type="text" id="edit-urg-nom">
+      </div>
+      <div class="form-group">
+        <label>Numéro de téléphone</label>
+        <input type="text" id="edit-urg-tel">
+      </div>
+      <div class="modal-buttons">
+        <button class="btn btn-cancel" onclick="fermerModales()">Annuler</button>
+        <button class="btn btn-green" onclick="sauvegarderUrgence()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODALE MODIFIER PHARMACIE -->
+  <div id="modalPharmacie" class="modal">
+    <div class="modal-content">
+      <h3>✏️ Modifier la Pharmacie</h3>
+      <input type="hidden" id="edit-ph-id">
+      <div class="form-group">
+        <label>Nom de la pharmacie</label>
+        <input type="text" id="edit-ph-nom">
+      </div>
+      <div class="form-group">
+        <label>Quartier</label>
+        <input type="text" id="edit-ph-quartier">
+      </div>
+      <div class="form-group">
+        <label>Téléphone</label>
+        <input type="text" id="edit-ph-tel">
+      </div>
+      <div class="form-group">
+        <label>Début de la garde</label>
+        <input type="date" id="edit-ph-debut">
+      </div>
+      <div class="form-group">
+        <label>Fin de la garde</label>
+        <input type="date" id="edit-ph-fin">
+      </div>
+      <div class="modal-buttons">
+        <button class="btn btn-cancel" onclick="fermerModales()">Annuler</button>
+        <button class="btn btn-green" onclick="sauvegarderPharmacie()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODALE MODIFIER ARTISAN -->
+  <div id="modalArtisan" class="modal">
+    <div class="modal-content">
+      <h3>✏️ Modifier le Prestataire</h3>
+      <input type="hidden" id="edit-art-id">
+      <div class="form-group">
+        <label>Nom complet</label>
+        <input type="text" id="edit-art-nom">
+      </div>
+      <div class="form-group">
+        <label>Métier</label>
+        <input type="text" id="edit-art-metier">
+      </div>
+      <div class="form-group">
+        <label>Quartier</label>
+        <input type="text" id="edit-art-quartier">
+      </div>
+      <div class="form-group">
+        <label>Téléphone</label>
+        <input type="text" id="edit-art-tel">
+      </div>
+      <div class="form-group">
+        <label>WhatsApp</label>
+        <input type="text" id="edit-art-wa">
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea id="edit-art-desc" rows="3"></textarea>
+      </div>
+      <div class="modal-buttons">
+        <button class="btn btn-cancel" onclick="fermerModales()">Annuler</button>
+        <button class="btn btn-green" onclick="sauvegarderArtisan()">Enregistrer</button>
+      </div>
     </div>
   </div>
 
   <script>
+    const MOT_DE_PASSE_ADMIN = "Yastef44045"; 
+
+    function verifierAccesAdmin() {
+      let passSession = sessionStorage.getItem('admin_authenticated');
+      if (passSession !== 'true') {
+        const saisie = prompt("🔒 Accès Administrateur FixTana\nVeuillez saisir le mot de passe :");
+        if (saisie === MOT_DE_PASSE_ADMIN) {
+          sessionStorage.setItem('admin_authenticated', 'true');
+        } else {
+          alert("❌ Mot de passe incorrect.");
+          document.body.innerHTML = "<h2 style='text-align:center; margin-top:50px; color:#ef4444;'>🚫 Accès non autorisé</h2>";
+          throw new Error("Accès refusé");
+        }
+      }
+    }
+
+    verifierAccesAdmin();
+
     const SUPABASE_URL = 'https://xfqzlifauzlmtzaidixb.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhmcXpsaWZhdXpsbXR6YWlkaXhiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU3NTkxMTIsImV4cCI6MjEwMTMzNTExMn0.AmBdkYq70S9QntL13EcmFSJaxASh-x4gu6T1Mkhxsvk';
-    const ADMIN_PASSWORD_HASH = "fixtana2026"; // Mot de passe simple pour démo (à adapter selon besoin)
 
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Vérification Session
-    window.onload = function() {
-      if (sessionStorage.getItem('admin_authenticated') === 'true') {
-        afficherDashboard();
-      }
-    };
+    let cacheVisites = [];
+    let listePubsCache = [];
+    let cacheUrgences = [];
+    let cachePharmacies = [];
+    let cacheArtisans = [];
+    let cacheClics = [];
 
-    function gererConnexion(e) {
-      e.preventDefault();
-      const pass = document.getElementById('admin-pass').value;
-      if (pass === ADMIN_PASSWORD_HASH) {
-        sessionStorage.setItem('admin_authenticated', 'true');
-        afficherDashboard();
-      } else {
-        alert("Mot de passe incorrect.");
-      }
+    function escapeHTML(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
     }
 
-    function deconnexion() {
-      sessionStorage.removeItem('admin_authenticated');
-      document.getElementById('admin-dashboard').style.display = 'none';
-      document.getElementById('auth-screen').style.display = 'block';
+    function formaterPrix(montant) {
+      if (!montant || isNaN(montant)) return '0 Ar';
+      return Number(montant).toLocaleString('fr-FR') + ' Ar';
     }
 
-    function afficherDashboard() {
-      document.getElementById('auth-screen').style.display = 'none';
-      document.getElementById('admin-dashboard').style.display = 'block';
-      chargerStats();
-      chargerPublicites();
-      chargerArtisansEnAttente();
+    async function initAdmin() {
+      await chargerVisites();
+      await chargerStats();
+      await chargerPubs();
+      await chargerUrgences();
+      await chargerPharmacies();
+      await chargerArtisans();
+
+      supabaseClient
+        .channel('admin-realtime')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'visites_journalieres' }, () => chargerVisites())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'artisans' }, () => { chargerArtisans(); chargerStats(); })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'publicites' }, () => chargerPubs())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'pharmacies' }, () => chargerPharmacies())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'urgences' }, () => chargerUrgences())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'clics_contact' }, () => chargerStats())
+        .subscribe();
     }
 
-    /* CHARGEMENT DES STATISTIQUES GLOBALES */
-    async function chargerStats() {
-      // Total Visites
-      const { count: vCount } = await supabaseClient.from('statistiques_visites').select('*', { count: 'exact', head: true });
-      document.getElementById('st-visites').innerText = vCount || 0;
-
-      // Artisans Validés
-      const { count: aCount } = await supabaseClient.from('artisans').select('*', { count: 'exact', head: true }).eq('est_verifie', true);
-      document.getElementById('st-artisans').innerText = aCount || 0;
-
-      // Artisans en Attente
-      const { count: attCount } = await supabaseClient.from('artisans').select('*', { count: 'exact', head: true }).eq('est_verifie', false);
-      document.getElementById('st-attente').innerText = attCount || 0;
-
-      // Publicités Actives
-      const { count: pCount } = await supabaseClient.from('publicites').select('*', { count: 'exact', head: true }).eq('est_actif', true);
-      document.getElementById('st-pubs').innerText = pCount || 0;
-    }
-
-    /* GESTION PUBLICITÉS & CALCUL CTR */
-    async function chargerPublicites() {
-      const { data: pubs, error } = await supabaseClient
-        .from('publicites')
+    /* --- 1. VISITES --- */
+    async function chargerVisites() {
+      const { data, error } = await supabaseClient
+        .from('visites_journalieres')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('date_visite', { ascending: false })
+        .limit(14);
 
-      const tbody = document.getElementById('tbl-pubs');
-      tbody.innerHTML = '';
-
-      if (error || !pubs || pubs.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7">Aucune publicité configurée.</td></tr>';
+      const tbody = document.getElementById('table-visites');
+      if (error || !data) {
+        tbody.innerHTML = '<tr><td colspan="3" class="empty-msg">Erreur lors du chargement des visites.</td></tr>';
         return;
       }
 
-      const aujourdhui = new Date();
-      aujourdhui.setHours(0, 0, 0, 0);
+      cacheVisites = data;
+      tbody.innerHTML = '';
 
-      pubs.forEach(p => {
-        const impressions = p.nb_impressions || 0;
-        const clics = p.nb_clics || 0;
-        const ctr = impressions > 0 ? ((clics / impressions) * 100).toFixed(2) + '%' : '0.00%';
+      if (data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" class="empty-msg">Aucune visite enregistrée pour le moment.</td></tr>';
+        return;
+      }
 
-        // Détermination Statut Date (Expiré / Futur / Actif)
-        let badgeStatut = '<span class="badge badge-success">Actif</span>';
-        if (!p.est_actif) {
-          badgeStatut = '<span class="badge badge-danger">Inactif</span>';
-        } else {
-          if (p.date_fin) {
-            const [y, m, d] = p.date_fin.split('-').map(Number);
-            if (new Date(y, m - 1, d) < aujourdhui) {
-              badgeStatut = '<span class="badge badge-warning">Expiré</span>';
-            }
-          }
+      const aujourdhuiStr = new Date().toISOString().split('T')[0];
+
+      data.forEach((v, index) => {
+        const isAujourdhui = v.date_visite === aujourdhuiStr;
+        const dateFormatee = formaterDate(v.date_visite);
+        
+        let tendance = '➖';
+        if (index < data.length - 1) {
+          const visitesVeille = data[index + 1].nb_visites;
+          if (v.nb_visites > visitesVeille) tendance = '↗️ <small style="color:#16a34a; font-weight:bold;">+En hausse</small>';
+          else if (v.nb_visites < visitesVeille) tendance = '📉 <small style="color:#dc2626; font-weight:bold;">-En baisse</small>';
         }
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td><strong>${p.titre}</strong></td>
-          <td>${p.date_debut || 'Imm.'} au ${p.date_fin || 'Indéterminé'}</td>
-          <td>${impressions}</td>
-          <td>${clics}</td>
-          <td><strong>${ctr}</strong></td>
-          <td>${badgeStatut}</td>
-          <td class="actions-btns">
-            <button class="btn-sm btn-edit" onclick="editerPub(${JSON.stringify(p).replace(/"/g, '&quot;')})">✏️</button>
-            <button class="btn-sm btn-delete" onclick="supprimerPub(${p.id})">🗑️</button>
+          <td>
+            <strong>${dateFormatee}</strong>
+            ${isAujourdhui ? ' <span class="badge-status status-ok">Aujourd\'hui</span>' : ''}
           </td>
+          <td><span class="stat-badge" style="font-size:0.95em;">👀 ${v.nb_visites} visites</span></td>
+          <td>${tendance}</td>
         `;
         tbody.appendChild(tr);
       });
     }
 
-    /* MODALE CRÉATION ET ÉDITION PUB */
-    function ouvrirModalPub() {
-      document.getElementById('form-pub').reset();
-      document.getElementById('pub-id').value = '';
-      document.getElementById('modal-pub-title').innerText = "📢 Ajouter une Publicité";
-      document.getElementById('modalPub').style.display = 'flex';
-    }
-
-    function editerPub(p) {
-      document.getElementById('pub-id').value = p.id;
-      document.getElementById('pub-titre').value = p.titre || '';
-      document.getElementById('pub-desc').value = p.description || '';
-      document.getElementById('pub-img').value = p.image_url || '';
-      document.getElementById('pub-link').value = p.lien_url || '';
-      document.getElementById('pub-date-debut').value = p.date_debut || '';
-      document.getElementById('pub-date-fin').value = p.date_fin || '';
-      document.getElementById('pub-actif').checked = p.est_actif;
-
-      document.getElementById('modal-pub-title').innerText = "✏️ Modifier la Publicité";
-      document.getElementById('modalPub').style.display = 'flex';
-    }
-
-    function fermerModalPub() {
-      document.getElementById('modalPub').style.display = 'none';
-    }
-
-    async function sauvegarderPub(e) {
-      e.preventDefault();
-      const id = document.getElementById('pub-id').value;
-      const titre = document.getElementById('pub-titre').value.trim();
-      const description = document.getElementById('pub-desc').value.trim();
-      const image_url = document.getElementById('pub-img').value.trim();
-      const lien_url = document.getElementById('pub-link').value.trim();
-      const date_debut = document.getElementById('pub-date-debut').value || null;
-      const date_fin = document.getElementById('pub-date-fin').value || null;
-      const est_actif = document.getElementById('pub-actif').checked;
-
-      const payload = { titre, description, image_url, lien_url, date_debut, date_fin, est_actif };
-
-      if (id) {
-        await supabaseClient.from('publicites').update(payload).eq('id', id);
-      } else {
-        await supabaseClient.from('publicites').insert([payload]);
+    function exporterVisitesXLSX() {
+      if (!cacheVisites || cacheVisites.length === 0) {
+        alert("Aucune donnée de visite à exporter.");
+        return;
       }
-
-      fermerModalPub();
-      chargerPublicites();
-      chargerStats();
+      const dataPropre = cacheVisites.map(v => ({
+        "Date": v.date_visite,
+        "Nombre de Visites": v.nb_visites
+      }));
+      const ws = XLSX.utils.json_to_sheet(dataPropre);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Visites Journalières");
+      XLSX.writeFile(wb, `FixTana_Rapport_Visites_${new Date().toISOString().split('T')[0]}.xlsx`);
     }
 
-    async function supprimerPub(id) {
-      if (confirm("Voulez-vous vraiment supprimer cette publicité ?")) {
-        await supabaseClient.from('publicites').delete().eq('id', id);
-        chargerPublicites();
-        chargerStats();
-      }
-    }
-
-    /* VALIDATION DES ARTISANS EN ATTENTE */
-    async function chargerArtisansEnAttente() {
+    /* --- 2. GESTION DES PUBLICITÉS, FINANCES & CTR --- */
+    async function chargerPubs() {
       const { data, error } = await supabaseClient
-        .from('artisans')
+        .from('publicites')
         .select('*')
-        .eq('est_verifie', false)
-        .order('created_at', { ascending: false });
+        .order('id', { ascending: false });
 
-      const tbody = document.getElementById('tbl-artisans-attente');
-      tbody.innerHTML = '';
-
-      if (error || !data || data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5">Aucune demande en attente.</td></tr>';
+      const tbody = document.getElementById('table-pubs');
+      if (error || !data) {
+        console.error("Erreur Supabase Pubs:", error);
+        tbody.innerHTML = '<tr><td colspan="8" class="empty-msg">Erreur de chargement.</td></tr>';
         return;
       }
 
-      data.forEach(a => {
+      listePubsCache = data;
+      tbody.innerHTML = '';
+
+      const maintenant = new Date();
+      const anneeCourante = maintenant.getFullYear();
+      const moisCourant = maintenant.getMonth();
+
+      let totalCumule = 0;
+      let totalMoisCourant = 0;
+
+      data.forEach(p => {
+        const prixPub = Number(p.prix) || 0;
+        totalCumule += prixPub;
+
+        if (p.created_at) {
+          const dateCreation = new Date(p.created_at);
+          if (dateCreation.getFullYear() === anneeCourante && dateCreation.getMonth() === moisCourant) {
+            totalMoisCourant += prixPub;
+          }
+        } else if (p.date_debut) {
+          const [y, m] = p.date_debut.split('-').map(Number);
+          if (y === anneeCourante && (m - 1) === moisCourant) {
+            totalMoisCourant += prixPub;
+          }
+        }
+      });
+
+      if (document.getElementById('kpi-revenus-mois')) {
+        document.getElementById('kpi-revenus-mois').innerText = formaterPrix(totalMoisCourant);
+      }
+      if (document.getElementById('kpi-revenus-total')) {
+        document.getElementById('kpi-revenus-total').innerText = formaterPrix(totalCumule);
+      }
+
+      if (data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="empty-msg">Aucune publicité enregistrée.</td></tr>';
+        if (document.getElementById('alert-pub')) document.getElementById('alert-pub').style.display = 'none';
+        return;
+      }
+
+      const aujourdhui = new Date();
+      aujourdhui.setHours(0,0,0,0);
+      let alertesPubText = [];
+
+      data.forEach(p => {
+        let statutBadge = '<span class="badge-status status-ok">🟢 Active</span>';
+        
+        if (!p.est_actif) {
+          statutBadge = '<span class="badge-status status-expired">🔴 Desactivée</span>';
+        } else if (p.date_fin) {
+          const [year, month, day] = p.date_fin.split('-').map(Number);
+          const dateFin = new Date(year, month - 1, day);
+          const diffJours = Math.round((dateFin - aujourdhui) / (1000 * 60 * 60 * 24));
+
+          if (diffJours < 0) {
+            statutBadge = '<span class="badge-status status-expired">🔴 Expirée</span>';
+            alertesPubText.push(`• <strong>${escapeHTML(p.titre)}</strong> : La publicité a expiré le ${formaterDate(p.date_fin)}.`);
+          } else if (diffJours <= 2) {
+            const libelleFin = diffJours === 0 ? "aujourd'hui" : `dans ${diffJours} j`;
+            statutBadge = `<span class="badge-status status-warning">⏳ Fin ${libelleFin}</span>`;
+            alertesPubText.push(`• <strong>${escapeHTML(p.titre)}</strong> : La campagne se termine ${libelleFin} (${formaterDate(p.date_fin)}).`);
+          }
+        }
+
+        const impressions = Number(p.nb_impressions) || 0;
+        const clics = Number(p.nb_clics) || 0;
+        const ctr = impressions > 0 ? ((clics / impressions) * 100).toFixed(2) : '0.00';
+
+        let ctrStyle = 'color: #64748b;';
+        if (Number(ctr) >= 2.0) ctrStyle = 'color: #16a34a; font-weight: bold;';
+        else if (Number(ctr) >= 0.5) ctrStyle = 'color: #d97706; font-weight: bold;';
+
+        const periodeStr = (p.date_debut && p.date_fin) 
+          ? `Du ${formaterDate(p.date_debut)} au ${formaterDate(p.date_fin)}`
+          : (p.date_fin ? `Jusqu'au ${formaterDate(p.date_fin)}` : 'Permanente');
+
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td><strong>${a.nom}</strong></td>
-          <td>${a.metier}</td>
-          <td>${a.quartier}</td>
-          <td>${a.telephone} ${a.whatsapp ? '/ WA' : ''}</td>
-          <td class="actions-btns">
-            <button class="btn-sm btn-add" onclick="validerArtisan(${a.id})">✅ Valider</button>
-            <button class="btn-sm btn-delete" onclick="supprimerArtisan(${a.id})">❌</button>
+          <td>
+            <strong>${escapeHTML(p.titre)}</strong>
+            ${p.description ? `<br><small style="color:#64748b">${escapeHTML(p.description)}</small>` : ''}
+          </td>
+          <td><strong style="color:#16a34a;">${formaterPrix(p.prix)}</strong></td>
+          <td><span class="stat-badge">👁️ ${impressions.toLocaleString('fr-FR')}</span></td>
+          <td><span class="stat-badge stat-wa">👆 ${clics.toLocaleString('fr-FR')}</span></td>
+          <td><span style="${ctrStyle}">${ctr} %</span></td>
+          <td><small>${periodeStr}</small></td>
+          <td>
+            <button type="button" style="border:none; background:none; padding:0; cursor:pointer;" onclick="basculerStatutPub(${p.id}, ${p.est_actif})">
+              ${statutBadge}
+            </button>
+          </td>
+          <td style="text-align: right; white-space: nowrap;">
+            <button type="button" class="btn btn-primary" onclick="editerPub(${p.id})" title="Modifier">✏️</button>
+            <button type="button" class="btn btn-danger" onclick="supprimerPub(${p.id})" title="Supprimer">🗑️</button>
           </td>
         `;
         tbody.appendChild(tr);
       });
+
+      const alertPubBanner = document.getElementById('alert-pub');
+      if (alertPubBanner) {
+        if (alertesPubText.length > 0) {
+          document.getElementById('alert-pub-text').innerHTML = alertesPubText.join('<br>');
+          alertPubBanner.style.display = 'block';
+        } else {
+          alertPubBanner.style.display = 'none';
+        }
+      }
+    }
+
+    function exporterRapportPubsXLSX() {
+      if (!listePubsCache || listePubsCache.length === 0) {
+        alert("Aucune donnée publicitaire à exporter.");
+        return;
+      }
+
+      const rapportAnnonceurs = listePubsCache.map(p => {
+        const impressions = Number(p.nb_impressions) || 0;
+        const clics = Number(p.nb_clics) || 0;
+        const ctr = impressions > 0 ? ((clics / impressions) * 100).toFixed(2) + '%' : '0.00%';
+
+        return {
+          "Annonceur": p.titre,
+          "Prix Campagne (Ar)": p.prix || 0,
+          "Impressions (Vues) 👁️": impressions,
+          "Nombre de Clics 👆": clics,
+          "Taux de Clic (CTR)": ctr,
+          "Lien Redirection": p.lien_url || 'N/A',
+          "Date Début": p.date_debut ? formaterDate(p.date_debut) : 'Permanente',
+          "Date Fin": p.date_fin ? formaterDate(p.date_fin) : 'Permanente',
+          "Statut Actif": p.est_actif ? "Oui" : "Non"
+        };
+      });
+
+      const ws = XLSX.utils.json_to_sheet(rapportAnnonceurs);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Bilan Bannières Pubs");
+      XLSX.writeFile(wb, `FixTana_Bilan_Annonceurs_${new Date().toISOString().split('T')[0]}.xlsx`);
+    }
+
+    async function ajouterOuModifierPub(e) {
+      e.preventDefault();
+      
+      const id = document.getElementById('pub-id-edition').value;
+      const titre = document.getElementById('pub-titre').value.trim();
+      const prix = parseFloat(document.getElementById('pub-prix').value) || 0;
+      const image_url = document.getElementById('pub-image').value.trim();
+      const lien_url = document.getElementById('pub-lien').value.trim();
+      const description = document.getElementById('pub-desc').value.trim();
+      const date_debut = document.getElementById('pub-debut').value || null;
+      const date_fin = document.getElementById('pub-fin').value || null;
+
+      const payload = {
+        titre: titre,
+        prix: prix,
+        image_url: image_url || null,
+        lien_url: lien_url || null,
+        description: description || null,
+        date_debut: date_debut,
+        date_fin: date_fin,
+        est_actif: true
+      };
+
+      let res;
+      if (id) {
+        delete payload.est_actif;
+        res = await supabaseClient
+          .from('publicites')
+          .update(payload)
+          .eq('id', id);
+      } else {
+        res = await supabaseClient
+          .from('publicites')
+          .insert([payload]);
+      }
+
+      if (res.error) {
+        alert("❌ Erreur Supabase : " + res.error.message);
+        console.error(res.error);
+        return;
+      }
+
+      reinitialiserFormulairePub();
+      await chargerPubs();
+    }
+
+    function editerPub(id) {
+      const pub = listePubsCache.find(p => Number(p.id) === Number(id));
+      if (!pub) {
+        console.error("Publicité non trouvée pour l'ID", id);
+        return;
+      }
+
+      document.getElementById('pub-id-edition').value = pub.id;
+      document.getElementById('pub-titre').value = pub.titre || '';
+      document.getElementById('pub-prix').value = pub.prix || '';
+      document.getElementById('pub-image').value = pub.image_url || '';
+      document.getElementById('pub-lien').value = pub.lien_url || '';
+      document.getElementById('pub-desc').value = pub.description || '';
+      document.getElementById('pub-debut').value = pub.date_debut || '';
+      document.getElementById('pub-fin').value = pub.date_fin || '';
+
+      const btnSubmit = document.getElementById('btn-soumettre-pub');
+      btnSubmit.innerText = "💾 Mettre à jour la Pub";
+      btnSubmit.className = "btn btn-primary";
+
+      document.getElementById('btn-annuler-pub').style.display = "block";
+      window.scrollTo({ top: document.getElementById('form-pub').offsetTop - 50, behavior: 'smooth' });
+    }
+
+    function reinitialiserFormulairePub() {
+      document.getElementById('form-pub').reset();
+      document.getElementById('pub-id-edition').value = '';
+      const btnSubmit = document.getElementById('btn-soumettre-pub');
+      btnSubmit.innerText = "+ Enregistrer la Pub";
+      btnSubmit.className = "btn btn-green";
+      document.getElementById('btn-annuler-pub').style.display = "none";
+    }
+
+    async function basculerStatutPub(id, statutActuel) {
+      await supabaseClient.from('publicites').update({ est_actif: !statutActuel }).eq('id', id);
+      chargerPubs();
+    }
+
+    async function supprimerPub(id) {
+      if (confirm("Supprimer cette publicité ?")) {
+        await supabaseClient.from('publicites').delete().eq('id', id);
+        chargerPubs();
+      }
+    }
+
+    /* --- 3. STATISTIQUES & CLICS ARTISANS --- */
+    async function chargerStats() {
+      const tbody = document.getElementById('table-stats');
+
+      const [resArtisans, resClics] = await Promise.all([
+        supabaseClient.from('artisans').select('id, nom, metier, quartier, telephone'),
+        supabaseClient.from('clics_contact').select('artisan_id, type_action')
+      ]);
+
+      if (resArtisans.error || resClics.error) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">Impossible de charger les statistiques.</td></tr>';
+        return;
+      }
+
+      const artisans = resArtisans.data || [];
+      const clics = resClics.data || [];
+      cacheClics = clics;
+
+      if (artisans.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">Aucun artisan enregistré.</td></tr>';
+        return;
+      }
+
+      const statsMap = {};
+      clics.forEach(c => {
+        if (!statsMap[c.artisan_id]) statsMap[c.artisan_id] = { appel: 0, whatsapp: 0 };
+        if (c.type_action === 'appel') statsMap[c.artisan_id].appel++;
+        if (c.type_action === 'whatsapp') statsMap[c.artisan_id].whatsapp++;
+      });
+
+      tbody.innerHTML = '';
+      artisans.forEach(a => {
+        const appels = statsMap[a.id]?.appel || 0;
+        const wa = statsMap[a.id]?.whatsapp || 0;
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${escapeHTML(a.nom)}</strong></td>
+          <td>${escapeHTML(a.metier)}</td>
+          <td><span class="stat-badge">${appels}</span></td>
+          <td><span class="stat-badge stat-wa">${wa}</span></td>
+          <td><strong>${appels + wa} clics</strong></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function exporterClicsXLSX() {
+      if (!cacheArtisans || cacheArtisans.length === 0) {
+        alert("Aucune donnée d'artisan à exporter.");
+        return;
+      }
+
+      const rapport = cacheArtisans.map(a => {
+        const clicsArtisan = cacheClics ? cacheClics.filter(c => Number(c.artisan_id) === Number(a.id)) : [];
+        const nbAppels = clicsArtisan.filter(c => c.type_action === 'appel').length;
+        const nbWhatsapp = clicsArtisan.filter(c => c.type_action === 'whatsapp').length;
+
+        return {
+          "ID": a.id,
+          "Nom / Entreprise": a.nom,
+          "Métier": a.metier,
+          "Quartier": a.quartier,
+          "Téléphone": a.telephone,
+          "Clics Appel 📞": nbAppels,
+          "Clics WhatsApp 💬": nbWhatsapp,
+          "Total Contacts": nbAppels + nbWhatsapp,
+          "Statut": a.est_verifie ? "Validé" : "En attente",
+          "Sponsorisé": a.est_sponsorise ? "Oui" : "Non"
+        };
+      });
+
+      const ws = XLSX.utils.json_to_sheet(rapport);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Statistiques Clics");
+      XLSX.writeFile(wb, `FixTana_Rapport_Clics_${new Date().toISOString().split('T')[0]}.xlsx`);
+    }
+
+    /* --- 4. URGENCES --- */
+    async function chargerUrgences() {
+      const { data: urgences, error } = await supabaseClient
+        .from('urgences')
+        .select('*')
+        .order('id', { ascending: true });
+
+      const tbody = document.getElementById('table-urgences');
+      tbody.innerHTML = '';
+
+      if (error || !urgences || urgences.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" class="empty-msg">Aucun numéro d\'urgence.</td></tr>';
+        return;
+      }
+
+      cacheUrgences = urgences;
+      urgences.forEach(u => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${escapeHTML(u.nom)}</strong></td>
+          <td><span style="font-size:1.1em; font-weight:bold; color:#dc2626;">${escapeHTML(u.telephone)}</span></td>
+          <td style="text-align: right; white-space: nowrap;">
+            <button class="btn btn-primary" title="Modifier" onclick="ouvrirEditUrgence(${u.id})">✏️</button>
+            <button class="btn btn-danger" title="Supprimer" onclick="supprimerUrgence(${u.id})">🗑️</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function ajouterUrgence(e) {
+      e.preventDefault();
+      const nom = document.getElementById('urg-nom').value.trim();
+      const telephone = document.getElementById('urg-tel').value.trim();
+
+      const { error } = await supabaseClient.from('urgences').insert([{ nom, telephone }]);
+
+      if (!error) {
+        document.getElementById('form-urgence').reset();
+        chargerUrgences();
+      } else {
+        alert("Erreur : " + error.message);
+      }
+    }
+
+    function ouvrirEditUrgence(id) {
+      const u = cacheUrgences.find(i => i.id === id);
+      if (!u) return;
+      document.getElementById('edit-urg-id').value = u.id;
+      document.getElementById('edit-urg-nom').value = u.nom || '';
+      document.getElementById('edit-urg-tel').value = u.telephone || '';
+      document.getElementById('modalUrgence').style.display = 'flex';
+    }
+
+    async function sauvegarderUrgence() {
+      const id = document.getElementById('edit-urg-id').value;
+      const nom = document.getElementById('edit-urg-nom').value.trim();
+      const telephone = document.getElementById('edit-urg-tel').value.trim();
+
+      const { error } = await supabaseClient.from('urgences').update({ nom, telephone }).eq('id', id);
+
+      if (!error) {
+        fermerModales();
+        chargerUrgences();
+      } else {
+        alert("Erreur : " + error.message);
+      }
+    }
+
+    async function supprimerUrgence(id) {
+      if (confirm("Supprimer ce numéro d'urgence ?")) {
+        await supabaseClient.from('urgences').delete().eq('id', id);
+        chargerUrgences();
+      }
+    }
+
+    /* --- 5. PHARMACIES --- */
+    async function chargerPharmacies() {
+      const { data: pharmacies, error } = await supabaseClient
+        .from('pharmacies')
+        .select('*')
+        .order('nom', { ascending: true });
+
+      const tbody = document.getElementById('table-pharmacies');
+      tbody.innerHTML = '';
+
+      if (error || !pharmacies || pharmacies.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">Aucune pharmacie enregistrée.</td></tr>';
+        return;
+      }
+
+      cachePharmacies = pharmacies;
+      const aujourdhui = new Date();
+      aujourdhui.setHours(0,0,0,0);
+
+      let alertesText = [];
+
+      pharmacies.forEach(p => {
+        let statutBadge = '<span class="badge-status status-ok">🟢 En Garde</span>';
+        
+        if (p.date_fin_garde) {
+          const [year, month, day] = p.date_fin_garde.split('-').map(Number);
+          const dateFin = new Date(year, month - 1, day);
+          const diffJours = Math.round((dateFin - aujourdhui) / (1000 * 60 * 60 * 24));
+
+          if (diffJours < 0) {
+            statutBadge = '<span class="badge-status status-expired">🔴 Expirée</span>';
+            alertesText.push(`• <strong>${escapeHTML(p.nom)}</strong> : La garde a expiré le ${formaterDate(p.date_fin_garde)}.`);
+          } else if (diffJours <= 2) {
+            const libelleFin = diffJours === 0 ? "aujourd'hui" : `dans ${diffJours} j`;
+            statutBadge = `<span class="badge-status status-warning">⏳ Fin ${libelleFin}</span>`;
+            alertesText.push(`• <strong>${escapeHTML(p.nom)}</strong> : La garde se termine ${libelleFin} (${formaterDate(p.date_fin_garde)}).`);
+          }
+        }
+
+        const periodeStr = (p.date_debut_garde && p.date_fin_garde) 
+          ? `Du ${formaterDate(p.date_debut_garde)} au ${formaterDate(p.date_fin_garde)}`
+          : 'Non définie';
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${escapeHTML(p.nom)}</strong></td>
+          <td>${escapeHTML(p.quartier)}<br><small style="color:#64748b">${escapeHTML(p.telephone || '-')}</small></td>
+          <td><small>${periodeStr}</small></td>
+          <td>${statutBadge}</td>
+          <td style="text-align: right; white-space: nowrap;">
+            <button class="btn btn-primary" title="Modifier" onclick="ouvrirEditPharmacie(${p.id})">✏️</button>
+            <button class="btn btn-danger" title="Supprimer" onclick="supprimerPharmacie(${p.id})">🗑️</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      const alertBanner = document.getElementById('alert-garde');
+      if (alertesText.length > 0) {
+        document.getElementById('alert-garde-text').innerHTML = alertesText.join('<br>');
+        alertBanner.style.display = 'block';
+      } else {
+        alertBanner.style.display = 'none';
+      }
+    }
+
+    async function ajouterPharmacie(event) {
+      event.preventDefault();
+      const nom = document.getElementById('ph-nom').value.trim();
+      const quartier = document.getElementById('ph-quartier').value.trim();
+      const telephone = document.getElementById('ph-tel').value.trim();
+      const date_debut_garde = document.getElementById('ph-debut').value || null;
+      const date_fin_garde = document.getElementById('ph-fin').value || null;
+
+      const { error } = await supabaseClient
+        .from('pharmacies')
+        .insert([{ nom, quartier, telephone, date_debut_garde, date_fin_garde, est_de_garde: true }]);
+
+      if (!error) {
+        document.getElementById('form-pharmacie').reset();
+        chargerPharmacies();
+      } else {
+        alert("Erreur lors de l'ajout : " + error.message);
+      }
+    }
+
+    function ouvrirEditPharmacie(id) {
+      const p = cachePharmacies.find(item => item.id === id);
+      if (!p) return;
+      document.getElementById('edit-ph-id').value = p.id;
+      document.getElementById('edit-ph-nom').value = p.nom || '';
+      document.getElementById('edit-ph-quartier').value = p.quartier || '';
+      document.getElementById('edit-ph-tel').value = p.telephone || '';
+      document.getElementById('edit-ph-debut').value = p.date_debut_garde || '';
+      document.getElementById('edit-ph-fin').value = p.date_fin_garde || '';
+      document.getElementById('modalPharmacie').style.display = 'flex';
+    }
+
+    async function sauvegarderPharmacie() {
+      const id = document.getElementById('edit-ph-id').value;
+      const nom = document.getElementById('edit-ph-nom').value.trim();
+      const quartier = document.getElementById('edit-ph-quartier').value.trim();
+      const telephone = document.getElementById('edit-ph-tel').value.trim();
+      const date_debut_garde = document.getElementById('edit-ph-debut').value || null;
+      const date_fin_garde = document.getElementById('edit-ph-fin').value || null;
+
+      const { error } = await supabaseClient
+        .from('pharmacies')
+        .update({ nom, quartier, telephone, date_debut_garde, date_fin_garde })
+        .eq('id', id);
+
+      if (!error) {
+        fermerModales();
+        chargerPharmacies();
+      } else {
+        alert("Erreur : " + error.message);
+      }
+    }
+
+    async function supprimerPharmacie(id) {
+      if (confirm("Supprimer cette pharmacie ?")) {
+        await supabaseClient.from('pharmacies').delete().eq('id', id);
+        chargerPharmacies();
+      }
+    }
+
+    /* --- 6. ARTISANS --- */
+    async function chargerArtisans() {
+      const { data: artisans, error } = await supabaseClient
+        .from('artisans')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      const tbodyAttente = document.getElementById('table-en-attente');
+      const tbodyValides = document.getElementById('table-valides');
+
+      tbodyAttente.innerHTML = '';
+      tbodyValides.innerHTML = '';
+
+      if (error || !artisans) return;
+
+      cacheArtisans = artisans;
+      const enAttente = artisans.filter(a => !a.est_verifie);
+      const valides = artisans.filter(a => a.est_verifie);
+
+      const alertPendingBanner = document.getElementById('alert-pending-banner');
+      const pendingTitle = document.getElementById('pending-count-title');
+      const pendingDesc = document.getElementById('pending-count-desc');
+
+      if (enAttente.length > 0) {
+        const countMsg = enAttente.length === 1 ? '1 prestataire attend' : `${enAttente.length} prestataires attendent`;
+        pendingTitle.innerText = `🔔 Nouvelle demande d'inscription ! (${enAttente.length})`;
+        pendingDesc.innerText = `Actuellement ${countMsg} votre validation.`;
+        alertPendingBanner.style.display = 'flex';
+      } else {
+        alertPendingBanner.style.display = 'none';
+      }
+
+      if (enAttente.length === 0) {
+        tbodyAttente.innerHTML = '<tr><td colspan="5" class="empty-msg">Aucune demande en attente.</td></tr>';
+      } else {
+        enAttente.forEach(a => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><strong>${escapeHTML(a.nom)}</strong></td>
+            <td>${escapeHTML(a.metier)}</td>
+            <td>${escapeHTML(a.quartier)}</td>
+            <td>${escapeHTML(a.telephone)}</td>
+            <td style="text-align: right; white-space: nowrap;">
+              <button class="btn btn-green" title="Valider" onclick="validerArtisan(${a.id})">✅</button>
+              <button class="btn btn-primary" title="Modifier" onclick="ouvrirEditArtisan(${a.id})">✏️</button>
+              <button class="btn btn-danger" title="Supprimer" onclick="supprimerArtisan(${a.id})">🗑️</button>
+            </td>
+          `;
+          tbodyAttente.appendChild(tr);
+        });
+      }
+
+      if (valides.length === 0) {
+        tbodyValides.innerHTML = '<tr><td colspan="5" class="empty-msg">Aucun artisan valide publié.</td></tr>';
+      } else {
+        valides.forEach(a => {
+          const tr = document.createElement('tr');
+          const isSponso = a.est_sponsorise === true;
+
+          tr.innerHTML = `
+            <td>
+              <strong>${escapeHTML(a.nom)}</strong>
+              ${isSponso ? '<br><small style="color:#d97706; font-weight:bold;">⭐ Sponsorisé</small>' : ''}
+            </td>
+            <td>${escapeHTML(a.metier)}</td>
+            <td>${escapeHTML(a.quartier)}</td>
+            <td>${escapeHTML(a.telephone)}</td>
+            <td style="text-align: right; white-space: nowrap;">
+              <button class="btn ${isSponso ? 'btn-danger' : 'btn-star'}" 
+                      title="${isSponso ? 'Retirer du haut de liste' : 'Mettre en haut de liste'}" 
+                      onclick="toggleSponsor(${a.id}, ${!isSponso})">
+                ${isSponso ? '⭐ Retirer' : '⭐ Sponsoriser'}
+              </button>
+              <button class="btn btn-primary" title="Modifier" onclick="ouvrirEditArtisan(${a.id})">✏️</button>
+              <button class="btn btn-danger" title="Supprimer" onclick="supprimerArtisan(${a.id})">🗑️</button>
+            </td>
+          `;
+          tbodyValides.appendChild(tr);
+        });
+      }
+    }
+
+    function scrollToPending() {
+      const element = document.getElementById('card-en-attente');
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+
+    async function toggleSponsor(id, nouveauStatut) {
+      await supabaseClient
+        .from('artisans')
+        .update({ est_sponsorise: nouveauStatut })
+        .eq('id', id);
+      chargerArtisans();
+    }
+
+    function ouvrirEditArtisan(id) {
+      const a = cacheArtisans.find(item => item.id === id);
+      if (!a) return;
+      document.getElementById('edit-art-id').value = a.id;
+      document.getElementById('edit-art-nom').value = a.nom || '';
+      document.getElementById('edit-art-metier').value = a.metier || '';
+      document.getElementById('edit-art-quartier').value = a.quartier || '';
+      document.getElementById('edit-art-tel').value = a.telephone || '';
+      document.getElementById('edit-art-wa').value = a.whatsapp || '';
+      document.getElementById('edit-art-desc').value = a.description || '';
+      document.getElementById('modalArtisan').style.display = 'flex';
+    }
+
+    async function sauvegarderArtisan() {
+      const id = document.getElementById('edit-art-id').value;
+      const nom = document.getElementById('edit-art-nom').value.trim();
+      const metier = document.getElementById('edit-art-metier').value.trim();
+      const quartier = document.getElementById('edit-art-quartier').value.trim();
+      const telephone = document.getElementById('edit-art-tel').value.trim();
+      const whatsapp = document.getElementById('edit-art-wa').value.trim();
+      const description = document.getElementById('edit-art-desc').value.trim();
+
+      const { error } = await supabaseClient
+        .from('artisans')
+        .update({ nom, metier, quartier, telephone, whatsapp, description })
+        .eq('id', id);
+
+      if (!error) {
+        fermerModales();
+        chargerArtisans();
+        chargerStats();
+      } else {
+        alert("Erreur : " + error.message);
+      }
     }
 
     async function validerArtisan(id) {
       await supabaseClient.from('artisans').update({ est_verifie: true }).eq('id', id);
-      chargerArtisansEnAttente();
-      chargerStats();
+      chargerArtisans();
     }
 
     async function supprimerArtisan(id) {
-      if (confirm("Refuser et supprimer cette inscription ?")) {
+      if (confirm("Supprimer cet artisan ?")) {
         await supabaseClient.from('artisans').delete().eq('id', id);
-        chargerArtisansEnAttente();
+        chargerArtisans();
         chargerStats();
       }
     }
+
+    /* UTILS */
+    function fermerModales() {
+      document.getElementById('modalUrgence').style.display = 'none';
+      document.getElementById('modalPharmacie').style.display = 'none';
+      document.getElementById('modalArtisan').style.display = 'none';
+    }
+
+    function formaterDate(dateStr) {
+      if (!dateStr) return '';
+      const parts = dateStr.split('-');
+      return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+
+    initAdmin();
   </script>
 </body>
 </html>
