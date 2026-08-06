@@ -126,13 +126,13 @@
       </div>
     </div>
 
-    <!-- CARROUSEL PUBLICITAIRE INTERNE (Tables supabase) -->
+    <!-- CARROUSEL PUBLICITAIRE INTERNE -->
     <div id="pub-carousel-wrapper" class="carousel-container" style="display: none;">
       <div id="pub-slides-container"></div>
       <div id="pub-dots-container" class="carousel-dots"></div>
     </div>
 
-    <!-- BLOC ADSENSE HAUT (Bannière Responsive) -->
+    <!-- BLOC ADSENSE HAUT -->
     <div class="adsense-card">
       <ins class="adsbygoogle"
            style="display:block"
@@ -209,7 +209,6 @@
     let currentSlideIndex = 0;
     let carouselTimer = null;
 
-    // Protection contre le code malveillant (Injection XSS)
     function escapeHTML(str) {
       if (!str) return '';
       return String(str)
@@ -251,7 +250,6 @@
         return;
       }
 
-      // --- FILTRAGE PAR DATES DE VALIDITÉ (DÉBUT & FIN) ---
       const aujourdhui = new Date();
       aujourdhui.setHours(0, 0, 0, 0);
 
@@ -276,7 +274,6 @@
         return;
       }
 
-      // --- AFFICHAGE DU CARROUSEL AVEC LES PUBS VALIDES ---
       wrapper.style.display = 'block';
       slidesContainer.innerHTML = '';
       dotsContainer.innerHTML = '';
@@ -287,7 +284,6 @@
         slide.href = escapeHTML(p.lien_url) || '#';
         if (p.lien_url) slide.target = '_blank';
 
-        // TRACKING : Enregistrement du clic sur la bannière
         slide.onclick = () => enregistrerEventPub(p.id, 'clic');
 
         const imgHTML = p.image_url ? `<img src="${escapeHTML(p.image_url)}" alt="${escapeHTML(p.titre)}">` : '';
@@ -300,7 +296,6 @@
         `;
         slidesContainer.appendChild(slide);
 
-        // TRACKING : Enregistrement de l'impression (vue) de la bannière
         enregistrerEventPub(p.id, 'impression');
 
         if (pubsValides.length > 1) {
@@ -316,15 +311,12 @@
       }
     }
 
-    // Fonction globale pour tracker les impressions et clics des bannières
     async function enregistrerEventPub(pubId, eventType) {
       try {
-        // 1. Ajouter la ligne dans l'historique des événements
         await supabaseClient
           .from('publicites_events')
           .insert([{ pub_id: pubId, event_type: eventType }]);
 
-        // 2. Mettre à jour le compteur global correspondant dans la table publicites
         const champ = eventType === 'clic' ? 'nb_clics' : 'nb_impressions';
         const { data: current } = await supabaseClient
           .from('publicites')
@@ -436,7 +428,6 @@
         `;
         conteneur.appendChild(card);
 
-        // Insertion automatique d'un bloc AdSense tous les 4 artisans
         if ((index + 1) % 4 === 0 && index !== liste.length - 1) {
           const adContainer = document.createElement('div');
           adContainer.className = 'adsense-card';
@@ -525,7 +516,6 @@
       }
     }
 
-    // Lancement global
     initPage();
   </script>
 </body>
