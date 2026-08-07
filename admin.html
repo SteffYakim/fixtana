@@ -125,15 +125,15 @@
     th { background-color: #f8fafc; color: #475569; font-weight: 600; }
     tr:hover { background-color: #f8fafc; }
 
-    /* CONTENEUR SCROLLABLE POUR LES LOGS */
-    .logs-scroll-container {
+    /* CONTENEUR GÉNÉRIQUE SCROLLABLE AVEC EN-TÊTE FIXE */
+    .table-scroll-container {
       max-height: 220px; /* Limite la hauteur à environ 4-5 lignes */
       overflow-y: auto;
       border: 1px solid #e2e8f0;
       border-radius: 8px;
     }
-    .logs-scroll-container table { margin-top: 0; }
-    .logs-scroll-container table thead th {
+    .table-scroll-container table { margin-top: 0; }
+    .table-scroll-container table thead th {
       position: sticky;
       top: 0;
       background-color: #f8fafc;
@@ -238,7 +238,7 @@
       </div>
       
       <!-- Zone Scrollable Compacte -->
-      <div class="logs-scroll-container">
+      <div class="table-scroll-container">
         <table>
           <thead>
             <tr>
@@ -260,18 +260,22 @@
         <h2>📈 Visites Journalières du Site</h2>
         <button class="btn btn-excel" onclick="exporterVisitesXLSX()">📥 Exporter Visites (Excel)</button>
       </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Nombre de Visites</th>
-            <th>Tendance</th>
-          </tr>
-        </thead>
-        <tbody id="table-visites">
-          <tr><td colspan="3" class="empty-msg">Chargement du trafic...</td></tr>
-        </tbody>
-      </table>
+      
+      <!-- Zone Scrollable Compacte -->
+      <div class="table-scroll-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Nombre de Visites</th>
+              <th>Tendance</th>
+            </tr>
+          </thead>
+          <tbody id="table-visites">
+            <tr><td colspan="3" class="empty-msg">Chargement du trafic...</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <!-- SECTION 2 : PUBLICITÉS & FINANCES -->
@@ -567,7 +571,7 @@
           .from('logs')
           .select('*')
           .order('created_at', { ascending: false })
-          .limit(5); // Récupère jusqu'à 100 événements récents
+          .limit(100);
 
         if (error || !logs) {
           tbody.innerHTML = '<tr><td colspan="3" class="empty-msg">⚠️ La table "logs" n\'existe pas encore ou RLS est activé.</td></tr>';
@@ -609,9 +613,14 @@
       });
     }
 
-    /* --- 1. VISITES --- */
+    /* --- 1. VISITES (AVEC SCROLL ET HISTORIQUE 90 JOURS) --- */
     async function chargerVisites() {
-      const { data, error } = await supabaseClient.from('visites_journalieres').select('*').order('date_visite', { ascending: false }).limit(14);
+      const { data, error } = await supabaseClient
+        .from('visites_journalieres')
+        .select('*')
+        .order('date_visite', { ascending: false })
+        .limit(5);
+
       const tbody = document.getElementById('table-visites');
       if (error || !data) { tbody.innerHTML = '<tr><td colspan="3" class="empty-msg">Erreur de chargement.</td></tr>'; return; }
       
