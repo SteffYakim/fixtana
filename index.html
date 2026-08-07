@@ -307,6 +307,10 @@
     let modeActuel = 'client';
     let cacheDemandes = [];
 
+    /* VARIABLES CARROUSEL PUBS */
+    let carouselInterval = null;
+    let currentSlideIndex = 0;
+
     function escapeHTML(str) {
       if (!str) return '';
       return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
@@ -322,6 +326,7 @@
       await chargerArtisans();
       await chargerDemandes();
 
+      // Notifications Realtime Supabase
       supabaseClient
         .channel('public-indrive')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'demandes' }, () => chargerDemandes())
@@ -333,7 +338,7 @@
       try { await supabaseClient.rpc('enregistrer_visite'); } catch (err) {}
     }
 
-    /* CARROUSEL PUBS INTERNE */
+    /* CARROUSEL PUBS INTERNE (AVEC AUTOMATISATION) */
     async function chargerCarrouselPubs() {
       const { data: pubs } = await supabaseClient.from('publicites').select('*').eq('est_actif', true).order('created_at', { ascending: false });
       const wrapper = document.getElementById('pub-carousel-wrapper');
@@ -342,7 +347,8 @@
       wrapper.style.display = 'block';
       const slidesContainer = document.getElementById('pub-slides-container');
       const dotsContainer = document.getElementById('pub-dots-container');
-      slidesContainer.innerHTML = ''; dotsContainer.innerHTML = '';
+      slidesContainer.innerHTML = ''; 
+      dotsContainer.innerHTML = '';
 
       pubs.forEach((p, index) => {
         const slide = document.createElement('a');
@@ -360,13 +366,32 @@
         if (pubs.length > 1) {
           const dot = document.createElement('span');
           dot.className = `dot ${index === 0 ? 'active-dot' : ''}`;
-          dot.onclick = () => afficherSlide(index);
+          dot.onclick = () => {
+            afficherSlide(index);
+            lancerTimerPub(pubs.length);
+          };
           dotsContainer.appendChild(dot);
         }
       });
+
+      // Lancement du timer automatique
+      if (pubs.length > 1) {
+        lancerTimerPub(pubs.length);
+        wrapper.onmouseenter = () => clearInterval(carouselInterval);
+        wrapper.onmouseleave = () => lancerTimerPub(pubs.length);
+      }
+    }
+
+    function lancerTimerPub(totalSlides) {
+      if (carouselInterval) clearInterval(carouselInterval);
+      carouselInterval = setInterval(() => {
+        currentSlideIndex = (currentSlideIndex + 1) % totalSlides;
+        afficherSlide(currentSlideIndex);
+      }, 4000); // Défilement toutes les 4 secondes
     }
 
     function afficherSlide(index) {
+      currentSlideIndex = index;
       const slides = document.querySelectorAll('.pub-slide');
       const dots = document.querySelectorAll('.dot');
       slides.forEach(s => s.classList.remove('active'));
@@ -426,7 +451,7 @@
 
               htmlOffres += `
                 <div class="offer-item" style="${estAcceptee ? 'border: 2px solid #16a34a; background: #f0fdf4;' : ''}">
-                  <div style="display:flex; justify-content:space-between; font-weight:bold; align-items:center;">
+                  <div style="display:flex; justify-between; font-weight:bold; align-items:center;">
                     <span>👤 ${escapeHTML(art.nom || 'Artisan')}</span>
                     <span style="color:#2563eb; font-size:1.05em;">${formaterPrix(o.prix_offre)}</span>
                   </div>
@@ -464,6 +489,7 @@
           container.appendChild(div);
         });
       } else {
+        /* VUE ARTISAN */
         const container = document.getElementById('liste-demandes-artisan');
         container.innerHTML = '';
         const ouvertes = cacheDemandes.filter(d => d.statut === 'ouvert');
@@ -533,7 +559,7 @@
         `;
         conteneur.appendChild(card);
 
-        // INJECTION DU PUB ADSENSE TOUS LES 4 ARTISANS
+        // INJECTION ADSENSE TOUS LES 4 ARTISANS
         if ((index + 1) % 4 === 0 && index !== liste.length - 1) {
           const adCard = document.createElement('div');
           adCard.className = 'adsense-card';
