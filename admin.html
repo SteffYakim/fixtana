@@ -120,10 +120,26 @@
     h2 { font-size: 1.2em; margin: 0; color: #1e293b; display: flex; align-items: center; gap: 8px; }
 
     /* Tableaux */
-    table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9em; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
     th, td { text-align: left; padding: 12px; border-bottom: 1px solid #e2e8f0; }
     th { background-color: #f8fafc; color: #475569; font-weight: 600; }
     tr:hover { background-color: #f8fafc; }
+
+    /* CONTENEUR SCROLLABLE POUR LES LOGS */
+    .logs-scroll-container {
+      max-height: 220px; /* Limite la hauteur à environ 4-5 lignes */
+      overflow-y: auto;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+    }
+    .logs-scroll-container table { margin-top: 0; }
+    .logs-scroll-container table thead th {
+      position: sticky;
+      top: 0;
+      background-color: #f8fafc;
+      z-index: 10;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
 
     /* Badges & Boutons */
     .badge-status { padding: 4px 8px; border-radius: 12px; font-weight: bold; font-size: 0.8em; display: inline-block; cursor: pointer; border: none; }
@@ -220,7 +236,9 @@
         <h2>📜 Historique des Actions (Logs)</h2>
         <button class="btn btn-excel" onclick="exporterLogsXLSX()">📥 Exporter Logs (Excel)</button>
       </div>
-      <div style="max-height: 280px; overflow-y: auto;">
+      
+      <!-- Zone Scrollable Compacte -->
+      <div class="logs-scroll-container">
         <table>
           <thead>
             <tr>
@@ -549,7 +567,7 @@
           .from('logs')
           .select('*')
           .order('created_at', { ascending: false })
-          .limit(50);
+          .limit(100); // Récupère jusqu'à 100 événements récents
 
         if (error || !logs) {
           tbody.innerHTML = '<tr><td colspan="3" class="empty-msg">⚠️ La table "logs" n\'existe pas encore ou RLS est activé.</td></tr>';
