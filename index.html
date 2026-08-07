@@ -8,7 +8,7 @@
   <!-- Supabase JS Client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   
-  <!-- ADSENSE -->
+  <!-- ADSENSE : Remplacez ca-pub-XXXXXXXXXXXXXXXX par votre identifiant AdSense -->
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
 
   <style>
@@ -77,10 +77,10 @@
     .demand-desc { font-size: 0.85em; color: #334155; margin-bottom: 8px; line-height: 1.3; }
 
     .offers-box { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; margin-top: 10px; }
-    .offer-item { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px; margin-bottom: 6px; }
+    .offer-item { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; margin-bottom: 8px; }
     .offer-item:last-child { margin-bottom: 0; }
 
-    /* ANNUAIRE DES ARTISANS CLASSIQUE */
+    /* ANNUAIRE CLASSIQUE DES ARTISANS */
     .annuaire-title { font-size: 1.2em; font-weight: bold; color: #0f172a; margin: 25px 0 10px 0; display: flex; align-items: center; gap: 8px; }
     .search-box { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.95em; margin-bottom: 12px; outline: none; }
     .filter-tags { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px; }
@@ -229,7 +229,7 @@
   </div>
 
   <!-- MODALE 2 : PUBLIER UN BESOIN (INDRIVE) -->
-  <div id="modalDemande" class="modal">
+  <div id="modalDemande" class="modal" onclick="gererClicExterieurModal(event, 'modalDemande')">
     <div class="modal-content">
       <h2>📢 Proposer un projet / besoin</h2>
       <form id="form-demande" onsubmit="soumettreDemande(event)">
@@ -274,7 +274,7 @@
   </div>
 
   <!-- MODALE 3 : FAIRE UNE OFFRE (ARTISAN) -->
-  <div id="modalOffre" class="modal">
+  <div id="modalOffre" class="modal" onclick="gererClicExterieurModal(event, 'modalOffre')">
     <div class="modal-content">
       <h2>🤝 Répondre à l'offre du client</h2>
       <form id="form-offre" onsubmit="soumettreOffre(event)">
@@ -307,8 +307,6 @@
 
     let tousLesArtisans = [];
     let metierFiltre = 'TOUS';
-    let currentSlideIndex = 0;
-    let carouselTimer = null;
     let modeActuel = 'client';
     let cacheDemandes = [];
 
@@ -327,6 +325,7 @@
       await chargerArtisans();
       await chargerDemandes();
 
+      // Mises à jour en direct (Realtime)
       supabaseClient
         .channel('public-indrive')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'demandes' }, () => chargerDemandes())
@@ -396,12 +395,27 @@
     }
 
     function afficherDemandes() {
+      const monTelClient = localStorage.getItem('fixtana_client_tel') || '';
+
       if (modeActuel === 'client') {
         const container = document.getElementById('liste-demandes-client');
         container.innerHTML = '';
-        if (cacheDemandes.length === 0) return container.innerHTML = '<div class="empty-state">Aucune demande publiée.</div>';
 
-        cacheDemandes.forEach(d => {
+        // Seules les demandes créées depuis cet appareil sont visibles pour le client
+        const mesDemandes = cacheDemandes.filter(d => {
+          if (!monTelClient) return false;
+          return (d.client_tel || '').replace(/\s+/g, '') === monTelClient.replace(/\s+/g, '');
+        });
+
+        if (mesDemandes.length === 0) {
+          return container.innerHTML = `
+            <div class="empty-state">
+              Vous n'avez aucune demande active.<br>
+              <small style="color:#64748b;">Cliquez sur <strong>"Déposer une demande"</strong> ci-dessus pour recevoir des offres d'artisans.</small>
+            </div>`;
+        }
+
+        mesDemandes.forEach(d => {
           const div = document.createElement('div');
           div.className = 'demand-card';
           const nbOffres = d.offres ? d.offres.length : 0;
@@ -412,25 +426,36 @@
             d.offres.forEach(o => {
               const art = o.artisans || {};
               const estAcceptee = o.statut === 'acceptee';
+              const telClean = (art.telephone || '').replace(/\s+/g, '');
+              const waClean = (art.whatsapp || art.telephone || '').replace(/\+/g, '').replace(/\s+/g, '');
+
               htmlOffres += `
                 <div class="offer-item" style="${estAcceptee ? 'border: 2px solid #16a34a; background: #f0fdf4;' : ''}">
-                  <div style="display:flex; justify-between; font-weight:bold;">
+                  <div style="display:flex; justify-content:space-between; font-weight:bold; align-items:center;">
                     <span>👤 ${escapeHTML(art.nom || 'Artisan')}</span>
-                    <span style="color:#2563eb;">${formaterPrix(o.prix_offre)}</span>
+                    <span style="color:#2563eb; font-size:1.05em;">${formaterPrix(o.prix_offre)}</span>
                   </div>
-                  ${o.message ? `<div style="font-size:0.8em; margin:4px 0;">"${escapeHTML(o.message)}"</div>` : ''}
+                  <div style="font-size:0.8em; color:#64748b; margin-top:2px;">📍 ${escapeHTML(art.quartier || 'Tana')}</div>
+                  ${o.message ? `<div style="font-size:0.85em; margin:6px 0; color:#334155;">"${escapeHTML(o.message)}"</div>` : ''}
+                  
                   ${estAcceptee ? `
-                    <div style="margin-top:5px; font-size:0.8em; color:#15803d; font-weight:bold;">
-                      ✅ Offre acceptée ! Tel: <a href="tel:${art.telephone}">${art.telephone}</a>
+                    <div style="margin-top:8px; padding:10px; background:#dcfce7; border-radius:8px; font-size:0.85em; border:1px solid #86efac;">
+                      <strong style="color:#15803d;">✅ Offre acceptée ! Contact direct :</strong><br>
+                      <div style="margin-top:6px; display:flex; gap:8px;">
+                        <a href="tel:${escapeHTML(telClean)}" class="btn-action btn-call" style="flex:1; text-decoration:none;">📞 Appeler (${escapeHTML(art.telephone)})</a>
+                        <a href="https://wa.me/${escapeHTML(waClean)}" target="_blank" class="btn-action btn-wa" style="flex:1; text-decoration:none;">💬 WhatsApp</a>
+                      </div>
                     </div>
                   ` : `
-                    <button class="btn-action btn-wa" style="margin-top:6px; width:100%;" onclick="accepterOffre(${o.id}, ${d.id})">✅ Accepter l'offre</button>
+                    <button class="btn-action btn-wa" style="margin-top:6px; width:100%; font-size:0.85em;" onclick="accepterOffre(${o.id}, ${d.id})">✅ Accepter cette offre</button>
                   `}
                 </div>
               `;
             });
             htmlOffres += `</div>`;
-          } else htmlOffres = `<div style="font-size: 0.8em; color: #94a3b8; margin-top:5px;">En attente de réponses d'artisans...</div>`;
+          } else {
+            htmlOffres = `<div style="font-size: 0.8em; color: #94a3b8; margin-top:8px; font-style:italic;">⏳ En attente de réponses des artisans...</div>`;
+          }
 
           div.innerHTML = `
             <div class="demand-header">
@@ -444,10 +469,12 @@
           container.appendChild(div);
         });
       } else {
+        /* VUE ARTISAN */
         const container = document.getElementById('liste-demandes-artisan');
         container.innerHTML = '';
         const ouvertes = cacheDemandes.filter(d => d.statut === 'ouvert');
-        if (ouvertes.length === 0) return container.innerHTML = '<div class="empty-state">Aucune demande disponible.</div>';
+
+        if (ouvertes.length === 0) return container.innerHTML = '<div class="empty-state">Aucune demande disponible pour le moment.</div>';
 
         ouvertes.forEach(d => {
           const div = document.createElement('div');
@@ -455,10 +482,12 @@
           div.innerHTML = `
             <div class="demand-header">
               <span class="demand-title">${escapeHTML(d.metier)} — ${escapeHTML(d.quartier)}</span>
+              <span class="badge-urgency urg-${d.urgence}">${escapeHTML(d.urgence)}</span>
             </div>
-            <div class="price-tag">Prix proposé : ${formaterPrix(d.prix_propose)}</div>
+            <div style="font-size: 0.85em; color: #64748b; margin-top:3px;">Client : ${escapeHTML(d.client_nom)}</div>
+            <div class="price-tag">Prix proposé par le client : ${formaterPrix(d.prix_propose)}</div>
             <p class="demand-desc">${escapeHTML(d.description)}</p>
-            <button class="btn-action btn-call" style="width:100%;" onclick="ouvrirModalOffre(${d.id}, ${d.prix_propose})">🤝 Faire une offre</button>
+            <button class="btn-action btn-call" style="width:100%; margin-top:5px;" onclick="ouvrirModalOffre(${d.id}, ${d.prix_propose})">🤝 Faire une proposition / Accepter</button>
           `;
           container.appendChild(div);
         });
@@ -471,7 +500,6 @@
       if (!data) return;
       tousLesArtisans = data;
       
-      // Select modal offre
       const select = document.getElementById('off-artisan-id');
       select.innerHTML = '<option value="">-- Sélectionner votre profil --</option>';
       data.forEach(a => select.innerHTML += `<option value="${a.id}">${escapeHTML(a.nom)} (${escapeHTML(a.metier)})</option>`);
@@ -530,13 +558,17 @@
       filtrerArtisans();
     }
 
-    /* INSCRIPTIONS ET DEMANDES */
+    /* GESTION DES MODALES */
     function ouvrirModalInscription() { document.getElementById('modalInscription').style.display = 'flex'; }
     function fermerModalInscription() { document.getElementById('modalInscription').style.display = 'none'; }
     function ouvrirModalDemande() { document.getElementById('modalDemande').style.display = 'flex'; }
     function fermerModalDemande() { document.getElementById('modalDemande').style.display = 'none'; }
     function ouvrirModalOffre(id, prix) { document.getElementById('off-demande-id').value = id; document.getElementById('off-prix').value = prix || ''; document.getElementById('modalOffre').style.display = 'flex'; }
     function fermerModalOffre() { document.getElementById('modalOffre').style.display = 'none'; }
+
+    function gererClicExterieurModal(e, idModal) {
+      if (e.target.id === idModal) document.getElementById(idModal).style.display = 'none';
+    }
 
     async function soumettreInscription(e) {
       e.preventDefault();
@@ -555,17 +587,26 @@
 
     async function soumettreDemande(e) {
       e.preventDefault();
+      const telClient = document.getElementById('dem-tel').value.trim();
+
       const payload = {
         client_nom: document.getElementById('dem-nom').value.trim(),
-        client_tel: document.getElementById('dem-tel').value.trim(),
+        client_tel: telClient,
         metier: document.getElementById('dem-metier').value.trim(),
         quartier: document.getElementById('dem-quartier').value.trim(),
         description: document.getElementById('dem-desc').value.trim(),
         urgence: document.getElementById('dem-urgence').value,
         prix_propose: parseFloat(document.getElementById('dem-prix').value) || 0
       };
+
       const { error } = await supabaseClient.from('demandes').insert([payload]);
-      if (!error) { alert("Demande publiée !"); fermerModalDemande(); chargerDemandes(); }
+      if (!error) {
+        // Enregistre le numéro du client sur son appareil
+        localStorage.setItem('fixtana_client_tel', telClient);
+        alert("✅ Demande publiée ! Seul votre appareil verra les offres et numéros de contact reçus.");
+        fermerModalDemande();
+        chargerDemandes();
+      } else alert("❌ Erreur : " + error.message);
     }
 
     async function soumettreOffre(e) {
@@ -577,7 +618,7 @@
         message: document.getElementById('off-msg').value.trim()
       };
       const { error } = await supabaseClient.from('offres').insert([payload]);
-      if (!error) { alert("Offre envoyée !"); fermerModalOffre(); chargerDemandes(); }
+      if (!error) { alert("🤝 Offre envoyée !"); fermerModalOffre(); chargerDemandes(); }
     }
 
     async function accepterOffre(offreId, demandeId) {
