@@ -729,6 +729,13 @@
       chargerDemandes();
     }
 
+    document.addEventListener("DOMContentLoaded", () => {
+  const blocInteractions = document.getElementById('liste-demandes');
+  if (blocInteractions) {
+    blocInteractions.parentElement.style.display = 'none'; // Masque tout le bloc
+  }
+});
+    
     initPage();
   </script>
 </body>
