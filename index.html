@@ -47,8 +47,16 @@
     .dot { width: 8px; height: 8px; background-color: #fcd34d; border-radius: 50%; cursor: pointer; transition: 0.3s; }
     .dot.active-dot { background-color: #b45309; width: 18px; border-radius: 10px; }
 
-    /* ADSENSE BANNER */
-    .adsense-card { background: #ffffff; border-radius: 12px; padding: 10px; margin-bottom: 15px; text-align: center; border: 1px dashed #cbd5e1; }
+    /* ADSENSE BANNER DANS LA LISTE */
+    .adsense-card { 
+      background: #ffffff; 
+      border-radius: 12px; 
+      padding: 10px; 
+      margin-bottom: 15px; 
+      text-align: center; 
+      border: 1px dashed #cbd5e1; 
+      overflow: hidden;
+    }
 
     /* SWITCHER SYSTEME INDRIVE (MODE CLIENT / ARTISAN) */
     .indrive-section { background: #ffffff; border-radius: 14px; padding: 16px; margin-bottom: 25px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
@@ -134,17 +142,6 @@
     <div id="pub-carousel-wrapper" class="carousel-container" style="display: none;">
       <div id="pub-slides-container"></div>
       <div id="pub-dots-container" class="carousel-dots"></div>
-    </div>
-
-    <!-- ADSENSE HAUT -->
-    <div class="adsense-card">
-      <ins class="adsbygoogle"
-           style="display:block"
-           data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
-           data-ad-slot="1234567890"
-           data-ad-format="auto"
-           data-full-width-responsive="true"></ins>
-      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
     </div>
 
     <!-- SECTION NÉGOCIATION EN DIRECT (STYLE INDRIVE) -->
@@ -325,7 +322,6 @@
       await chargerArtisans();
       await chargerDemandes();
 
-      // Mises à jour en direct (Realtime)
       supabaseClient
         .channel('public-indrive')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'demandes' }, () => chargerDemandes())
@@ -337,7 +333,7 @@
       try { await supabaseClient.rpc('enregistrer_visite'); } catch (err) {}
     }
 
-    /* CARROUSEL PUBS */
+    /* CARROUSEL PUBS INTERNE */
     async function chargerCarrouselPubs() {
       const { data: pubs } = await supabaseClient.from('publicites').select('*').eq('est_actif', true).order('created_at', { ascending: false });
       const wrapper = document.getElementById('pub-carousel-wrapper');
@@ -401,7 +397,6 @@
         const container = document.getElementById('liste-demandes-client');
         container.innerHTML = '';
 
-        // Seules les demandes créées depuis cet appareil sont visibles pour le client
         const mesDemandes = cacheDemandes.filter(d => {
           if (!monTelClient) return false;
           return (d.client_tel || '').replace(/\s+/g, '') === monTelClient.replace(/\s+/g, '');
@@ -469,7 +464,6 @@
           container.appendChild(div);
         });
       } else {
-        /* VUE ARTISAN */
         const container = document.getElementById('liste-demandes-artisan');
         container.innerHTML = '';
         const ouvertes = cacheDemandes.filter(d => d.statut === 'ouvert');
@@ -494,7 +488,7 @@
       }
     }
 
-    /* ANNUAIRE DES ARTISANS */
+    /* ANNUAIRE DES ARTISANS & ADSENSE INTEGRE DEDANS */
     async function chargerArtisans() {
       const { data } = await supabaseClient.from('artisans').select('*').eq('est_verifie', true).order('est_sponsorise', { ascending: false });
       if (!data) return;
@@ -522,7 +516,7 @@
       conteneur.innerHTML = '';
       if (liste.length === 0) return conteneur.innerHTML = '<div class="empty-state">Aucun artisan trouvé.</div>';
 
-      liste.forEach(a => {
+      liste.forEach((a, index) => {
         const card = document.createElement('div');
         card.className = `artisan-card ${a.est_sponsorise ? 'sponso' : ''}`;
         card.innerHTML = `
@@ -538,6 +532,22 @@
           </div>
         `;
         conteneur.appendChild(card);
+
+        // INJECTION DU PUB ADSENSE TOUS LES 4 ARTISANS
+        if ((index + 1) % 4 === 0 && index !== liste.length - 1) {
+          const adCard = document.createElement('div');
+          adCard.className = 'adsense-card';
+          adCard.innerHTML = `
+            <ins class="adsbygoogle"
+                 style="display:block"
+                 data-ad-format="fluid"
+                 data-ad-layout-key="-fb+5w+4e-db+86"
+                 data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+                 data-ad-slot="9876543210"></ins>
+          `;
+          conteneur.appendChild(adCard);
+          try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch (e) {}
+        }
       });
     }
 
@@ -601,7 +611,6 @@
 
       const { error } = await supabaseClient.from('demandes').insert([payload]);
       if (!error) {
-        // Enregistre le numéro du client sur son appareil
         localStorage.setItem('fixtana_client_tel', telClient);
         alert("✅ Demande publiée ! Seul votre appareil verra les offres et numéros de contact reçus.");
         fermerModalDemande();
