@@ -567,7 +567,7 @@
           .from('logs')
           .select('*')
           .order('created_at', { ascending: false })
-          .limit(100); // Récupère jusqu'à 100 événements récents
+          .limit(5); // Récupère jusqu'à 100 événements récents
 
         if (error || !logs) {
           tbody.innerHTML = '<tr><td colspan="3" class="empty-msg">⚠️ La table "logs" n\'existe pas encore ou RLS est activé.</td></tr>';
