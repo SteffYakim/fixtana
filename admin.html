@@ -908,84 +908,101 @@
     }
 
     /* --- GESTION DU RÉSUMÉ DES ÉCHANGES ET NÉGOCIATIONS --- */
-    async function chargerEchanges() {
-      const container = document.getElementById('liste-echanges');
-      if (!container) return;
+    function formaterDateHeure(dateString) {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return '';
+  const d = date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const h = date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  return `📅 ${d} à ${h}`;
+}
 
-      try {
-        const { data: demandes, error } = await supabaseClient
-          .from('demandes')
-          .select(`*, offres(*, artisans(*))`)
-          .order('created_at', { ascending: false });
+async function chargerEchanges() {
+  const container = document.getElementById('liste-echanges');
+  if (!container) return;
 
-        if (error || !demandes || demandes.length === 0) {
-          container.innerHTML = '<div class="empty-msg">Aucun échange ou négociation enregistré.</div>';
-          return;
-        }
+  try {
+    const { data: demandes, error } = await supabaseClient
+      .from('demandes')
+      .select(`*, offres(*, artisans(*))`)
+      .order('created_at', { ascending: false });
 
-        container.innerHTML = '';
-
-        demandes.forEach(d => {
-          const div = document.createElement('div');
-          div.style.cssText = 'background: white; border-radius: 8px; padding: 12px 15px; margin-bottom: 12px; border: 1px solid #cbd5e1; box-shadow: 0 1px 3px rgba(0,0,0,0.05);';
-
-          const nbOffres = d.offres ? d.offres.length : 0;
-          let htmlOffres = '';
-
-          if (nbOffres > 0) {
-            htmlOffres = `<div style="margin-top: 8px; padding-left: 10px; border-left: 3px solid #2563eb;">`;
-            d.offres.forEach(o => {
-              const art = o.artisans || {};
-              const estAcceptee = o.statut === 'acceptee';
-
-              htmlOffres += `
-                <div style="background: ${estAcceptee ? '#dcfce7' : '#ffffff'}; padding: 8px 12px; border-radius: 6px; margin-bottom: 6px; border: 1px solid ${estAcceptee ? '#86efac' : '#e2e8f0'}; font-size: 0.88em;">
-                  <div style="display:flex; justify-content:space-between; align-items:center;">
-                    <span><strong>🔧 ${escapeHTML(art.nom || 'Artisan')}</strong> (📞 ${escapeHTML(art.telephone || 'N/C')})</span>
-                    <span style="color:${estAcceptee ? '#15803d' : '#2563eb'}; font-weight:bold;">${formaterPrix(o.prix_offre)}</span>
-                  </div>
-                  ${o.message ? `<div style="color:#475569; font-style:italic; margin-top:3px;">"${escapeHTML(o.message)}"</div>` : ''}
-                  ${estAcceptee ? `<div style="color:#15803d; font-weight:bold; margin-top:4px;">✅ OFFRE ACCEPTÉE PAR LE CLIENT</div>` : ''}
-                </div>
-              `;
-            });
-            htmlOffres += `</div>`;
-          } else {
-            htmlOffres = `<div style="color:#94a3b8; font-size:0.82em; margin-top:6px; font-style:italic;">⏳ Aucune offre reçue de la part des artisans.</div>`;
-          }
-
-          div.innerHTML = `
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #cbd5e1; padding-bottom: 8px; margin-bottom: 8px;">
-              <div>
-                <span style="color: #0f172a; font-weight: bold; font-size: 0.98em;">📌 ${escapeHTML(d.metier)} — ${escapeHTML(d.quartier)}</span>
-                <div style="font-size:0.82em; color:#64748b; margin-top:2px;">
-                  Client : <strong>${escapeHTML(d.client_nom)}</strong> | 📞 Tel: <a href="tel:${escapeHTML(d.client_tel)}" style="color:#2563eb; text-decoration:none; font-weight:bold;">${escapeHTML(d.client_tel)}</a>
-                </div>
-              </div>
-              <div>
-                <span class="badge-status ${d.statut === 'attribue' ? 'status-ok' : 'status-warning'}">
-                  ${d.statut === 'attribue' ? 'Conclu' : 'En cours'}
-                </span>
-              </div>
-            </div>
-            <div style="font-size:0.88em; color:#334155; margin-bottom:6px;">
-              <strong>Budget proposé client :</strong> ${formaterPrix(d.prix_propose)} | <strong>Urgence :</strong> ${escapeHTML(d.urgence)}
-            </div>
-            <div style="font-size:0.88em; color:#64748b; margin-bottom:8px; line-height: 1.3;">
-              "${escapeHTML(d.description)}"
-            </div>
-            <div style="font-size:0.82em; font-weight:bold; color:#475569; margin-top:8px;">
-              💬 Offres reçues (${nbOffres}) :
-            </div>
-            ${htmlOffres}
-          `;
-
-          container.appendChild(div);
-        });
-      } catch (err) {
-        container.innerHTML = '<div class="empty-msg">Erreur lors de la récupération des échanges.</div>';
-      }
+    if (error || !demandes || demandes.length === 0) {
+      container.innerHTML = '<div class="empty-msg">Aucun échange ou négociation enregistré.</div>';
+      return;
     }
+
+    container.innerHTML = '';
+
+    demandes.forEach(d => {
+      const div = document.createElement('div');
+      div.style.cssText = 'background: white; border-radius: 8px; padding: 12px 15px; margin-bottom: 12px; border: 1px solid #cbd5e1; box-shadow: 0 1px 3px rgba(0,0,0,0.05);';
+
+      const nbOffres = d.offres ? d.offres.length : 0;
+      const dateDemande = formaterDateHeure(d.created_at);
+      const telClient = d.client_tel || d.telephone || d.client_telephone || '';
+      const nomClient = d.client_nom || d.nom || 'Anonyme';
+
+      let htmlOffres = '';
+
+      if (nbOffres > 0) {
+        htmlOffres = `<div style="margin-top: 8px; padding-left: 10px; border-left: 3px solid #2563eb;">`;
+        d.offres.forEach(o => {
+          const art = o.artisans || {};
+          const estAcceptee = o.statut === 'acceptee' || o.statut === 'accepte';
+          const dateOffre = formaterDateHeure(o.created_at);
+          const telArtisan = art.telephone || o.artisan_telephone || '';
+
+          htmlOffres += `
+            <div style="background: ${estAcceptee ? '#dcfce7' : '#ffffff'}; padding: 8px 12px; border-radius: 6px; margin-bottom: 6px; border: 1px solid ${estAcceptee ? '#86efac' : '#e2e8f0'}; font-size: 0.88em;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span><strong>🔧 ${escapeHTML(art.nom || o.artisan_nom || 'Artisan')}</strong> ${telArtisan ? `(📞 <a href="tel:${escapeHTML(telArtisan)}" style="color:#2563eb; text-decoration:none;">${escapeHTML(telArtisan)}</a>)` : ''}</span>
+                <span style="color:${estAcceptee ? '#15803d' : '#2563eb'}; font-weight:bold;">${formaterPrix(o.prix_offre || o.prix_propose)}</span>
+              </div>
+              ${o.message ? `<div style="color:#475569; font-style:italic; margin-top:3px;">"${escapeHTML(o.message)}"</div>` : ''}
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px; font-size:0.85em; color:#64748b; border-top:1px dashed #e2e8f0; padding-top:4px;">
+                <span>${dateOffre}</span>
+                ${estAcceptee ? `<span style="color:#15803d; font-weight:bold;">✅ OFFRE ACCEPTÉE PAR LE CLIENT</span>` : ''}
+              </div>
+            </div>
+          `;
+        });
+        htmlOffres += `</div>`;
+      } else {
+        htmlOffres = `<div style="color:#94a3b8; font-size:0.82em; margin-top:6px; font-style:italic;">⏳ Aucune offre reçue de la part des artisans.</div>`;
+      }
+
+      div.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px dashed #cbd5e1; padding-bottom: 8px; margin-bottom: 8px;">
+          <div>
+            <span style="color: #0f172a; font-weight: bold; font-size: 0.98em;">📌 ${escapeHTML(d.metier || '')} — ${escapeHTML(d.quartier || '')}</span>
+            <div style="font-size:0.82em; color:#64748b; margin-top:2px;">
+              Client : <strong>${escapeHTML(nomClient)}</strong> | 📞 Tel: <a href="tel:${escapeHTML(telClient)}" style="color:#2563eb; text-decoration:none; font-weight:bold;">${escapeHTML(telClient || 'Non renseigné')}</a>
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <span class="badge-status ${d.statut === 'attribue' ? 'status-ok' : 'status-warning'}">
+              ${d.statut === 'attribue' ? 'Conclu' : 'En cours'}
+            </span>
+            <div style="font-size:0.78em; color:#64748b; margin-top:4px;">${dateDemande}</div>
+          </div>
+        </div>
+        <div style="font-size:0.88em; color:#334155; margin-bottom:6px;">
+          <strong>Budget proposé client :</strong> ${formaterPrix(d.prix_propose)} | <strong>Urgence :</strong> ${escapeHTML(d.urgence || 'immédiat')}
+        </div>
+        ${d.description ? `<div style="font-size:0.88em; color:#64748b; margin-bottom:8px; line-height: 1.3;">"${escapeHTML(d.description)}"</div>` : ''}
+        <div style="font-size:0.82em; font-weight:bold; color:#475569; margin-top:8px;">
+          💬 Offres reçues (${nbOffres}) :
+        </div>
+        ${htmlOffres}
+      `;
+
+      container.appendChild(div);
+    });
+  } catch (err) {
+    container.innerHTML = '<div class="empty-msg">Erreur lors de la récupération des échanges.</div>';
+  }
+}
 
     /* --- 4. URGENCES --- */
     async function chargerUrgences() {
