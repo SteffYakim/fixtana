@@ -147,7 +147,6 @@
     .btn-excel { background-color: #0284c7; color: white; }
     .btn-excel:hover { background-color: #0369a1; }
 
-    /* Boutons de prolongation rapide */
     .btn-extend { background-color: #8b5cf6; color: white; }
     .btn-extend:hover { background-color: #7c3aed; }
 
@@ -173,27 +172,6 @@
     <h1>👑 FixTana — Administration</h1>
     <p class="subtitle">Gestion globale en temps réel (Visites, Publicités, Revenus, Urgences, Pharmacies et Artisans).</p>
 
-  <div class="card">
-  <div class="card-header-flex">
-    <h2>📜 Historique des Actions (Logs)</h2>
-    <button class="btn btn-excel" onclick="exporterLogsXLSX()">📥 Exporter Logs (Excel)</button>
-  </div>
-  <div style="max-height: 300px; overflow-y: auto;">
-    <table>
-      <thead>
-        <tr>
-          <th style="width: 180px;">Date & Heure</th>
-          <th style="width: 200px;">Action</th>
-          <th>Détails</th>
-        </tr>
-      </thead>
-      <tbody id="table-logs">
-        <tr><td colspan="3" class="empty-msg">Chargement des logs...</td></tr>
-      </tbody>
-    </table>
-  </div>
-</div>
-    
     <!-- KPI REVENUS PUBLICITAIRES -->
     <div class="kpi-grid">
       <div class="kpi-card">
@@ -236,6 +214,28 @@
       <div id="alert-pub-text"></div>
     </div>
 
+    <!-- SECTION HISTORIQUE DES ACTIONS (LOGS) -->
+    <div class="card">
+      <div class="card-header-flex">
+        <h2>📜 Historique des Actions (Logs)</h2>
+        <button class="btn btn-excel" onclick="exporterLogsXLSX()">📥 Exporter Logs (Excel)</button>
+      </div>
+      <div style="max-height: 280px; overflow-y: auto;">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 170px;">Date & Heure</th>
+              <th style="width: 200px;">Action</th>
+              <th>Détails</th>
+            </tr>
+          </thead>
+          <tbody id="table-logs">
+            <tr><td colspan="3" class="empty-msg">Chargement des logs...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
     <!-- SECTION 1 : VISITES JOURNALIÈRES -->
     <div class="card">
       <div class="card-header-flex">
@@ -256,7 +256,7 @@
       </table>
     </div>
 
-    <!-- SECTION 2 : PUBLICITÉS & FINANCES (SUIVI CTR ET EXPORT) -->
+    <!-- SECTION 2 : PUBLICITÉS & FINANCES -->
     <div class="card">
       <div class="card-header-flex">
         <h2>📢 Bannières Publicitaires & Performances (CTR)</h2>
@@ -417,19 +417,13 @@
     </div>
   </div>
 
-  <!-- MODALE MODIFIER URGENCE -->
+  <!-- MODALES MODIFICATION -->
   <div id="modalUrgence" class="modal">
     <div class="modal-content">
       <h3>✏️ Modifier l'Urgence</h3>
       <input type="hidden" id="edit-urg-id">
-      <div class="form-group">
-        <label>Nom du service</label>
-        <input type="text" id="edit-urg-nom">
-      </div>
-      <div class="form-group">
-        <label>Numéro de téléphone</label>
-        <input type="text" id="edit-urg-tel">
-      </div>
+      <div class="form-group"><label>Nom du service</label><input type="text" id="edit-urg-nom"></div>
+      <div class="form-group"><label>Téléphone</label><input type="text" id="edit-urg-tel"></div>
       <div class="modal-buttons">
         <button class="btn btn-cancel" onclick="fermerModales()">Annuler</button>
         <button class="btn btn-green" onclick="sauvegarderUrgence()">Enregistrer</button>
@@ -437,31 +431,15 @@
     </div>
   </div>
 
-  <!-- MODALE MODIFIER PHARMACIE -->
   <div id="modalPharmacie" class="modal">
     <div class="modal-content">
       <h3>✏️ Modifier la Pharmacie</h3>
       <input type="hidden" id="edit-ph-id">
-      <div class="form-group">
-        <label>Nom de la pharmacie</label>
-        <input type="text" id="edit-ph-nom">
-      </div>
-      <div class="form-group">
-        <label>Quartier</label>
-        <input type="text" id="edit-ph-quartier">
-      </div>
-      <div class="form-group">
-        <label>Téléphone</label>
-        <input type="text" id="edit-ph-tel">
-      </div>
-      <div class="form-group">
-        <label>Début de la garde</label>
-        <input type="date" id="edit-ph-debut">
-      </div>
-      <div class="form-group">
-        <label>Fin de la garde</label>
-        <input type="date" id="edit-ph-fin">
-      </div>
+      <div class="form-group"><label>Nom pharmacie</label><input type="text" id="edit-ph-nom"></div>
+      <div class="form-group"><label>Quartier</label><input type="text" id="edit-ph-quartier"></div>
+      <div class="form-group"><label>Téléphone</label><input type="text" id="edit-ph-tel"></div>
+      <div class="form-group"><label>Début de garde</label><input type="date" id="edit-ph-debut"></div>
+      <div class="form-group"><label>Fin de garde</label><input type="date" id="edit-ph-fin"></div>
       <div class="modal-buttons">
         <button class="btn btn-cancel" onclick="fermerModales()">Annuler</button>
         <button class="btn btn-green" onclick="sauvegarderPharmacie()">Enregistrer</button>
@@ -469,35 +447,16 @@
     </div>
   </div>
 
-  <!-- MODALE MODIFIER ARTISAN -->
   <div id="modalArtisan" class="modal">
     <div class="modal-content">
       <h3>✏️ Modifier le Prestataire</h3>
       <input type="hidden" id="edit-art-id">
-      <div class="form-group">
-        <label>Nom complet</label>
-        <input type="text" id="edit-art-nom">
-      </div>
-      <div class="form-group">
-        <label>Métier</label>
-        <input type="text" id="edit-art-metier">
-      </div>
-      <div class="form-group">
-        <label>Quartier</label>
-        <input type="text" id="edit-art-quartier">
-      </div>
-      <div class="form-group">
-        <label>Téléphone</label>
-        <input type="text" id="edit-art-tel">
-      </div>
-      <div class="form-group">
-        <label>WhatsApp</label>
-        <input type="text" id="edit-art-wa">
-      </div>
-      <div class="form-group">
-        <label>Description</label>
-        <textarea id="edit-art-desc" rows="3"></textarea>
-      </div>
+      <div class="form-group"><label>Nom complet</label><input type="text" id="edit-art-nom"></div>
+      <div class="form-group"><label>Métier</label><input type="text" id="edit-art-metier"></div>
+      <div class="form-group"><label>Quartier</label><input type="text" id="edit-art-quartier"></div>
+      <div class="form-group"><label>Téléphone</label><input type="text" id="edit-art-tel"></div>
+      <div class="form-group"><label>WhatsApp</label><input type="text" id="edit-art-wa"></div>
+      <div class="form-group"><label>Description</label><textarea id="edit-art-desc" rows="3"></textarea></div>
       <div class="modal-buttons">
         <button class="btn btn-cancel" onclick="fermerModales()">Annuler</button>
         <button class="btn btn-green" onclick="sauvegarderArtisan()">Enregistrer</button>
@@ -538,12 +497,7 @@
 
     function escapeHTML(str) {
       if (!str) return '';
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
     }
 
     function formaterPrix(montant) {
@@ -551,7 +505,14 @@
       return Number(montant).toLocaleString('fr-FR') + ' Ar';
     }
 
+    function formaterDate(dateStr) {
+      if (!dateStr) return '';
+      const parts = dateStr.split('-');
+      return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+
     async function initAdmin() {
+      await chargerLogs();
       await chargerVisites();
       await chargerStats();
       await chargerPubs();
@@ -561,6 +522,7 @@
 
       supabaseClient
         .channel('admin-realtime')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'logs' }, () => chargerLogs())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'visites_journalieres' }, () => chargerVisites())
         .on('postgres_changes', { event: '*', schema: 'public', table: 'artisans' }, () => { chargerArtisans(); chargerStats(); })
         .on('postgres_changes', { event: '*', schema: 'public', table: 'publicites' }, () => chargerPubs())
@@ -570,34 +532,78 @@
         .subscribe();
     }
 
+    /* --- GESTION DES LOGS D'ACTIVITÉ --- */
+    async function enregistrerLog(action, details) {
+      try {
+        await supabaseClient.from('logs').insert([{ action, details }]);
+        chargerLogs();
+      } catch (e) {
+        console.warn("Impossible d'enregistrer le log:", e);
+      }
+    }
+
+    async function chargerLogs() {
+      const tbody = document.getElementById('table-logs');
+      try {
+        const { data: logs, error } = await supabaseClient
+          .from('logs')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(50);
+
+        if (error || !logs) {
+          tbody.innerHTML = '<tr><td colspan="3" class="empty-msg">⚠️ La table "logs" n\'existe pas encore ou l\'accès est restreint.</td></tr>';
+          return;
+        }
+
+        if (logs.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="3" class="empty-msg">Aucune action enregistrée pour le moment.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = '';
+        logs.forEach(l => {
+          const dateLog = new Date(l.created_at).toLocaleString('fr-FR', {
+            day: '2-digit', month: '2-digit', year: 'numeric',
+            hour: '2-digit', minute: '2-digit', second: '2-digit'
+          });
+
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><small style="color:#64748b; font-weight:bold;">${dateLog}</small></td>
+            <td><strong>${escapeHTML(l.action)}</strong></td>
+            <td>${escapeHTML(l.details)}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        tbody.innerHTML = '<tr><td colspan="3" class="empty-msg">Erreur de chargement des logs.</td></tr>';
+      }
+    }
+
+    function exporterLogsXLSX() {
+      supabaseClient.from('logs').select('*').order('created_at', { ascending: false }).then(({ data, error }) => {
+        if (error || !data || data.length === 0) return alert("Aucun log à exporter.");
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Logs d'activité");
+        XLSX.writeFile(wb, `FixTana_Logs_${new Date().toISOString().split('T')[0]}.xlsx`);
+      });
+    }
+
     /* --- 1. VISITES --- */
     async function chargerVisites() {
-      const { data, error } = await supabaseClient
-        .from('visites_journalieres')
-        .select('*')
-        .order('date_visite', { ascending: false })
-        .limit(14);
-
+      const { data, error } = await supabaseClient.from('visites_journalieres').select('*').order('date_visite', { ascending: false }).limit(14);
       const tbody = document.getElementById('table-visites');
-      if (error || !data) {
-        tbody.innerHTML = '<tr><td colspan="3" class="empty-msg">Erreur lors du chargement des visites.</td></tr>';
-        return;
-      }
-
+      if (error || !data) { tbody.innerHTML = '<tr><td colspan="3" class="empty-msg">Erreur de chargement.</td></tr>'; return; }
+      
       cacheVisites = data;
       tbody.innerHTML = '';
-
-      if (data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="3" class="empty-msg">Aucune visite enregistrée pour le moment.</td></tr>';
-        return;
-      }
+      if (data.length === 0) { tbody.innerHTML = '<tr><td colspan="3" class="empty-msg">Aucune visite.</td></tr>'; return; }
 
       const aujourdhuiStr = new Date().toISOString().split('T')[0];
-
       data.forEach((v, index) => {
         const isAujourdhui = v.date_visite === aujourdhuiStr;
-        const dateFormatee = formaterDate(v.date_visite);
-        
         let tendance = '➖';
         if (index < data.length - 1) {
           const visitesVeille = data[index + 1].nb_visites;
@@ -607,11 +613,8 @@
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td>
-            <strong>${dateFormatee}</strong>
-            ${isAujourdhui ? ' <span class="badge-status status-ok">Aujourd\'hui</span>' : ''}
-          </td>
-          <td><span class="stat-badge" style="font-size:0.95em;">👀 ${v.nb_visites} visites</span></td>
+          <td><strong>${formaterDate(v.date_visite)}</strong> ${isAujourdhui ? '<span class="badge-status status-ok">Aujourd\'hui</span>' : ''}</td>
+          <td><span class="stat-badge">👀 ${v.nb_visites} visites</span></td>
           <td>${tendance}</td>
         `;
         tbody.appendChild(tr);
@@ -619,95 +622,51 @@
     }
 
     function exporterVisitesXLSX() {
-      if (!cacheVisites || cacheVisites.length === 0) {
-        alert("Aucune donnée de visite à exporter.");
-        return;
-      }
-      const dataPropre = cacheVisites.map(v => ({
-        "Date": v.date_visite,
-        "Nombre de Visites": v.nb_visites
-      }));
-      const ws = XLSX.utils.json_to_sheet(dataPropre);
+      if (!cacheVisites.length) return alert("Aucune donnée.");
+      const ws = XLSX.utils.json_to_sheet(cacheVisites.map(v => ({ "Date": v.date_visite, "Visites": v.nb_visites })));
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Visites Journalières");
-      XLSX.writeFile(wb, `FixTana_Rapport_Visites_${new Date().toISOString().split('T')[0]}.xlsx`);
+      XLSX.utils.book_append_sheet(wb, ws, "Visites");
+      XLSX.writeFile(wb, `FixTana_Visites_${new Date().toISOString().split('T')[0]}.xlsx`);
     }
 
-    /* --- 2. GESTION DES PUBLICITÉS, FINANCES & CTR --- */
+    /* --- 2. PUBLICITÉS & FINANCES --- */
     async function chargerPubs() {
-      const { data, error } = await supabaseClient
-        .from('publicites')
-        .select('*')
-        .order('id', { ascending: false });
-
+      const { data, error } = await supabaseClient.from('publicites').select('*').order('id', { ascending: false });
       const tbody = document.getElementById('table-pubs');
-      if (error || !data) {
-        console.error("Erreur Supabase Pubs:", error);
-        tbody.innerHTML = '<tr><td colspan="8" class="empty-msg">Erreur de chargement.</td></tr>';
-        return;
-      }
+      if (error || !data) { tbody.innerHTML = '<tr><td colspan="8" class="empty-msg">Erreur.</td></tr>'; return; }
 
       listePubsCache = data;
       tbody.innerHTML = '';
 
       const maintenant = new Date();
-      const anneeCourante = maintenant.getFullYear();
-      const moisCourant = maintenant.getMonth();
-
-      let totalCumule = 0;
-      let totalMoisCourant = 0;
+      let totalCumule = 0, totalMoisCourant = 0;
 
       data.forEach(p => {
         const prixPub = Number(p.prix) || 0;
         totalCumule += prixPub;
-
-        if (p.created_at) {
-          const dateCreation = new Date(p.created_at);
-          if (dateCreation.getFullYear() === anneeCourante && dateCreation.getMonth() === moisCourant) {
-            totalMoisCourant += prixPub;
-          }
-        } else if (p.date_debut) {
-          const [y, m] = p.date_debut.split('-').map(Number);
-          if (y === anneeCourante && (m - 1) === moisCourant) {
-            totalMoisCourant += prixPub;
-          }
-        }
+        if (p.created_at && new Date(p.created_at).getMonth() === maintenant.getMonth()) totalMoisCourant += prixPub;
       });
 
-      if (document.getElementById('kpi-revenus-mois')) {
-        document.getElementById('kpi-revenus-mois').innerText = formaterPrix(totalMoisCourant);
-      }
-      if (document.getElementById('kpi-revenus-total')) {
-        document.getElementById('kpi-revenus-total').innerText = formaterPrix(totalCumule);
-      }
+      document.getElementById('kpi-revenus-mois').innerText = formaterPrix(totalMoisCourant);
+      document.getElementById('kpi-revenus-total').innerText = formaterPrix(totalCumule);
 
-      if (data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="empty-msg">Aucune publicité enregistrée.</td></tr>';
-        if (document.getElementById('alert-pub')) document.getElementById('alert-pub').style.display = 'none';
-        return;
-      }
+      if (data.length === 0) { tbody.innerHTML = '<tr><td colspan="8" class="empty-msg">Aucune publicité.</td></tr>'; return; }
 
-      const aujourdhui = new Date();
-      aujourdhui.setHours(0,0,0,0);
+      const aujourdhui = new Date(); aujourdhui.setHours(0,0,0,0);
       let alertesPubText = [];
 
       data.forEach(p => {
         let statutBadge = '<span class="badge-status status-ok">🟢 Active</span>';
-        
-        if (!p.est_actif) {
-          statutBadge = '<span class="badge-status status-expired">🔴 Desactivée</span>';
-        } else if (p.date_fin) {
-          const [year, month, day] = p.date_fin.split('-').map(Number);
-          const dateFin = new Date(year, month - 1, day);
-          const diffJours = Math.round((dateFin - aujourdhui) / (1000 * 60 * 60 * 24));
-
+        if (!p.est_actif) statutBadge = '<span class="badge-status status-expired">🔴 Desactivée</span>';
+        else if (p.date_fin) {
+          const [y, m, d] = p.date_fin.split('-').map(Number);
+          const diffJours = Math.round((new Date(y, m - 1, d) - aujourdhui) / (1000 * 60 * 60 * 24));
           if (diffJours < 0) {
             statutBadge = '<span class="badge-status status-expired">🔴 Expirée</span>';
-            alertesPubText.push(`• <strong>${escapeHTML(p.titre)}</strong> : La publicité a expiré le ${formaterDate(p.date_fin)}.`);
+            alertesPubText.push(`• <strong>${escapeHTML(p.titre)}</strong> : A expiré le ${formaterDate(p.date_fin)}.`);
           } else if (diffJours <= 2) {
-            const libelleFin = diffJours === 0 ? "aujourd'hui" : `dans ${diffJours} j`;
-            statutBadge = `<span class="badge-status status-warning">⏳ Fin ${libelleFin}</span>`;
-            alertesPubText.push(`• <strong>${escapeHTML(p.titre)}</strong> : La campagne se termine ${libelleFin} (${formaterDate(p.date_fin)}).`);
+            statutBadge = `<span class="badge-status status-warning">⏳ Fin dans ${diffJours}j</span>`;
+            alertesPubText.push(`• <strong>${escapeHTML(p.titre)}</strong> : Se termine bientôt (${formaterDate(p.date_fin)}).`);
           }
         }
 
@@ -715,138 +674,65 @@
         const clics = Number(p.nb_clics) || 0;
         const ctr = impressions > 0 ? ((clics / impressions) * 100).toFixed(2) : '0.00';
 
-        let ctrStyle = 'color: #64748b;';
-        if (Number(ctr) >= 2.0) ctrStyle = 'color: #16a34a; font-weight: bold;';
-        else if (Number(ctr) >= 0.5) ctrStyle = 'color: #d97706; font-weight: bold;';
-
-        const periodeStr = (p.date_debut && p.date_fin) 
-          ? `Du ${formaterDate(p.date_debut)} au ${formaterDate(p.date_fin)}`
-          : (p.date_fin ? `Jusqu'au ${formaterDate(p.date_fin)}` : 'Permanente');
-
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td>
-            <strong>${escapeHTML(p.titre)}</strong>
-            ${p.description ? `<br><small style="color:#64748b">${escapeHTML(p.description)}</small>` : ''}
-          </td>
+          <td><strong>${escapeHTML(p.titre)}</strong></td>
           <td><strong style="color:#16a34a;">${formaterPrix(p.prix)}</strong></td>
           <td><span class="stat-badge">👁️ ${impressions.toLocaleString('fr-FR')}</span></td>
           <td><span class="stat-badge stat-wa">👆 ${clics.toLocaleString('fr-FR')}</span></td>
-          <td><span style="${ctrStyle}">${ctr} %</span></td>
-          <td><small>${periodeStr}</small></td>
-          <td>
-            <button type="button" style="border:none; background:none; padding:0; cursor:pointer;" onclick="basculerStatutPub(${p.id}, ${p.est_actif})">
-              ${statutBadge}
-            </button>
-          </td>
+          <td><strong>${ctr} %</strong></td>
+          <td><small>${p.date_fin ? 'Jusqu\'au ' + formaterDate(p.date_fin) : 'Permanente'}</small></td>
+          <td><button style="border:none; background:none; cursor:pointer;" onclick="basculerStatutPub(${p.id}, ${p.est_actif})">${statutBadge}</button></td>
           <td style="text-align: right; white-space: nowrap;">
-            <button type="button" class="btn btn-extend" onclick="prolongerPubRapide(${p.id})" title="Prolonger la durée">➕ Prolonger</button>
-            <button type="button" class="btn btn-primary" onclick="editerPub(${p.id})" title="Modifier">✏️</button>
-            <button type="button" class="btn btn-danger" onclick="supprimerPub(${p.id})" title="Supprimer">🗑️</button>
+            <button class="btn btn-extend" onclick="prolongerPubRapide(${p.id})" title="Prolonger">➕ Prolonger</button>
+            <button class="btn btn-primary" onclick="editerPub(${p.id})">✏️</button>
+            <button class="btn btn-danger" onclick="supprimerPub(${p.id})">🗑️</button>
           </td>
         `;
         tbody.appendChild(tr);
       });
 
       const alertPubBanner = document.getElementById('alert-pub');
-      if (alertPubBanner) {
-        if (alertesPubText.length > 0) {
-          document.getElementById('alert-pub-text').innerHTML = alertesPubText.join('<br>');
-          alertPubBanner.style.display = 'block';
-        } else {
-          alertPubBanner.style.display = 'none';
-        }
-      }
+      if (alertesPubText.length > 0) {
+        document.getElementById('alert-pub-text').innerHTML = alertesPubText.join('<br>');
+        alertPubBanner.style.display = 'block';
+      } else alertPubBanner.style.display = 'none';
     }
 
     async function prolongerPubRapide(id) {
       const pub = listePubsCache.find(p => Number(p.id) === Number(id));
       if (!pub) return;
 
-      const choix = prompt(
-        `⏳ PROLONGER LA CAMPAGNE : "${pub.titre}"\n\n` +
-        `Choisissez la durée de prolongation à ajouter à partir de la date de fin actuelle (ou à partir d'aujourd'hui si expirée) :\n\n` +
-        `1 = +1 Semaine (7 jours)\n` +
-        `2 = +2 Semaines (14 jours)\n` +
-        `3 = +1 Mois (30 jours)\n` +
-        `4 = +3 Mois (90 jours)\n\n` +
-        `Entrez le numéro de votre choix (1, 2, 3 ou 4) :`
-      );
-
+      const choix = prompt(`⏳ PROLONGER "${pub.titre}" :\n1 = +1 Semaine\n2 = +2 Semaines\n3 = +1 Mois\n4 = +3 Mois`);
       if (!choix) return;
 
-      let joursAAjouter = 0;
-      switch (choix.trim()) {
-        case '1': joursAAjouter = 7; break;
-        case '2': joursAAjouter = 14; break;
-        case '3': joursAAjouter = 30; break;
-        case '4': joursAAjouter = 90; break;
-        default:
-          alert("❌ Choix invalide. Veuillez saisir un chiffre entre 1 et 4.");
-          return;
-      }
+      let jours = 0;
+      if (choix === '1') jours = 7;
+      else if (choix === '2') jours = 14;
+      else if (choix === '3') jours = 30;
+      else if (choix === '4') jours = 90;
+      else return alert("❌ Choix invalide.");
 
-      let dateReference = new Date();
+      let dateRef = new Date();
       if (pub.date_fin) {
         const [y, m, d] = pub.date_fin.split('-').map(Number);
-        const dateFinActuelle = new Date(y, m - 1, d);
-        if (dateFinActuelle > dateReference) {
-          dateReference = dateFinActuelle;
-        }
+        const dFin = new Date(y, m - 1, d);
+        if (dFin > dateRef) dateRef = dFin;
       }
 
-      dateReference.setDate(dateReference.getDate() + joursAAjouter);
-      const nouvelleDateFinStr = dateReference.toISOString().split('T')[0];
+      dateRef.setDate(dateRef.getDate() + jours);
+      const nouvelleDateStr = dateRef.toISOString().split('T')[0];
 
-      const { error } = await supabaseClient
-        .from('publicites')
-        .update({
-          date_fin: nouvelleDateFinStr,
-          est_actif: true
-        })
-        .eq('id', id);
-
-      if (error) {
-        alert("❌ Erreur lors de la prolongation : " + error.message);
-      } else {
-        alert(`✅ Campagne prolongée jusqu'au ${formaterDate(nouvelleDateFinStr)} !`);
+      const { error } = await supabaseClient.from('publicites').update({ date_fin: nouvelleDateStr, est_actif: true }).eq('id', id);
+      if (!error) {
+        await enregistrerLog("Prolongation Pub", `Prolongation de la pub "${pub.titre}" jusqu'au ${formaterDate(nouvelleDateStr)} (+${jours} jours)`);
+        alert("✅ Campagne prolongée !");
         chargerPubs();
       }
     }
 
-    function exporterRapportPubsXLSX() {
-      if (!listePubsCache || listePubsCache.length === 0) {
-        alert("Aucune donnée publicitaire à exporter.");
-        return;
-      }
-
-      const rapportAnnonceurs = listePubsCache.map(p => {
-        const impressions = Number(p.nb_impressions) || 0;
-        const clics = Number(p.nb_clics) || 0;
-        const ctr = impressions > 0 ? ((clics / impressions) * 100).toFixed(2) + '%' : '0.00%';
-
-        return {
-          "Annonceur": p.titre,
-          "Prix Campagne (Ar)": p.prix || 0,
-          "Impressions (Vues) 👁️": impressions,
-          "Nombre de Clics 👆": clics,
-          "Taux de Clic (CTR)": ctr,
-          "Lien Redirection": p.lien_url || 'N/A',
-          "Date Début": p.date_debut ? formaterDate(p.date_debut) : 'Permanente',
-          "Date Fin": p.date_fin ? formaterDate(p.date_fin) : 'Permanente',
-          "Statut Actif": p.est_actif ? "Oui" : "Non"
-        };
-      });
-
-      const ws = XLSX.utils.json_to_sheet(rapportAnnonceurs);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Bilan Bannières Pubs");
-      XLSX.writeFile(wb, `FixTana_Bilan_Annonceurs_${new Date().toISOString().split('T')[0]}.xlsx`);
-    }
-
     async function ajouterOuModifierPub(e) {
       e.preventDefault();
-      
       const id = document.getElementById('pub-id-edition').value;
       const titre = document.getElementById('pub-titre').value.trim();
       const prix = parseFloat(document.getElementById('pub-prix').value) || 0;
@@ -856,47 +742,24 @@
       const date_debut = document.getElementById('pub-debut').value || null;
       const date_fin = document.getElementById('pub-fin').value || null;
 
-      const payload = {
-        titre: titre,
-        prix: prix,
-        image_url: image_url || null,
-        lien_url: lien_url || null,
-        description: description || null,
-        date_debut: date_debut,
-        date_fin: date_fin,
-        est_actif: true
-      };
+      const payload = { titre, prix, image_url: image_url || null, lien_url: lien_url || null, description: description || null, date_debut, date_fin, est_actif: true };
 
-      let res;
       if (id) {
         delete payload.est_actif;
-        res = await supabaseClient
-          .from('publicites')
-          .update(payload)
-          .eq('id', id);
+        await supabaseClient.from('publicites').update(payload).eq('id', id);
+        await enregistrerLog("Modification Pub", `Modification de la pub "${titre}"`);
       } else {
-        res = await supabaseClient
-          .from('publicites')
-          .insert([payload]);
-      }
-
-      if (res.error) {
-        alert("❌ Erreur Supabase : " + res.error.message);
-        console.error(res.error);
-        return;
+        await supabaseClient.from('publicites').insert([payload]);
+        await enregistrerLog("Création Pub", `Ajout de la pub "${titre}" (${formaterPrix(prix)})`);
       }
 
       reinitialiserFormulairePub();
-      await chargerPubs();
+      chargerPubs();
     }
 
     function editerPub(id) {
       const pub = listePubsCache.find(p => Number(p.id) === Number(id));
-      if (!pub) {
-        console.error("Publicité non trouvée pour l'ID", id);
-        return;
-      }
-
+      if (!pub) return;
       document.getElementById('pub-id-edition').value = pub.id;
       document.getElementById('pub-titre').value = pub.titre || '';
       document.getElementById('pub-prix').value = pub.prix || '';
@@ -909,9 +772,7 @@
       const btnSubmit = document.getElementById('btn-soumettre-pub');
       btnSubmit.innerText = "💾 Mettre à jour la Pub";
       btnSubmit.className = "btn btn-primary";
-
       document.getElementById('btn-annuler-pub').style.display = "block";
-      window.scrollTo({ top: document.getElementById('form-pub').offsetTop - 50, behavior: 'smooth' });
     }
 
     function reinitialiserFormulairePub() {
@@ -929,34 +790,36 @@
     }
 
     async function supprimerPub(id) {
+      const pub = listePubsCache.find(p => Number(p.id) === Number(id));
       if (confirm("Supprimer cette publicité ?")) {
         await supabaseClient.from('publicites').delete().eq('id', id);
+        await enregistrerLog("Suppression Pub", `Suppression de la pub "${pub ? pub.titre : id}"`);
         chargerPubs();
       }
     }
 
-    /* --- 3. STATISTIQUES & CLICS ARTISANS --- */
+    function exporterRapportPubsXLSX() {
+      if (!listePubsCache.length) return alert("Aucune donnée.");
+      const ws = XLSX.utils.json_to_sheet(listePubsCache.map(p => ({
+        "Annonceur": p.titre, "Prix (Ar)": p.prix, "Impressions": p.nb_impressions, "Clics": p.nb_clics
+      })));
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Bilan Pubs");
+      XLSX.writeFile(wb, `FixTana_Bilan_Pubs_${new Date().toISOString().split('T')[0]}.xlsx`);
+    }
+
+    /* --- 3. STATISTIQUES --- */
     async function chargerStats() {
       const tbody = document.getElementById('table-stats');
-
       const [resArtisans, resClics] = await Promise.all([
-        supabaseClient.from('artisans').select('id, nom, metier, quartier, telephone'),
+        supabaseClient.from('artisans').select('id, nom, metier'),
         supabaseClient.from('clics_contact').select('artisan_id, type_action')
       ]);
 
-      if (resArtisans.error || resClics.error) {
-        tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">Impossible de charger les statistiques.</td></tr>';
-        return;
-      }
-
+      if (resArtisans.error || resClics.error) return;
       const artisans = resArtisans.data || [];
       const clics = resClics.data || [];
       cacheClics = clics;
-
-      if (artisans.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">Aucun artisan enregistré.</td></tr>';
-        return;
-      }
 
       const statsMap = {};
       clics.forEach(c => {
@@ -969,7 +832,6 @@
       artisans.forEach(a => {
         const appels = statsMap[a.id]?.appel || 0;
         const wa = statsMap[a.id]?.whatsapp || 0;
-
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td><strong>${escapeHTML(a.nom)}</strong></td>
@@ -983,61 +845,27 @@
     }
 
     function exporterClicsXLSX() {
-      if (!cacheArtisans || cacheArtisans.length === 0) {
-        alert("Aucune donnée d'artisan à exporter.");
-        return;
-      }
-
-      const rapport = cacheArtisans.map(a => {
-        const clicsArtisan = cacheClics ? cacheClics.filter(c => Number(c.artisan_id) === Number(a.id)) : [];
-        const nbAppels = clicsArtisan.filter(c => c.type_action === 'appel').length;
-        const nbWhatsapp = clicsArtisan.filter(c => c.type_action === 'whatsapp').length;
-
-        return {
-          "ID": a.id,
-          "Nom / Entreprise": a.nom,
-          "Métier": a.metier,
-          "Quartier": a.quartier,
-          "Téléphone": a.telephone,
-          "Clics Appel 📞": nbAppels,
-          "Clics WhatsApp 💬": nbWhatsapp,
-          "Total Contacts": nbAppels + nbWhatsapp,
-          "Statut": a.est_verifie ? "Validé" : "En attente",
-          "Sponsorisé": a.est_sponsorise ? "Oui" : "Non"
-        };
-      });
-
-      const ws = XLSX.utils.json_to_sheet(rapport);
+      if (!cacheArtisans.length) return alert("Aucune donnée.");
+      const ws = XLSX.utils.json_to_sheet(cacheArtisans.map(a => ({ "Nom": a.nom, "Métier": a.metier, "Téléphone": a.telephone })));
       const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Statistiques Clics");
-      XLSX.writeFile(wb, `FixTana_Rapport_Clics_${new Date().toISOString().split('T')[0]}.xlsx`);
+      XLSX.utils.book_append_sheet(wb, ws, "Clics Artisans");
+      XLSX.writeFile(wb, `FixTana_Clics_${new Date().toISOString().split('T')[0]}.xlsx`);
     }
 
     /* --- 4. URGENCES --- */
     async function chargerUrgences() {
-      const { data: urgences, error } = await supabaseClient
-        .from('urgences')
-        .select('*')
-        .order('id', { ascending: true });
-
+      const { data: urgences } = await supabaseClient.from('urgences').select('*').order('id', { ascending: true });
       const tbody = document.getElementById('table-urgences');
       tbody.innerHTML = '';
-
-      if (error || !urgences || urgences.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="3" class="empty-msg">Aucun numéro d\'urgence.</td></tr>';
-        return;
-      }
-
+      if (!urgences || urgences.length === 0) return tbody.innerHTML = '<tr><td colspan="3" class="empty-msg">Aucun numéro.</td></tr>';
+      
       cacheUrgences = urgences;
       urgences.forEach(u => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td><strong>${escapeHTML(u.nom)}</strong></td>
           <td><span style="font-size:1.1em; font-weight:bold; color:#dc2626;">${escapeHTML(u.telephone)}</span></td>
-          <td style="text-align: right; white-space: nowrap;">
-            <button class="btn btn-primary" title="Modifier" onclick="ouvrirEditUrgence(${u.id})">✏️</button>
-            <button class="btn btn-danger" title="Supprimer" onclick="supprimerUrgence(${u.id})">🗑️</button>
-          </td>
+          <td style="text-align: right;"><button class="btn btn-danger" onclick="supprimerUrgence(${u.id})">🗑️</button></td>
         `;
         tbody.appendChild(tr);
       });
@@ -1047,211 +875,90 @@
       e.preventDefault();
       const nom = document.getElementById('urg-nom').value.trim();
       const telephone = document.getElementById('urg-tel').value.trim();
-
       const { error } = await supabaseClient.from('urgences').insert([{ nom, telephone }]);
-
       if (!error) {
+        await enregistrerLog("Ajout Urgence", `Ajout du service "${nom}" (${telephone})`);
         document.getElementById('form-urgence').reset();
         chargerUrgences();
-      } else {
-        alert("Erreur : " + error.message);
-      }
-    }
-
-    function ouvrirEditUrgence(id) {
-      const u = cacheUrgences.find(i => i.id === id);
-      if (!u) return;
-      document.getElementById('edit-urg-id').value = u.id;
-      document.getElementById('edit-urg-nom').value = u.nom || '';
-      document.getElementById('edit-urg-tel').value = u.telephone || '';
-      document.getElementById('modalUrgence').style.display = 'flex';
-    }
-
-    async function sauvegarderUrgence() {
-      const id = document.getElementById('edit-urg-id').value;
-      const nom = document.getElementById('edit-urg-nom').value.trim();
-      const telephone = document.getElementById('edit-urg-tel').value.trim();
-
-      const { error } = await supabaseClient.from('urgences').update({ nom, telephone }).eq('id', id);
-
-      if (!error) {
-        fermerModales();
-        chargerUrgences();
-      } else {
-        alert("Erreur : " + error.message);
       }
     }
 
     async function supprimerUrgence(id) {
+      const u = cacheUrgences.find(i => i.id === id);
       if (confirm("Supprimer ce numéro d'urgence ?")) {
         await supabaseClient.from('urgences').delete().eq('id', id);
+        await enregistrerLog("Suppression Urgence", `Suppression de l'urgence "${u ? u.nom : id}"`);
         chargerUrgences();
       }
     }
 
     /* --- 5. PHARMACIES --- */
     async function chargerPharmacies() {
-      const { data: pharmacies, error } = await supabaseClient
-        .from('pharmacies')
-        .select('*')
-        .order('nom', { ascending: true });
-
+      const { data: pharmacies } = await supabaseClient.from('pharmacies').select('*').order('nom', { ascending: true });
       const tbody = document.getElementById('table-pharmacies');
       tbody.innerHTML = '';
-
-      if (error || !pharmacies || pharmacies.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">Aucune pharmacie enregistrée.</td></tr>';
-        return;
-      }
+      if (!pharmacies || pharmacies.length === 0) return tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">Aucune pharmacie.</td></tr>';
 
       cachePharmacies = pharmacies;
-      const aujourdhui = new Date();
-      aujourdhui.setHours(0,0,0,0);
-
-      let alertesText = [];
-
       pharmacies.forEach(p => {
-        let statutBadge = '<span class="badge-status status-ok">🟢 En Garde</span>';
-        
-        if (p.date_fin_garde) {
-          const [year, month, day] = p.date_fin_garde.split('-').map(Number);
-          const dateFin = new Date(year, month - 1, day);
-          const diffJours = Math.round((dateFin - aujourdhui) / (1000 * 60 * 60 * 24));
-
-          if (diffJours < 0) {
-            statutBadge = '<span class="badge-status status-expired">🔴 Expirée</span>';
-            alertesText.push(`• <strong>${escapeHTML(p.nom)}</strong> : La garde a expiré le ${formaterDate(p.date_fin_garde)}.`);
-          } else if (diffJours <= 2) {
-            const libelleFin = diffJours === 0 ? "aujourd'hui" : `dans ${diffJours} j`;
-            statutBadge = `<span class="badge-status status-warning">⏳ Fin ${libelleFin}</span>`;
-            alertesText.push(`• <strong>${escapeHTML(p.nom)}</strong> : La garde se termine ${libelleFin} (${formaterDate(p.date_fin_garde)}).`);
-          }
-        }
-
-        const periodeStr = (p.date_debut_garde && p.date_fin_garde) 
-          ? `Du ${formaterDate(p.date_debut_garde)} au ${formaterDate(p.date_fin_garde)}`
-          : 'Non définie';
-
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td><strong>${escapeHTML(p.nom)}</strong></td>
-          <td>${escapeHTML(p.quartier)}<br><small style="color:#64748b">${escapeHTML(p.telephone || '-')}</small></td>
-          <td><small>${periodeStr}</small></td>
-          <td>${statutBadge}</td>
-          <td style="text-align: right; white-space: nowrap;">
-            <button class="btn btn-primary" title="Modifier" onclick="ouvrirEditPharmacie(${p.id})">✏️</button>
-            <button class="btn btn-danger" title="Supprimer" onclick="supprimerPharmacie(${p.id})">🗑️</button>
-          </td>
+          <td>${escapeHTML(p.quartier)}</td>
+          <td><small>${p.date_fin_garde ? formaterDate(p.date_fin_garde) : '-'}</small></td>
+          <td><span class="badge-status status-ok">🟢 En Garde</span></td>
+          <td style="text-align: right;"><button class="btn btn-danger" onclick="supprimerPharmacie(${p.id})">🗑️</button></td>
         `;
         tbody.appendChild(tr);
       });
-
-      const alertBanner = document.getElementById('alert-garde');
-      if (alertBanner) {
-        if (alertesText.length > 0) {
-          document.getElementById('alert-garde-text').innerHTML = alertesText.join('<br>');
-          alertBanner.style.display = 'block';
-        } else {
-          alertBanner.style.display = 'none';
-        }
-      }
     }
 
-    async function ajouterPharmacie(event) {
-      event.preventDefault();
+    async function ajouterPharmacie(e) {
+      e.preventDefault();
       const nom = document.getElementById('ph-nom').value.trim();
       const quartier = document.getElementById('ph-quartier').value.trim();
       const telephone = document.getElementById('ph-tel').value.trim();
       const date_debut_garde = document.getElementById('ph-debut').value || null;
       const date_fin_garde = document.getElementById('ph-fin').value || null;
 
-      const { error } = await supabaseClient
-        .from('pharmacies')
-        .insert([{ nom, quartier, telephone, date_debut_garde, date_fin_garde, est_de_garde: true }]);
-
+      const { error } = await supabaseClient.from('pharmacies').insert([{ nom, quartier, telephone, date_debut_garde, date_fin_garde, est_de_garde: true }]);
       if (!error) {
+        await enregistrerLog("Ajout Pharmacie", `Ajout de la pharmacie "${nom}" (${quartier})`);
         document.getElementById('form-pharmacie').reset();
         chargerPharmacies();
-      } else {
-        alert("Erreur lors de l'ajout : " + error.message);
-      }
-    }
-
-    function ouvrirEditPharmacie(id) {
-      const p = cachePharmacies.find(item => item.id === id);
-      if (!p) return;
-      document.getElementById('edit-ph-id').value = p.id;
-      document.getElementById('edit-ph-nom').value = p.nom || '';
-      document.getElementById('edit-ph-quartier').value = p.quartier || '';
-      document.getElementById('edit-ph-tel').value = p.telephone || '';
-      document.getElementById('edit-ph-debut').value = p.date_debut_garde || '';
-      document.getElementById('edit-ph-fin').value = p.date_fin_garde || '';
-      document.getElementById('modalPharmacie').style.display = 'flex';
-    }
-
-    async function sauvegarderPharmacie() {
-      const id = document.getElementById('edit-ph-id').value;
-      const nom = document.getElementById('edit-ph-nom').value.trim();
-      const quartier = document.getElementById('edit-ph-quartier').value.trim();
-      const telephone = document.getElementById('edit-ph-tel').value.trim();
-      const date_debut_garde = document.getElementById('edit-ph-debut').value || null;
-      const date_fin_garde = document.getElementById('edit-ph-fin').value || null;
-
-      const { error } = await supabaseClient
-        .from('pharmacies')
-        .update({ nom, quartier, telephone, date_debut_garde, date_fin_garde })
-        .eq('id', id);
-
-      if (!error) {
-        fermerModales();
-        chargerPharmacies();
-      } else {
-        alert("Erreur : " + error.message);
       }
     }
 
     async function supprimerPharmacie(id) {
+      const p = cachePharmacies.find(item => item.id === id);
       if (confirm("Supprimer cette pharmacie ?")) {
         await supabaseClient.from('pharmacies').delete().eq('id', id);
+        await enregistrerLog("Suppression Pharmacie", `Suppression de la pharmacie "${p ? p.nom : id}"`);
         chargerPharmacies();
       }
     }
 
     /* --- 6. ARTISANS --- */
     async function chargerArtisans() {
-      const { data: artisans, error } = await supabaseClient
-        .from('artisans')
-        .select('*')
-        .order('created_at', { ascending: false });
-
+      const { data: artisans } = await supabaseClient.from('artisans').select('*').order('created_at', { ascending: false });
       const tbodyAttente = document.getElementById('table-en-attente');
       const tbodyValides = document.getElementById('table-valides');
 
-      tbodyAttente.innerHTML = '';
-      tbodyValides.innerHTML = '';
-
-      if (error || !artisans) return;
+      tbodyAttente.innerHTML = ''; tbodyValides.innerHTML = '';
+      if (!artisans) return;
 
       cacheArtisans = artisans;
       const enAttente = artisans.filter(a => !a.est_verifie);
       const valides = artisans.filter(a => a.est_verifie);
 
       const alertPendingBanner = document.getElementById('alert-pending-banner');
-      const pendingTitle = document.getElementById('pending-count-title');
-      const pendingDesc = document.getElementById('pending-count-desc');
-
       if (enAttente.length > 0) {
-        const countMsg = enAttente.length === 1 ? '1 prestataire attend' : `${enAttente.length} prestataires attendent`;
-        pendingTitle.innerText = `🔔 Nouvelle demande d'inscription ! (${enAttente.length})`;
-        pendingDesc.innerText = `Actuellement ${countMsg} votre validation.`;
+        document.getElementById('pending-count-title').innerText = `🔔 Inscription en attente ! (${enAttente.length})`;
         alertPendingBanner.style.display = 'flex';
-      } else {
-        alertPendingBanner.style.display = 'none';
-      }
+      } else alertPendingBanner.style.display = 'none';
 
-      if (enAttente.length === 0) {
-        tbodyAttente.innerHTML = '<tr><td colspan="5" class="empty-msg">Aucune demande en attente.</td></tr>';
-      } else {
+      if (enAttente.length === 0) tbodyAttente.innerHTML = '<tr><td colspan="5" class="empty-msg">Aucune demande en attente.</td></tr>';
+      else {
         enAttente.forEach(a => {
           const tr = document.createElement('tr');
           tr.innerHTML = `
@@ -1260,38 +967,28 @@
             <td>${escapeHTML(a.quartier)}</td>
             <td>${escapeHTML(a.telephone)}</td>
             <td style="text-align: right; white-space: nowrap;">
-              <button class="btn btn-green" title="Valider" onclick="validerArtisan(${a.id})">✅</button>
-              <button class="btn btn-primary" title="Modifier" onclick="ouvrirEditArtisan(${a.id})">✏️</button>
-              <button class="btn btn-danger" title="Supprimer" onclick="supprimerArtisan(${a.id})">🗑️</button>
+              <button class="btn btn-green" onclick="validerArtisan(${a.id})">✅ Valider</button>
+              <button class="btn btn-danger" onclick="supprimerArtisan(${a.id})">🗑️</button>
             </td>
           `;
           tbodyAttente.appendChild(tr);
         });
       }
 
-      if (valides.length === 0) {
-        tbodyValides.innerHTML = '<tr><td colspan="5" class="empty-msg">Aucun artisan valide publié.</td></tr>';
-      } else {
+      if (valides.length === 0) tbodyValides.innerHTML = '<tr><td colspan="5" class="empty-msg">Aucun artisan validé.</td></tr>';
+      else {
         valides.forEach(a => {
-          const tr = document.createElement('tr');
           const isSponso = a.est_sponsorise === true;
-
+          const tr = document.createElement('tr');
           tr.innerHTML = `
-            <td>
-              <strong>${escapeHTML(a.nom)}</strong>
-              ${isSponso ? '<br><small style="color:#d97706; font-weight:bold;">⭐ Sponsorisé</small>' : ''}
-            </td>
+            <td><strong>${escapeHTML(a.nom)}</strong> ${isSponso ? '<br><small style="color:#d97706; font-weight:bold;">⭐ Sponsorisé</small>' : ''}</td>
             <td>${escapeHTML(a.metier)}</td>
             <td>${escapeHTML(a.quartier)}</td>
             <td>${escapeHTML(a.telephone)}</td>
             <td style="text-align: right; white-space: nowrap;">
-              <button class="btn ${isSponso ? 'btn-danger' : 'btn-star'}" 
-                      title="${isSponso ? 'Retirer du haut de liste' : 'Mettre en haut de liste'}" 
-                      onclick="toggleSponsor(${a.id}, ${!isSponso})">
-                ${isSponso ? '⭐ Retirer' : '⭐ Sponsoriser'}
-              </button>
-              <button class="btn btn-primary" title="Modifier" onclick="ouvrirEditArtisan(${a.id})">✏️</button>
-              <button class="btn btn-danger" title="Supprimer" onclick="supprimerArtisan(${a.id})">🗑️</button>
+              <button class="btn ${isSponso ? 'btn-danger' : 'btn-star'}" onclick="toggleSponsor(${a.id}, ${!isSponso})">${isSponso ? '⭐ Retirer' : '⭐ Sponsor'}</button>
+              <button class="btn btn-primary" onclick="ouvrirEditArtisan(${a.id})">✏️</button>
+              <button class="btn btn-danger" onclick="supprimerArtisan(${a.id})">🗑️</button>
             </td>
           `;
           tbodyValides.appendChild(tr);
@@ -1299,18 +996,29 @@
       }
     }
 
-    function scrollToPending() {
-      const element = document.getElementById('card-en-attente');
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth' });
+    async function validerArtisan(id) {
+      const artisan = cacheArtisans.find(a => Number(a.id) === Number(id));
+      const { error } = await supabaseClient.from('artisans').update({ est_verifie: true }).eq('id', id);
+
+      if (!error) {
+        await enregistrerLog("Validation Artisan", `Validation de la fiche de ${artisan ? artisan.nom : 'ID ' + id}`);
+        
+        if (artisan) {
+          let numTel = (artisan.whatsapp || artisan.telephone || '').replace(/\+/g, '').replace(/\s+/g, '').replace(/-/g, '');
+          if (numTel.startsWith('0')) numTel = '261' + numTel.substring(1);
+          if (numTel) {
+            const msg = `Bonjour ${artisan.nom}, félicitations ! 🎉 Votre fiche est désormais validée et publiée sur FixTana !`;
+            window.open(`https://wa.me/${numTel}?text=${encodeURIComponent(msg)}`, '_blank');
+          }
+        }
+        chargerArtisans();
       }
     }
 
     async function toggleSponsor(id, nouveauStatut) {
-      await supabaseClient
-        .from('artisans')
-        .update({ est_sponsorise: nouveauStatut })
-        .eq('id', id);
+      const artisan = cacheArtisans.find(a => Number(a.id) === Number(id));
+      await supabaseClient.from('artisans').update({ est_sponsorise: nouveauStatut }).eq('id', id);
+      await enregistrerLog("Sponsor Artisan", `${nouveauStatut ? 'Mise en avant' : 'Retrait du sponsor'} pour "${artisan ? artisan.nom : id}"`);
       chargerArtisans();
     }
 
@@ -1336,273 +1044,32 @@
       const whatsapp = document.getElementById('edit-art-wa').value.trim();
       const description = document.getElementById('edit-art-desc').value.trim();
 
-      const { error } = await supabaseClient
-        .from('artisans')
-        .update({ nom, metier, quartier, telephone, whatsapp, description })
-        .eq('id', id);
-
+      const { error } = await supabaseClient.from('artisans').update({ nom, metier, quartier, telephone, whatsapp, description }).eq('id', id);
       if (!error) {
+        await enregistrerLog("Modification Artisan", `Mise à jour des informations de "${nom}"`);
         fermerModales();
         chargerArtisans();
-        chargerStats();
-      } else {
-        alert("Erreur : " + error.message);
       }
     }
-
-    async function validerArtisan(id) {
-  // 1. Mise à jour de la base de données Supabase
-  const { error } = await supabaseClient
-    .from('artisans')
-    .update({ est_verifie: true })
-    .eq('id', id);
-
-  if (error) {
-    alert("❌ Erreur lors de la validation : " + error.message);
-    return;
-  }
-
-  // 2. Recherche de l'artisan validé dans la liste en mémoire
-  const artisan = cacheArtisans.find(a => Number(a.id) === Number(id));
-
-  // 3. Génération et ouverture du lien WhatsApp
-  if (artisan) {
-    // Récupération prioritaire du numéro WhatsApp, sinon du Téléphone standard
-    let numTel = artisan.whatsapp || artisan.telephone || '';
-    
-    // Nettoyage du numéro (suppression des espaces, tirets et signes +)
-    numTel = numTel.replace(/\+/g, '').replace(/\s+/g, '').replace(/-/g, '');
-
-    // Formatage au format international Madagascar si le numéro commence par 0
-    if (numTel.startsWith('0')) {
-      numTel = '261' + numTel.substring(1);
-    }
-
-    if (numTel) {
-      const message = `Bonjour ${artisan.nom}, félicitations ! 🎉 Votre fiche est désormais validée et publiée sur la plateforme FixTana !`;
-      const urlWhatsapp = `https://wa.me/${numTel}?text=${encodeURIComponent(message)}`;
-      
-      // Ouverture directe de WhatsApp dans un nouvel onglet
-      window.open(urlWhatsapp, '_blank');
-    }
-  }
-
-  // 4. Rafraîchissement dynamique des tables
-  chargerArtisans();
-}
 
     async function supprimerArtisan(id) {
-      if (confirm("Supprimer cet artisan ?")) {
+      const artisan = cacheArtisans.find(a => Number(a.id) === Number(id));
+      if (confirm(`Supprimer l'artisan "${artisan ? artisan.nom : id}" ?`)) {
         await supabaseClient.from('artisans').delete().eq('id', id);
+        await enregistrerLog("Suppression Artisan", `Suppression de l'artisan "${artisan ? artisan.nom : 'ID ' + id}"`);
         chargerArtisans();
-        chargerStats();
       }
     }
 
-    async function enregistrerLog(action, details) {
-  try {
-    await supabaseClient.from('logs').insert([{ action, details }]);
-    chargerLogs(); // Rafraîchissement automatique du tableau des logs
-  } catch (err) {
-    console.error("Erreur enregistrement log :", err);
-  }
-}
-
-// --- CHARGEMENT & AFFICHAGE DES LOGS ---
-async function chargerLogs() {
-  const { data: logs, error } = await supabaseClient
-    .from('logs')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .limit(50); // Affiche les 50 dernières actions
-
-  const tbody = document.getElementById('table-logs');
-  if (error || !logs) {
-    tbody.innerHTML = '<tr><td colspan="3" class="empty-msg">Erreur de chargement des logs.</td></tr>';
-    return;
-  }
-
-  if (logs.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="3" class="empty-msg">Aucune action enregistrée pour le moment.</td></tr>';
-    return;
-  }
-
-  tbody.innerHTML = '';
-  logs.forEach(l => {
-    const dateLog = new Date(l.created_at).toLocaleString('fr-FR', {
-      day: '2-digit', month: '2-digit', year: 'numeric',
-      hour: '2-digit', minute: '2-digit', second: '2-digit'
-    });
-
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td><small style="color:#64748b; font-weight:bold;">${dateLog}</small></td>
-      <td><strong>${escapeHTML(l.action)}</strong></td>
-      <td>${escapeHTML(l.details)}</td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
-
-function exporterLogsXLSX() {
-  // Optionnel : exportation Excel de l'historique
-  supabaseClient.from('logs').select('*').order('created_at', { ascending: false }).then(({ data }) => {
-    if (!data || data.length === 0) return alert("Aucun log à exporter.");
-    const ws = XLSX.utils.json_to_sheet(data);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Logs d'activité");
-    XLSX.writeFile(wb, `FixTana_Logs_${new Date().toISOString().split('T')[0]}.xlsx`);
-  });
-}
-
-// --- MISE À JOUR DE LA FONCTION INIT ---
-// Pensez à ajouter chargerLogs() dans initAdmin() :
-async function initAdmin() {
-  await chargerVisites();
-  await chargerStats();
-  await chargerPubs();
-  await chargerUrgences();
-  await chargerPharmacies();
-  await chargerArtisans();
-  await chargerLogs(); // <--- AJOUT ICI
-
-  supabaseClient
-    .channel('admin-realtime')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'logs' }, () => chargerLogs()) // <--- Renseigne les logs en temps réel
-    .subscribe();
-}
-
-// =========================================================================
-// INTEGRATION DES LOGS DANS TOUTES LES ACTIONS DU SITE
-// =========================================================================
-
-/* 1. ARTISANS */
-async function validerArtisan(id) {
-  const artisan = cacheArtisans.find(a => Number(a.id) === Number(id));
-  const { error } = await supabaseClient.from('artisans').update({ est_verifie: true }).eq('id', id);
-
-  if (!error) {
-    await enregistrerLog("Validation Artisan", `Validation de la fiche de ${artisan ? artisan.nom : 'ID ' + id}`);
-    
-    // Notification WhatsApp
-    if (artisan) {
-      let numTel = (artisan.whatsapp || artisan.telephone || '').replace(/\+/g, '').replace(/\s+/g, '').replace(/-/g, '');
-      if (numTel.startsWith('0')) numTel = '261' + numTel.substring(1);
-      if (numTel) {
-        const msg = `Bonjour ${artisan.nom}, félicitations ! 🎉 Votre fiche est désormais validée et publiée sur FixTana !`;
-        window.open(`https://wa.me/${numTel}?text=${encodeURIComponent(msg)}`, '_blank');
-      }
+    function scrollToPending() {
+      const element = document.getElementById('card-en-attente');
+      if (element) element.scrollIntoView({ behavior: 'smooth' });
     }
-    chargerArtisans();
-  }
-}
 
-async function supprimerArtisan(id) {
-  const artisan = cacheArtisans.find(a => Number(a.id) === Number(id));
-  if (confirm(`Supprimer l'artisan "${artisan ? artisan.nom : id}" ?`)) {
-    const { error } = await supabaseClient.from('artisans').delete().eq('id', id);
-    if (!error) {
-      await enregistrerLog("Suppression Artisan", `Suppression de l'artisan "${artisan ? artisan.nom : 'ID ' + id}"`);
-      chargerArtisans();
-      chargerStats();
-    }
-  }
-}
-
-async function toggleSponsor(id, nouveauStatut) {
-  const artisan = cacheArtisans.find(a => Number(a.id) === Number(id));
-  await supabaseClient.from('artisans').update({ est_sponsorise: nouveauStatut }).eq('id', id);
-  await enregistrerLog("Sponsorisation Artisan", `${nouveauStatut ? 'Mise en avant' : 'Retrait du sponsor'} pour "${artisan ? artisan.nom : id}"`);
-  chargerArtisans();
-}
-
-/* 2. PUBLICITÉS */
-async function ajouterOuModifierPub(e) {
-  e.preventDefault();
-  const id = document.getElementById('pub-id-edition').value;
-  const titre = document.getElementById('pub-titre').value.trim();
-  // ... (récupération des autres champs identiques à votre code actuel)
-
-  if (id) {
-    await supabaseClient.from('publicites').update(payload).eq('id', id);
-    await enregistrerLog("Modification Pub", `Modification de la campagne "${titre}"`);
-  } else {
-    await supabaseClient.from('publicites').insert([payload]);
-    await enregistrerLog("Création Pub", `Ajout d'une nouvelle publicité : "${titre}" (${prix} Ar)`);
-  }
-  reinitialiserFormulairePub();
-  chargerPubs();
-}
-
-async function prolongerPubRapide(id) {
-  const pub = listePubsCache.find(p => Number(p.id) === Number(id));
-  // ... (Logique de sélection du nombre de jours inchangée) ...
-  
-  const { error } = await supabaseClient.from('publicites').update({ date_fin: nouvelleDateFinStr, est_actif: true }).eq('id', id);
-  if (!error) {
-    await enregistrerLog("Prolongation Pub", `Prolongation de la pub "${pub.titre}" jusqu'au ${formaterDate(nouvelleDateFinStr)} (+${joursAAjouter} jours)`);
-    chargerPubs();
-  }
-}
-
-async function supprimerPub(id) {
-  const pub = listePubsCache.find(p => Number(p.id) === Number(id));
-  if (confirm("Supprimer cette publicité ?")) {
-    await supabaseClient.from('publicites').delete().eq('id', id);
-    await enregistrerLog("Suppression Pub", `Suppression de la publicité "${pub ? pub.titre : id}"`);
-    chargerPubs();
-  }
-}
-
-/* 3. PHARMACIES */
-async function ajouterPharmacie(event) {
-  event.preventDefault();
-  const nom = document.getElementById('ph-nom').value.trim();
-  // ... (code d'insertion habituel) ...
-  if (!error) {
-    await enregistrerLog("Ajout Pharmacie", `Ajout de la pharmacie de garde "${nom}"`);
-    chargerPharmacies();
-  }
-}
-
-async function supprimerPharmacie(id) {
-  const p = cachePharmacies.find(item => item.id === id);
-  if (confirm("Supprimer cette pharmacie ?")) {
-    await supabaseClient.from('pharmacies').delete().eq('id', id);
-    await enregistrerLog("Suppression Pharmacie", `Suppression de la pharmacie "${p ? p.nom : id}"`);
-    chargerPharmacies();
-  }
-}
-
-/* 4. URGENCES */
-async function ajouterUrgence(e) {
-  // ...
-  if (!error) {
-    await enregistrerLog("Ajout Numéro Urgence", `Ajout du service d'urgence "${nom}" (${telephone})`);
-    chargerUrgences();
-  }
-}
-
-async function supprimerUrgence(id) {
-  const u = cacheUrgences.find(i => i.id === id);
-  if (confirm("Supprimer ce numéro d'urgence ?")) {
-    await supabaseClient.from('urgences').delete().eq('id', id);
-    await enregistrerLog("Suppression Urgence", `Suppression du service d'urgence "${u ? u.nom : id}"`);
-    chargerUrgences();
-  }
-}
-    
-    /* UTILS */
     function fermerModales() {
       document.getElementById('modalUrgence').style.display = 'none';
       document.getElementById('modalPharmacie').style.display = 'none';
       document.getElementById('modalArtisan').style.display = 'none';
-    }
-
-    function formaterDate(dateStr) {
-      if (!dateStr) return '';
-      const parts = dateStr.split('-');
-      return `${parts[2]}/${parts[1]}/${parts[0]}`;
     }
 
     initAdmin();
