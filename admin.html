@@ -173,6 +173,27 @@
     <h1>👑 FixTana — Administration</h1>
     <p class="subtitle">Gestion globale en temps réel (Visites, Publicités, Revenus, Urgences, Pharmacies et Artisans).</p>
 
+  <div class="card">
+  <div class="card-header-flex">
+    <h2>📜 Historique des Actions (Logs)</h2>
+    <button class="btn btn-excel" onclick="exporterLogsXLSX()">📥 Exporter Logs (Excel)</button>
+  </div>
+  <div style="max-height: 300px; overflow-y: auto;">
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 180px;">Date & Heure</th>
+          <th style="width: 200px;">Action</th>
+          <th>Détails</th>
+        </tr>
+      </thead>
+      <tbody id="table-logs">
+        <tr><td colspan="3" class="empty-msg">Chargement des logs...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+    
     <!-- KPI REVENUS PUBLICITAIRES -->
     <div class="kpi-grid">
       <div class="kpi-card">
