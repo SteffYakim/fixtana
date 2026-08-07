@@ -127,7 +127,7 @@
 
     /* CONTENEUR GÉNÉRIQUE SCROLLABLE AVEC EN-TÊTE FIXE */
     .table-scroll-container {
-      max-height: 250px; /* Limite la hauteur à environ 5-6 lignes */
+      max-height: 250px; /* Limite la hauteur à environ 5 lignes */
       overflow-y: auto;
       border: 1px solid #e2e8f0;
       border-radius: 8px;
@@ -237,7 +237,6 @@
         <button class="btn btn-excel" onclick="exporterLogsXLSX()">📥 Exporter Logs (Excel)</button>
       </div>
       
-      <!-- Zone Scrollable Compacte -->
       <div class="table-scroll-container">
         <table>
           <thead>
@@ -261,7 +260,6 @@
         <button class="btn btn-excel" onclick="exporterVisitesXLSX()">📥 Exporter Visites (Excel)</button>
       </div>
       
-      <!-- Zone Scrollable Compacte -->
       <div class="table-scroll-container">
         <table>
           <thead>
@@ -330,7 +328,6 @@
         <button class="btn btn-green" onclick="exporterClicsXLSX()">📥 Exporter Rapport Clics (Excel)</button>
       </div>
 
-      <!-- Zone Scrollable Compacte -->
       <div class="table-scroll-container">
         <table>
           <thead>
@@ -425,21 +422,35 @@
 
     <!-- SECTION 7 : ARTISANS VALIDÉS & SPONSORISÉS -->
     <div class="card">
-      <h2>✅ Artisans vérifiés & publiés</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Nom</th>
-            <th>Métier</th>
-            <th>Quartier</th>
-            <th>Téléphone</th>
-            <th style="text-align: right;">Actions</th>
-          </tr>
-        </thead>
-        <tbody id="table-valides">
-          <tr><td colspan="5" class="empty-msg">Chargement...</td></tr>
-        </tbody>
-      </table>
+      <div class="card-header-flex">
+        <h2>✅ Artisans vérifiés & publiés</h2>
+        <!-- BARRE DE RECHERCHE DYNAMIQUE -->
+        <input 
+          type="text" 
+          id="search-artisan" 
+          placeholder="🔍 Rechercher (nom, métier, quartier...)" 
+          oninput="filtrerArtisans()"
+          style="padding: 8px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9em; width: 280px; outline: none;"
+        >
+      </div>
+
+      <!-- CONTENEUR SCROLLABLE (AFFFICHE 5 ARTISANS VISIBLES ~265px) -->
+      <div class="table-scroll-container" style="max-height: 265px;">
+        <table>
+          <thead>
+            <tr>
+              <th>Nom</th>
+              <th>Métier</th>
+              <th>Quartier</th>
+              <th>Téléphone</th>
+              <th style="text-align: right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="table-valides">
+            <tr><td colspan="5" class="empty-msg">Chargement...</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 
@@ -617,7 +628,7 @@
       });
     }
 
-    /* --- 1. VISITES (AVEC SCROLL ET HISTORIQUE 90 JOURS) --- */
+    /* --- 1. VISITES --- */
     async function chargerVisites() {
       const { data, error } = await supabaseClient
         .from('visites_journalieres')
@@ -1045,18 +1056,16 @@
       }
     }
 
-    /* --- 6. ARTISANS --- */
+    /* --- 6. ARTISANS (AVEC RECHERCHE ET SCROLL 5 LIGNES) --- */
     async function chargerArtisans() {
       const { data: artisans } = await supabaseClient.from('artisans').select('*').order('created_at', { ascending: false });
-      const tbodyAttente = document.getElementById('table-en-attente');
-      const tbodyValides = document.getElementById('table-valides');
-
-      tbodyAttente.innerHTML = ''; tbodyValides.innerHTML = '';
       if (!artisans) return;
 
       cacheArtisans = artisans;
+
+      // Traitement des artisans en attente
+      const tbodyAttente = document.getElementById('table-en-attente');
       const enAttente = artisans.filter(a => !a.est_verifie);
-      const valides = artisans.filter(a => a.est_verifie);
 
       const alertPendingBanner = document.getElementById('alert-pending-banner');
       if (enAttente.length > 0) {
@@ -1064,8 +1073,10 @@
         alertPendingBanner.style.display = 'flex';
       } else alertPendingBanner.style.display = 'none';
 
-      if (enAttente.length === 0) tbodyAttente.innerHTML = '<tr><td colspan="5" class="empty-msg">Aucune demande en attente.</td></tr>';
-      else {
+      tbodyAttente.innerHTML = '';
+      if (enAttente.length === 0) {
+        tbodyAttente.innerHTML = '<tr><td colspan="5" class="empty-msg">Aucune demande en attente.</td></tr>';
+      } else {
         enAttente.forEach(a => {
           const tr = document.createElement('tr');
           tr.innerHTML = `
@@ -1082,25 +1093,48 @@
         });
       }
 
-      if (valides.length === 0) tbodyValides.innerHTML = '<tr><td colspan="5" class="empty-msg">Aucun artisan validé.</td></tr>';
-      else {
-        valides.forEach(a => {
-          const isSponso = a.est_sponsorise === true;
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td><strong>${escapeHTML(a.nom)}</strong> ${isSponso ? '<br><small style="color:#d97706; font-weight:bold;">⭐ Sponsorisé</small>' : ''}</td>
-            <td>${escapeHTML(a.metier)}</td>
-            <td>${escapeHTML(a.quartier)}</td>
-            <td>${escapeHTML(a.telephone)}</td>
-            <td style="text-align: right; white-space: nowrap;">
-              <button class="btn ${isSponso ? 'btn-danger' : 'btn-star'}" onclick="toggleSponsor(${a.id}, ${!isSponso})">${isSponso ? '⭐ Retirer' : '⭐ Sponsor'}</button>
-              <button class="btn btn-primary" onclick="ouvrirEditArtisan(${a.id})">✏️</button>
-              <button class="btn btn-danger" onclick="supprimerArtisan(${a.id})">🗑️</button>
-            </td>
-          `;
-          tbodyValides.appendChild(tr);
-        });
+      // Filtrage et affichage des artisans validés
+      filtrerArtisans();
+    }
+
+    // FONCTION DE RECHERCHE EN TEMPS RÉEL
+    function filtrerArtisans() {
+      const tbodyValides = document.getElementById('table-valides');
+      const recherche = (document.getElementById('search-artisan')?.value || '').toLowerCase().trim();
+      
+      const valides = cacheArtisans.filter(a => a.est_verifie);
+
+      const validesFiltres = valides.filter(a => {
+        const nom = (a.nom || '').toLowerCase();
+        const metier = (a.metier || '').toLowerCase();
+        const quartier = (a.quartier || '').toLowerCase();
+        const tel = (a.telephone || '').toLowerCase();
+        return nom.includes(recherche) || metier.includes(recherche) || quartier.includes(recherche) || tel.includes(recherche);
+      });
+
+      tbodyValides.innerHTML = '';
+
+      if (validesFiltres.length === 0) {
+        tbodyValides.innerHTML = `<tr><td colspan="5" class="empty-msg">${recherche ? '🔍 Aucun artisan ne correspond à votre recherche.' : 'Aucun artisan validé.'}</td></tr>`;
+        return;
       }
+
+      validesFiltres.forEach(a => {
+        const isSponso = a.est_sponsorise === true;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${escapeHTML(a.nom)}</strong> ${isSponso ? '<br><small style="color:#d97706; font-weight:bold;">⭐ Sponsorisé</small>' : ''}</td>
+          <td>${escapeHTML(a.metier)}</td>
+          <td>${escapeHTML(a.quartier)}</td>
+          <td>${escapeHTML(a.telephone)}</td>
+          <td style="text-align: right; white-space: nowrap;">
+            <button class="btn ${isSponso ? 'btn-danger' : 'btn-star'}" onclick="toggleSponsor(${a.id}, ${!isSponso})">${isSponso ? '⭐ Retirer' : '⭐ Sponsor'}</button>
+            <button class="btn btn-primary" onclick="ouvrirEditArtisan(${a.id})">✏️</button>
+            <button class="btn btn-danger" onclick="supprimerArtisan(${a.id})">🗑️</button>
+          </td>
+        `;
+        tbodyValides.appendChild(tr);
+      });
     }
 
     async function validerArtisan(id) {
