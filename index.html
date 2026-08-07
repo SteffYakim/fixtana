@@ -270,16 +270,20 @@
     </div>
   </div>
 
-  <!-- MODALE 3 : FAIRE UNE OFFRE (ARTISAN) -->
+  <!-- MODALE 3 : FAIRE UNE OFFRE (ARTISAN AVEC AUTHENTIFICATION TELEPHONE) -->
   <div id="modalOffre" class="modal" onclick="gererClicExterieurModal(event, 'modalOffre')">
     <div class="modal-content">
       <h2>🤝 Répondre à l'offre du client</h2>
       <form id="form-offre" onsubmit="soumettreOffre(event)">
         <input type="hidden" id="off-demande-id">
+        
+        <!-- REMPLACEMENT DE LA LISTE DEROULANTE PAR UN CHAMP TELEPHONE DE VERIFICATION -->
         <div class="form-group">
-          <label>Sélectionner votre profil artisan *</label>
-          <select id="off-artisan-id" required><option value="">Chargement...</option></select>
+          <label>Votre numéro de téléphone d'artisan vérifié *</label>
+          <input type="tel" id="off-artisan-tel" required placeholder="Ex: 034 00 000 00">
+          <small style="color:#64748b; font-size:0.75em;">Permet de vérifier si votre compte est validé.</small>
         </div>
+
         <div class="form-group">
           <label>Votre prix proposé (Ar) *</label>
           <input type="number" id="off-prix" required placeholder="Ex: 30000">
@@ -290,7 +294,7 @@
         </div>
         <div class="modal-buttons">
           <button type="button" class="btn-cancel" onclick="fermerModalOffre()">Annuler</button>
-          <button type="submit" class="btn-submit">Envoyer l'offre</button>
+          <button type="submit" id="btn-send-offer" class="btn-submit">Envoyer l'offre</button>
         </div>
       </form>
     </div>
@@ -326,7 +330,6 @@
       await chargerArtisans();
       await chargerDemandes();
 
-      // Notifications Realtime Supabase
       supabaseClient
         .channel('public-indrive')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'demandes' }, () => chargerDemandes())
@@ -338,7 +341,7 @@
       try { await supabaseClient.rpc('enregistrer_visite'); } catch (err) {}
     }
 
-    /* CARROUSEL PUBS INTERNE (AVEC AUTOMATISATION) */
+    /* CARROUSEL PUBS INTERNE */
     async function chargerCarrouselPubs() {
       const { data: pubs } = await supabaseClient.from('publicites').select('*').eq('est_actif', true).order('created_at', { ascending: false });
       const wrapper = document.getElementById('pub-carousel-wrapper');
@@ -374,7 +377,6 @@
         }
       });
 
-      // Lancement du timer automatique
       if (pubs.length > 1) {
         lancerTimerPub(pubs.length);
         wrapper.onmouseenter = () => clearInterval(carouselInterval);
@@ -387,7 +389,7 @@
       carouselInterval = setInterval(() => {
         currentSlideIndex = (currentSlideIndex + 1) % totalSlides;
         afficherSlide(currentSlideIndex);
-      }, 4000); // Défilement toutes les 4 secondes
+      }, 4000);
     }
 
     function afficherSlide(index) {
@@ -451,7 +453,7 @@
 
               htmlOffres += `
                 <div class="offer-item" style="${estAcceptee ? 'border: 2px solid #16a34a; background: #f0fdf4;' : ''}">
-                  <div style="display:flex; justify-between; font-weight:bold; align-items:center;">
+                  <div style="display:flex; justify-content:space-between; font-weight:bold; align-items:center;">
                     <span>👤 ${escapeHTML(art.nom || 'Artisan')}</span>
                     <span style="color:#2563eb; font-size:1.05em;">${formaterPrix(o.prix_offre)}</span>
                   </div>
@@ -514,16 +516,11 @@
       }
     }
 
-    /* ANNUAIRE DES ARTISANS & ADSENSE INTEGRE DEDANS */
+    /* ANNUAIRE DES ARTISANS */
     async function chargerArtisans() {
       const { data } = await supabaseClient.from('artisans').select('*').eq('est_verifie', true).order('est_sponsorise', { ascending: false });
       if (!data) return;
       tousLesArtisans = data;
-      
-      const select = document.getElementById('off-artisan-id');
-      select.innerHTML = '<option value="">-- Sélectionner votre profil --</option>';
-      data.forEach(a => select.innerHTML += `<option value="${a.id}">${escapeHTML(a.nom)} (${escapeHTML(a.metier)})</option>`);
-
       genererFiltresMetiers(data);
       afficherArtisans(data);
     }
@@ -559,7 +556,7 @@
         `;
         conteneur.appendChild(card);
 
-        // INJECTION ADSENSE TOUS LES 4 ARTISANS
+        // ADSENSE TOUS LES 4 ARTISANS
         if ((index + 1) % 4 === 0 && index !== liste.length - 1) {
           const adCard = document.createElement('div');
           adCard.className = 'adsense-card';
@@ -599,7 +596,18 @@
     function fermerModalInscription() { document.getElementById('modalInscription').style.display = 'none'; }
     function ouvrirModalDemande() { document.getElementById('modalDemande').style.display = 'flex'; }
     function fermerModalDemande() { document.getElementById('modalDemande').style.display = 'none'; }
-    function ouvrirModalOffre(id, prix) { document.getElementById('off-demande-id').value = id; document.getElementById('off-prix').value = prix || ''; document.getElementById('modalOffre').style.display = 'flex'; }
+
+    function ouvrirModalOffre(id, prix) { 
+      document.getElementById('off-demande-id').value = id; 
+      document.getElementById('off-prix').value = prix || ''; 
+      
+      // Pré-remplir le numéro si déjà saisi dans le navigateur
+      const telSauvegarde = localStorage.getItem('fixtana_artisan_tel') || '';
+      document.getElementById('off-artisan-tel').value = telSauvegarde;
+
+      document.getElementById('modalOffre').style.display = 'flex'; 
+    }
+
     function fermerModalOffre() { document.getElementById('modalOffre').style.display = 'none'; }
 
     function gererClicExterieurModal(e, idModal) {
@@ -608,17 +616,26 @@
 
     async function soumettreInscription(e) {
       e.preventDefault();
+      const telArtisan = document.getElementById('ins-tel').value.trim();
+
       const payload = {
         nom: document.getElementById('ins-nom').value.trim(),
         metier: document.getElementById('ins-metier').value.trim(),
         quartier: document.getElementById('ins-quartier').value.trim(),
-        telephone: document.getElementById('ins-tel').value.trim(),
+        telephone: telArtisan,
         whatsapp: document.getElementById('ins-wa').value.trim(),
         description: document.getElementById('ins-desc').value.trim(),
         est_verifie: false
       };
+
       const { error } = await supabaseClient.from('artisans').insert([payload]);
-      if (!error) { alert("Demande envoyée !"); fermerModalInscription(); }
+      if (!error) { 
+        localStorage.setItem('fixtana_artisan_tel', telArtisan);
+        alert("✅ Demande envoyée ! Un administrateur vérifiera votre profil sous peu."); 
+        fermerModalInscription(); 
+      } else {
+        alert("❌ Erreur : " + error.message);
+      }
     }
 
     async function soumettreDemande(e) {
@@ -644,16 +661,65 @@
       } else alert("❌ Erreur : " + error.message);
     }
 
+    /* SOUMISSION D'UNE OFFRE AVEC VERIFICATION EN BASE DE DONNEES */
     async function soumettreOffre(e) {
       e.preventDefault();
+      
+      const btn = document.getElementById('btn-send-offer');
+      btn.disabled = true;
+      btn.innerText = "Vérification...";
+
+      const telArtisanSaisi = document.getElementById('off-artisan-tel').value.trim().replace(/\s+/g, '');
+      const demandeId = document.getElementById('off-demande-id').value;
+      const prixOffre = parseFloat(document.getElementById('off-prix').value);
+      const message = document.getElementById('off-msg').value.trim();
+
+      // 1. RECHERCHE DE L'ARTISAN DANS SUPABASE (Rapprochement du téléphone)
+      const { data: artisans, error: fetchErr } = await supabaseClient
+        .from('artisans')
+        .select('*');
+
+      btn.disabled = false;
+      btn.innerText = "Envoyer l'offre";
+
+      if (fetchErr) {
+        return alert("Erreur de connexion : " + fetchErr.message);
+      }
+
+      // Comparaison des numéros nettoyés
+      const artisanTrouve = artisans.find(a => (a.telephone || '').replace(/\s+/g, '') === telArtisanSaisi);
+
+      if (!artisanTrouve) {
+        alert("⚠️ Ce numéro n'est pas enregistré comme artisan dans notre base.\n\nVous allez être redirigé vers le formulaire d'inscription.");
+        fermerModalOffre();
+        ouvrirModalInscription();
+        document.getElementById('ins-tel').value = telArtisanSaisi;
+        return;
+      }
+
+      if (!artisanTrouve.est_verifie) {
+        alert("⏳ Votre profil artisan est enregistré mais en attente de vérification par l'administrateur.");
+        return;
+      }
+
+      // 2. SI L'ARTISAN EST TROUVÉ ET VÉRIFIÉ -> ON SOUBAIT L'OFFRE
       const payload = {
-        demande_id: document.getElementById('off-demande-id').value,
-        artisan_id: document.getElementById('off-artisan-id').value,
-        prix_offre: parseFloat(document.getElementById('off-prix').value),
-        message: document.getElementById('off-msg').value.trim()
+        demande_id: demandeId,
+        artisan_id: artisanTrouve.id,
+        prix_offre: prixOffre,
+        message: message
       };
-      const { error } = await supabaseClient.from('offres').insert([payload]);
-      if (!error) { alert("🤝 Offre envoyée !"); fermerModalOffre(); chargerDemandes(); }
+
+      const { error: insertErr } = await supabaseClient.from('offres').insert([payload]);
+
+      if (!insertErr) {
+        localStorage.setItem('fixtana_artisan_tel', telArtisanSaisi);
+        alert(`🤝 Offre envoyée avec succès sous le nom de "${artisanTrouve.nom}" !`);
+        fermerModalOffre();
+        chargerDemandes();
+      } else {
+        alert("❌ Erreur : " + insertErr.message);
+      }
     }
 
     async function accepterOffre(offreId, demandeId) {
