@@ -3,10 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FixTana - Dépannage & Services à Tana</title>
+  <title>FixTana - Artisans & Services à Tana</title>
   
   <!-- Supabase JS Client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <!-- ADSENSE -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
 
   <style>
     * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -17,112 +20,221 @@
     h1 { font-size: 1.8em; color: #0f172a; margin: 0 0 5px 0; }
     p.sub { color: #64748b; font-size: 0.85em; margin: 0 0 15px 0; }
     
-    /* Boutons de mode (Client / Artisan) */
-    .mode-switcher { display: flex; gap: 8px; margin-bottom: 20px; background: #e2e8f0; padding: 4px; border-radius: 12px; }
+    .nav-links { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+    .nav-links a, .nav-links button { text-decoration: none; font-size: 0.85em; font-weight: bold; padding: 8px 14px; border-radius: 20px; border: none; cursor: pointer; transition: 0.2s; }
+    .nav-links a.urgent { background: #fee2e2; color: #991b1b; }
+    .nav-links button.register { background: #dcfce7; color: #15803d; }
+    .nav-links button.register:hover { background: #bbf7d0; }
+
+    /* CARROUSEL PUBLICITAIRE INTERNE */
+    .carousel-container {
+      position: relative;
+      max-width: 100%;
+      margin: 0 0 20px 0;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+    }
+    .pub-slide { display: none; padding: 15px; text-decoration: none; color: #78350f; }
+    .pub-slide.active { display: block; }
+    .pub-tag { font-size: 0.7em; text-transform: uppercase; font-weight: bold; color: #b45309; margin-bottom: 6px; display: block; }
+    .pub-slide img { width: 100%; height: 120px; object-fit: cover; border-radius: 8px; margin-bottom: 8px; display: block; }
+    .pub-title { font-weight: bold; font-size: 1.05em; color: #92400e; margin-bottom: 4px; }
+    .pub-desc { font-size: 0.85em; color: #a16207; margin: 0; }
+    .carousel-dots { display: flex; justify-content: center; gap: 6px; padding-bottom: 10px; background: #fffbeb; }
+    .dot { width: 8px; height: 8px; background-color: #fcd34d; border-radius: 50%; cursor: pointer; transition: 0.3s; }
+    .dot.active-dot { background-color: #b45309; width: 18px; border-radius: 10px; }
+
+    /* ADSENSE BANNER */
+    .adsense-card { background: #ffffff; border-radius: 12px; padding: 10px; margin-bottom: 15px; text-align: center; border: 1px dashed #cbd5e1; }
+
+    /* SWITCHER SYSTEME INDRIVE (MODE CLIENT / ARTISAN) */
+    .indrive-section { background: #ffffff; border-radius: 14px; padding: 16px; margin-bottom: 25px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+    .mode-switcher { display: flex; gap: 8px; margin-bottom: 15px; background: #f1f5f9; padding: 4px; border-radius: 12px; }
     .mode-btn { flex: 1; border: none; padding: 10px; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 0.85em; }
     .mode-btn.active { background: #2563eb; color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
 
-    /* Bouton principal "Poster un besoin" */
     .btn-post-need {
       width: 100%;
       background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
-      color: white;
-      border: none;
-      padding: 14px;
-      border-radius: 12px;
-      font-size: 1em;
-      font-weight: bold;
-      cursor: pointer;
-      margin-bottom: 20px;
-      box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
+      color: white; border: none; padding: 14px; border-radius: 12px;
+      font-size: 1em; font-weight: bold; cursor: pointer; margin-bottom: 15px;
+      box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25);
     }
 
-    /* Cartes de Demandes */
-    .demand-card { background: white; border-radius: 12px; padding: 16px; margin-bottom: 15px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.03); }
-    .demand-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
-    .demand-title { font-weight: bold; font-size: 1em; color: #0f172a; }
-    .badge-urgency { font-size: 0.7em; padding: 4px 8px; border-radius: 6px; font-weight: bold; }
+    /* CARTES DEMANDES / OFFRES */
+    .demand-card { background: #f8fafc; border-radius: 12px; padding: 14px; margin-bottom: 12px; border: 1px solid #cbd5e1; }
+    .demand-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+    .demand-title { font-weight: bold; font-size: 0.95em; color: #0f172a; }
+    .badge-urgency { font-size: 0.7em; padding: 3px 6px; border-radius: 6px; font-weight: bold; }
     .urg-immediat { background: #fee2e2; color: #991b1b; }
     .urg-aujourdhui { background: #fef3c7; color: #92400e; }
     .urg-rdv { background: #e0f2fe; color: #0369a1; }
 
-    .price-tag { font-size: 1.1em; font-weight: bold; color: #16a34a; margin: 8px 0; }
-    .demand-desc { font-size: 0.88em; color: #334155; margin-bottom: 10px; line-height: 1.4; }
-    .demand-img { width: 100%; max-height: 180px; object-fit: cover; border-radius: 8px; margin-bottom: 10px; }
+    .price-tag { font-size: 1.05em; font-weight: bold; color: #16a34a; margin: 6px 0; }
+    .demand-desc { font-size: 0.85em; color: #334155; margin-bottom: 8px; line-height: 1.3; }
 
-    /* Accordéon Offres des artisans */
-    .offers-box { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px; margin-top: 10px; }
-    .offer-item { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; margin-bottom: 8px; }
+    .offers-box { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; margin-top: 10px; }
+    .offer-item { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px; margin-bottom: 6px; }
     .offer-item:last-child { margin-bottom: 0; }
-    .offer-artisan-name { font-weight: bold; font-size: 0.9em; display: flex; align-items: center; justify-content: space-between; }
-    .offer-price { color: #2563eb; font-weight: bold; font-size: 0.95em; }
 
-    /* Modale & Formulaires */
-    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 1000; padding: 15px; }
-    .modal-content { background: white; padding: 20px; border-radius: 12px; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; }
-    .modal-content h2 { margin-top: 0; font-size: 1.2em; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; }
+    /* ANNUAIRE DES ARTISANS CLASSIQUE */
+    .annuaire-title { font-size: 1.2em; font-weight: bold; color: #0f172a; margin: 25px 0 10px 0; display: flex; align-items: center; gap: 8px; }
+    .search-box { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.95em; margin-bottom: 12px; outline: none; }
+    .filter-tags { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px; }
+    .tag { background: white; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 15px; font-size: 0.8em; cursor: pointer; white-space: nowrap; }
+    .tag.active { background: #2563eb; color: white; border-color: #2563eb; }
+
+    .artisan-card { background: white; border-radius: 12px; padding: 16px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; }
+    .artisan-card.sponso { border: 2px solid #f59e0b; background: #fffbeb; }
+    .artisan-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+    .artisan-name { font-weight: bold; font-size: 1.1em; color: #0f172a; }
+    .artisan-metier { background: #eff6ff; color: #1d4ed8; font-size: 0.75em; padding: 3px 8px; border-radius: 10px; font-weight: bold; }
+    .artisan-quartier { font-size: 0.85em; color: #64748b; margin-bottom: 10px; }
+    .artisan-desc { font-size: 0.85em; color: #334155; margin-bottom: 12px; line-height: 1.4; }
+    .actions-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .btn-action { text-align: center; padding: 10px; border-radius: 8px; text-decoration: none; font-size: 0.85em; font-weight: bold; border: none; cursor: pointer; }
+    .btn-call { background: #2563eb; color: white; }
+    .btn-wa { background: #16a34a; color: white; }
+
+    .empty-state { text-align: center; color: #64748b; padding: 20px; background: white; border-radius: 10px; border: 1px dashed #cbd5e1; font-size: 0.9em; }
+
+    /* MODALES */
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; padding: 15px; }
+    .modal-content { background: white; padding: 22px; border-radius: 12px; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; }
+    .modal-content h2 { margin-top: 0; color: #0f172a; font-size: 1.2em; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; }
     .form-group { margin-bottom: 12px; }
     .form-group label { display: block; font-size: 0.85em; font-weight: 600; color: #475569; margin-bottom: 4px; }
-    .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9em; outline: none; }
+    .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9em; outline: none; }
     .modal-buttons { display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; }
-    
-    .btn-action { width: 100%; border: none; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 0.85em; }
-    .btn-primary { background: #2563eb; color: white; }
-    .btn-green { background: #16a34a; color: white; }
-    .btn-cancel { background: #94a3b8; color: white; }
+    .btn-submit { background: #16a34a; color: white; border: none; padding: 10px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+    .btn-cancel { background: #94a3b8; color: white; border: none; padding: 10px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; }
 
-    .empty-state { text-align: center; color: #64748b; padding: 30px; background: white; border-radius: 10px; border: 1px dashed #cbd5e1; }
+    footer { text-align: center; margin-top: 30px; padding: 15px 0; border-top: 1px solid #cbd5e1; font-size: 0.8em; color: #64748b; }
+    footer a { color: #2563eb; text-decoration: none; }
   </style>
 </head>
 <body>
 
   <div class="container">
+    <!-- EN-TÊTE ET NAVIGATION -->
     <div class="header">
       <h1>🛠️ FixTana</h1>
-      <p class="sub">Négociez et trouvez votre artisan en direct à Antananarivo</p>
+      <p class="sub">Trouvez ou négociez directement avec les artisans à Antananarivo</p>
+      
+      <div class="nav-links">
+        <a href="urgences.html" class="urgent">🚨 Urgences & Pharmacies</a>
+        <button class="register" onclick="ouvrirModalInscription()">➕ Devenir Prestataire</button>
+      </div>
+    </div>
 
-      <!-- SWITCHER MODE CLIENT / ARTISAN -->
+    <!-- CARROUSEL PUBLICITAIRE INTERNE -->
+    <div id="pub-carousel-wrapper" class="carousel-container" style="display: none;">
+      <div id="pub-slides-container"></div>
+      <div id="pub-dots-container" class="carousel-dots"></div>
+    </div>
+
+    <!-- ADSENSE HAUT -->
+    <div class="adsense-card">
+      <ins class="adsbygoogle"
+           style="display:block"
+           data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+           data-ad-slot="1234567890"
+           data-ad-format="auto"
+           data-full-width-responsive="true"></ins>
+      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+    </div>
+
+    <!-- SECTION NÉGOCIATION EN DIRECT (STYLE INDRIVE) -->
+    <div class="indrive-section">
       <div class="mode-switcher">
-        <button id="btn-mode-client" class="mode-btn active" onclick="basculerMode('client')">👨‍💼 Mode Client</button>
-        <button id="btn-mode-artisan" class="mode-btn" onclick="basculerMode('artisan')">🔧 Mode Artisan / Prestataire</button>
+        <button id="btn-mode-client" class="mode-btn active" onclick="basculerMode('client')">👨‍💼 Demander une intervention</button>
+        <button id="btn-mode-artisan" class="mode-btn" onclick="basculerMode('artisan')">🔧 Réponses Artisans</button>
+      </div>
+
+      <!-- VUE CLIENT : POSTER UN BESOIN -->
+      <div id="view-client">
+        <button class="btn-post-need" onclick="ouvrirModalDemande()">
+          📢 Déposer une demande (Proposer un tarif)
+        </button>
+
+        <h4 style="margin: 10px 0 8px 0; color:#475569;">📋 Vos demandes publiées & Offres</h4>
+        <div id="liste-demandes-client">
+          <div class="empty-state">Chargement de vos demandes...</div>
+        </div>
+      </div>
+
+      <!-- VUE ARTISAN : REPONDRE AUX DEMANDES -->
+      <div id="view-artisan" style="display: none;">
+        <h4 style="margin: 0 0 10px 0; color:#475569;">🔔 Demandes récentes des clients</h4>
+        <div id="liste-demandes-artisan">
+          <div class="empty-state">Chargement des opportunités...</div>
+        </div>
       </div>
     </div>
 
-    <!-- VUE CLIENT : POSTER UN BESOIN -->
-    <div id="view-client">
-      <button class="btn-post-need" onclick="ouvrirModalDemande()">
-        <span>📢</span> Demander une intervention (Proposer un prix)
-      </button>
+    <!-- ANNUAIRE CLASSIQUE DES ARTISANS VÉRIFIÉS -->
+    <div class="annuaire-title">🔍 Annuaire complet des prestataires</div>
+    
+    <input type="text" id="search-input" class="search-box" placeholder="Rechercher (ex: Plombier, Analakely...)" oninput="filtrerArtisans()">
+    <div class="filter-tags" id="tags-container"></div>
 
-      <h3>📋 Vos demandes en cours</h3>
-      <div id="liste-demandes-client">
-        <div class="empty-state">Chargement de vos demandes...</div>
-      </div>
+    <div id="liste-artisans">
+      <div class="empty-state">Chargement des prestataires...</div>
     </div>
 
-    <!-- VUE ARTISAN : REPONDRE AUX DEMANDES -->
-    <div id="view-artisan" style="display: none;">
-      <div style="margin-bottom: 15px; background: #eff6ff; padding: 12px; border-radius: 10px; font-size: 0.85em; color: #1e40af;">
-        ℹ️ <strong>Espace Artisan :</strong> Parcourez les demandes des clients, acceptez leur tarif ou proposez votre contre-offre.
-      </div>
-      <h3>🔔 Demandes clients récentes à Tana</h3>
-      <div id="liste-demandes-artisan">
-        <div class="empty-state">Recherche des demandes autour de vous...</div>
-      </div>
+    <!-- FOOTER -->
+    <footer>
+      <p>© 2026 FixTana - Tous droits réservés | <a href="politique-confidentialite.html">Mentions Légales & Confidentialité</a></p>
+    </footer>
+  </div>
+
+  <!-- MODALE 1 : INSCRIPTION ARTISAN -->
+  <div id="modalInscription" class="modal" onclick="gererClicExterieurModal(event, 'modalInscription')">
+    <div class="modal-content">
+      <h2>📝 Inscription Prestataire</h2>
+      <form id="form-inscription" onsubmit="soumettreInscription(event)">
+        <div class="form-group">
+          <label>Nom complet / Nom de l'entreprise *</label>
+          <input type="text" id="ins-nom" required placeholder="Ex: Jean Rakoto">
+        </div>
+        <div class="form-group">
+          <label>Métier / Activité *</label>
+          <input type="text" id="ins-metier" required placeholder="Ex: Plombier, Vitrier...">
+        </div>
+        <div class="form-group">
+          <label>Quartier d'intervention *</label>
+          <input type="text" id="ins-quartier" required placeholder="Ex: Analakely, Ankorondrano...">
+        </div>
+        <div class="form-group">
+          <label>Numéro Téléphone *</label>
+          <input type="tel" id="ins-tel" required placeholder="Ex: 034 00 000 00">
+        </div>
+        <div class="form-group">
+          <label>Numéro WhatsApp (facultatif)</label>
+          <input type="tel" id="ins-wa" placeholder="Ex: 261340000000">
+        </div>
+        <div class="form-group">
+          <label>Courte description de vos services</label>
+          <textarea id="ins-desc" rows="3" placeholder="Présentez brièvement vos compétences..."></textarea>
+        </div>
+        <div class="modal-buttons">
+          <button type="button" class="btn-cancel" onclick="fermerModalInscription()">Annuler</button>
+          <button type="submit" id="btn-submit-form" class="btn-submit">Envoyer ma demande</button>
+        </div>
+      </form>
     </div>
   </div>
 
-  <!-- MODALE : CREER UNE DEMANDE (CLIENT) -->
+  <!-- MODALE 2 : PUBLIER UN BESOIN (INDRIVE) -->
   <div id="modalDemande" class="modal">
     <div class="modal-content">
-      <h2>📢 Publication de votre besoin</h2>
+      <h2>📢 Proposer un projet / besoin</h2>
       <form id="form-demande" onsubmit="soumettreDemande(event)">
         <div class="form-group">
-          <label>Votre Nom complet *</label>
+          <label>Votre Nom *</label>
           <input type="text" id="dem-nom" required placeholder="Ex: Rado">
         </div>
         <div class="form-group">
@@ -130,72 +242,58 @@
           <input type="tel" id="dem-tel" required placeholder="Ex: 034 00 000 00">
         </div>
         <div class="form-group">
-          <label>Service requis *</label>
-          <select id="dem-metier" required>
-            <option value="">-- Choisir un métier --</option>
-            <option value="Plomberie">Plomberie</option>
-            <option value="Électricité">Électricité</option>
-            <option value="Mécanique Auto / Moto">Mécanique Auto / Moto</option>
-            <option value="Serrurerie">Serrurerie</option>
-            <option value="Menuiserie">Menuiserie</option>
-            <option value="Autre">Autre service</option>
-          </select>
+          <label>Métier recherché *</label>
+          <input type="text" id="dem-metier" required placeholder="Ex: Plomberie, Électricité, Menuiserie...">
         </div>
         <div class="form-group">
-          <label>Quartier d'intervention *</label>
-          <input type="text" id="dem-quartier" required placeholder="Ex: Mahamasina, Ankorondrano...">
+          <label>Quartier *</label>
+          <input type="text" id="dem-quartier" required placeholder="Ex: Mahamasina, Itaosy...">
         </div>
         <div class="form-group">
-          <label>Description détaillée du problème *</label>
-          <textarea id="dem-desc" rows="3" required placeholder="Ex: Fuite d'eau sous l'évier de la cuisine, tuyau percé."></textarea>
+          <label>Description du travail *</label>
+          <textarea id="dem-desc" rows="3" required placeholder="Ex: Fuite sous évier, tuyau percé à remplacer."></textarea>
         </div>
         <div class="form-group">
           <label>Urgence *</label>
           <select id="dem-urgence" required>
-            <option value="immediat">🚨 Immédiat (Urgent)</option>
+            <option value="immediat">🚨 Immédiat</option>
             <option value="aujourdhui">📅 Aujourd'hui</option>
             <option value="rdv">🗓️ Rendez-vous programmé</option>
           </select>
         </div>
         <div class="form-group">
-          <label>Votre prix proposé (Ariary) - Facultatif</label>
-          <input type="number" id="dem-prix" placeholder="Ex: 25000" min="0" step="1000">
-        </div>
-        <div class="form-group">
-          <label>Photo du problème (URL Image) - Facultatif</label>
-          <input type="url" id="dem-img" placeholder="https://exemples.com/photo.jpg">
+          <label>Prix proposé (Ar) - Facultatif</label>
+          <input type="number" id="dem-prix" placeholder="Ex: 25000">
         </div>
         <div class="modal-buttons">
-          <button type="button" class="btn-action btn-cancel" onclick="fermerModalDemande()">Annuler</button>
-          <button type="submit" id="btn-submit-demande" class="btn-action btn-green">Publier la demande</button>
+          <button type="button" class="btn-cancel" onclick="fermerModalDemande()">Annuler</button>
+          <button type="submit" class="btn-submit">Publier la demande</button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- MODALE : FAIRE UNE CONTRE-OFFRE (ARTISAN) -->
+  <!-- MODALE 3 : FAIRE UNE OFFRE (ARTISAN) -->
   <div id="modalOffre" class="modal">
     <div class="modal-content">
-      <h2>🤝 Faire une offre au client</h2>
+      <h2>🤝 Répondre à l'offre du client</h2>
       <form id="form-offre" onsubmit="soumettreOffre(event)">
         <input type="hidden" id="off-demande-id">
         <div class="form-group">
-          <label>Sélectionner votre profil Artisan *</label>
-          <select id="off-artisan-id" required>
-            <option value="">Chargement de votre profil...</option>
-          </select>
+          <label>Sélectionner votre profil artisan *</label>
+          <select id="off-artisan-id" required><option value="">Chargement...</option></select>
         </div>
         <div class="form-group">
-          <label>Votre tarif proposé (Ar) *</label>
-          <input type="number" id="off-prix" required min="1000" step="1000" placeholder="Ex: 30000">
+          <label>Votre prix proposé (Ar) *</label>
+          <input type="number" id="off-prix" required placeholder="Ex: 30000">
         </div>
         <div class="form-group">
-          <label>Message / Précision pour le client</label>
-          <textarea id="off-msg" rows="2" placeholder="Ex: Je peux intervenir dans 20 min. Fournitures non incluses."></textarea>
+          <label>Message pour le client</label>
+          <textarea id="off-msg" rows="2" placeholder="Ex: Je viens dans 20 min avec les outils."></textarea>
         </div>
         <div class="modal-buttons">
-          <button type="button" class="btn-action btn-cancel" onclick="fermerModalOffre()">Annuler</button>
-          <button type="submit" class="btn-action btn-primary">Envoyer l'offre</button>
+          <button type="button" class="btn-cancel" onclick="fermerModalOffre()">Annuler</button>
+          <button type="submit" class="btn-submit">Envoyer l'offre</button>
         </div>
       </form>
     </div>
@@ -207,9 +305,12 @@
 
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+    let tousLesArtisans = [];
+    let metierFiltre = 'TOUS';
+    let currentSlideIndex = 0;
+    let carouselTimer = null;
     let modeActuel = 'client';
     let cacheDemandes = [];
-    let cacheArtisans = [];
 
     function escapeHTML(str) {
       if (!str) return '';
@@ -220,11 +321,12 @@
       return m ? Number(m).toLocaleString('fr-FR') + ' Ar' : 'Sur devis';
     }
 
-    async function init() {
-      await chargerArtisansPourSelect();
+    async function initPage() {
+      await comptabiliserVisite();
+      await chargerCarrouselPubs();
+      await chargerArtisans();
       await chargerDemandes();
 
-      // Écoute Supabase Realtime pour mettre à jour automatiquement dès qu'une offre/demande arrive
       supabaseClient
         .channel('public-indrive')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'demandes' }, () => chargerDemandes())
@@ -232,216 +334,260 @@
         .subscribe();
     }
 
+    async function comptabiliserVisite() {
+      try { await supabaseClient.rpc('enregistrer_visite'); } catch (err) {}
+    }
+
+    /* CARROUSEL PUBS */
+    async function chargerCarrouselPubs() {
+      const { data: pubs } = await supabaseClient.from('publicites').select('*').eq('est_actif', true).order('created_at', { ascending: false });
+      const wrapper = document.getElementById('pub-carousel-wrapper');
+      if (!pubs || pubs.length === 0) return;
+
+      wrapper.style.display = 'block';
+      const slidesContainer = document.getElementById('pub-slides-container');
+      const dotsContainer = document.getElementById('pub-dots-container');
+      slidesContainer.innerHTML = ''; dotsContainer.innerHTML = '';
+
+      pubs.forEach((p, index) => {
+        const slide = document.createElement('a');
+        slide.className = `pub-slide ${index === 0 ? 'active' : ''}`;
+        slide.href = escapeHTML(p.lien_url) || '#';
+        if (p.lien_url) slide.target = '_blank';
+        slide.innerHTML = `
+          <span class="pub-tag">📢 Sponsorisé</span>
+          ${p.image_url ? `<img src="${escapeHTML(p.image_url)}">` : ''}
+          <div class="pub-title">${escapeHTML(p.titre)}</div>
+          ${p.description ? `<p class="pub-desc">${escapeHTML(p.description)}</p>` : ''}
+        `;
+        slidesContainer.appendChild(slide);
+
+        if (pubs.length > 1) {
+          const dot = document.createElement('span');
+          dot.className = `dot ${index === 0 ? 'active-dot' : ''}`;
+          dot.onclick = () => afficherSlide(index);
+          dotsContainer.appendChild(dot);
+        }
+      });
+    }
+
+    function afficherSlide(index) {
+      const slides = document.querySelectorAll('.pub-slide');
+      const dots = document.querySelectorAll('.dot');
+      slides.forEach(s => s.classList.remove('active'));
+      dots.forEach(d => d.classList.remove('active-dot'));
+      if (slides[index]) slides[index].classList.add('active');
+      if (dots[index]) dots[index].classList.add('active-dot');
+    }
+
+    /* GESTION MODE CLIENT / ARTISAN (INDRIVE) */
     function basculerMode(mode) {
       modeActuel = mode;
       document.getElementById('btn-mode-client').className = `mode-btn ${mode === 'client' ? 'active' : ''}`;
       document.getElementById('btn-mode-artisan').className = `mode-btn ${mode === 'artisan' ? 'active' : ''}`;
-      
       document.getElementById('view-client').style.display = mode === 'client' ? 'block' : 'none';
       document.getElementById('view-artisan').style.display = mode === 'artisan' ? 'block' : 'none';
-
       afficherDemandes();
     }
 
-    async function chargerArtisansPourSelect() {
-      const { data } = await supabaseClient.from('artisans').select('id, nom, metier').eq('est_verifie', true);
-      cacheArtisans = data || [];
-      const select = document.getElementById('off-artisan-id');
-      select.innerHTML = '<option value="">-- Sélectionnez votre profil --</option>';
-      cacheArtisans.forEach(a => {
-        select.innerHTML += `<option value="${a.id}">${escapeHTML(a.nom)} (${escapeHTML(a.metier)})</option>`;
-      });
-    }
-
     async function chargerDemandes() {
-      const { data: demandes, error } = await supabaseClient
-        .from('demandes')
-        .select(`
-          *,
-          offres (
-            id,
-            prix_offre,
-            message,
-            statut,
-            artisans ( id, nom, metier, telephone, whatsapp, quartier )
-          )
-        `)
-        .order('created_at', { ascending: false });
-
-      if (!error && demandes) {
-        cacheDemandes = demandes;
-        afficherDemandes();
-      }
+      const { data } = await supabaseClient.from('demandes').select(`*, offres(*, artisans(*))`).order('created_at', { ascending: false });
+      if (data) { cacheDemandes = data; afficherDemandes(); }
     }
 
     function afficherDemandes() {
-      if (modeActuel === 'client') rendrevueClient();
-      else rendreVueArtisan();
-    }
+      if (modeActuel === 'client') {
+        const container = document.getElementById('liste-demandes-client');
+        container.innerHTML = '';
+        if (cacheDemandes.length === 0) return container.innerHTML = '<div class="empty-state">Aucune demande publiée.</div>';
 
-    /* RENDER VUE CLIENT */
-    function rendrevueClient() {
-      const container = document.getElementById('liste-demandes-client');
-      container.innerHTML = '';
+        cacheDemandes.forEach(d => {
+          const div = document.createElement('div');
+          div.className = 'demand-card';
+          const nbOffres = d.offres ? d.offres.length : 0;
 
-      if (cacheDemandes.length === 0) {
-        container.innerHTML = '<div class="empty-state">Vous n\'avez posté aucune demande.</div>';
-        return;
-      }
-
-      cacheDemandes.forEach(d => {
-        const div = document.createElement('div');
-        div.className = 'demand-card';
-
-        let badgeUrg = '<span class="badge-urgency urg-rdv">🗓️ RDV</span>';
-        if (d.urgence === 'immediat') badgeUrg = '<span class="badge-urgency urg-immediat">🚨 Urgent</span>';
-        else if (d.urgence === 'aujourdhui') badgeUrg = '<span class="badge-urgency urg-aujourdhui">📅 Aujourd\'hui</span>';
-
-        const nbOffres = d.offres ? d.offres.length : 0;
-
-        let htmlOffres = '';
-        if (nbOffres > 0) {
-          htmlOffres = `<div class="offers-box"><strong>💬 ${nbOffres} offre(s) d'artisan(s) reçue(s) :</strong><br><br>`;
-          d.offres.forEach(o => {
-            const art = o.artisans || {};
-            const estAcceptee = o.statut === 'acceptee';
-
-            htmlOffres += `
-              <div class="offer-item" style="${estAcceptee ? 'border: 2px solid #16a34a; background: #f0fdf4;' : ''}">
-                <div class="offer-artisan-name">
-                  <span>👤 ${escapeHTML(art.nom || 'Artisan')}</span>
-                  <span class="offer-price">${formaterPrix(o.prix_offre)}</span>
-                </div>
-                <div style="font-size: 0.8em; color: #64748b; margin-top: 2px;">📍 ${escapeHTML(art.quartier || 'Tana')}</div>
-                ${o.message ? `<p style="font-size: 0.85em; margin: 5px 0; color: #334155;">"${escapeHTML(o.message)}"</p>` : ''}
-                
-                ${estAcceptee ? `
-                  <div style="margin-top: 8px; padding: 8px; background: #dcfce7; border-radius: 6px; font-size: 0.85em;">
-                    <strong>✅ Offre acceptée ! Contactez l'artisan :</strong><br>
-                    📞 Tel: <a href="tel:${art.telephone}">${art.telephone}</a><br>
-                    ${art.whatsapp ? `💬 WA: <a href="https://wa.me/${art.whatsapp}" target="_blank">Ouvrir WhatsApp</a>` : ''}
+          let htmlOffres = '';
+          if (nbOffres > 0) {
+            htmlOffres = `<div class="offers-box"><strong>💬 ${nbOffres} offre(s) reçue(s) :</strong><br>`;
+            d.offres.forEach(o => {
+              const art = o.artisans || {};
+              const estAcceptee = o.statut === 'acceptee';
+              htmlOffres += `
+                <div class="offer-item" style="${estAcceptee ? 'border: 2px solid #16a34a; background: #f0fdf4;' : ''}">
+                  <div style="display:flex; justify-between; font-weight:bold;">
+                    <span>👤 ${escapeHTML(art.nom || 'Artisan')}</span>
+                    <span style="color:#2563eb;">${formaterPrix(o.prix_offre)}</span>
                   </div>
-                ` : `
-                  <button class="btn-action btn-green" style="margin-top: 6px;" onclick="accepterOffre(${o.id}, ${d.id})">✅ Accepter cette offre</button>
-                `}
-              </div>
-            `;
-          });
-          htmlOffres += `</div>`;
-        } else {
-          htmlOffres = `<div style="font-size: 0.8em; color: #94a3b8; font-style: italic; margin-top: 8px;">En attente de propositions d'artisans...</div>`;
-        }
+                  ${o.message ? `<div style="font-size:0.8em; margin:4px 0;">"${escapeHTML(o.message)}"</div>` : ''}
+                  ${estAcceptee ? `
+                    <div style="margin-top:5px; font-size:0.8em; color:#15803d; font-weight:bold;">
+                      ✅ Offre acceptée ! Tel: <a href="tel:${art.telephone}">${art.telephone}</a>
+                    </div>
+                  ` : `
+                    <button class="btn-action btn-wa" style="margin-top:6px; width:100%;" onclick="accepterOffre(${o.id}, ${d.id})">✅ Accepter l'offre</button>
+                  `}
+                </div>
+              `;
+            });
+            htmlOffres += `</div>`;
+          } else htmlOffres = `<div style="font-size: 0.8em; color: #94a3b8; margin-top:5px;">En attente de réponses d'artisans...</div>`;
 
-        div.innerHTML = `
-          <div class="demand-header">
-            <span class="demand-title">${escapeHTML(d.metier)} — ${escapeHTML(d.quartier)}</span>
-            ${badgeUrg}
-          </div>
-          <div class="price-tag">Votre proposition : ${formaterPrix(d.prix_propose)}</div>
-          <p class="demand-desc">${escapeHTML(d.description)}</p>
-          ${d.image_url ? `<img src="${escapeHTML(d.image_url)}" class="demand-img">` : ''}
-          ${htmlOffres}
-        `;
-        container.appendChild(div);
-      });
-    }
+          div.innerHTML = `
+            <div class="demand-header">
+              <span class="demand-title">${escapeHTML(d.metier)} — ${escapeHTML(d.quartier)}</span>
+              <span class="badge-urgency urg-${d.urgence}">${escapeHTML(d.urgence)}</span>
+            </div>
+            <div class="price-tag">Votre proposition : ${formaterPrix(d.prix_propose)}</div>
+            <p class="demand-desc">${escapeHTML(d.description)}</p>
+            ${htmlOffres}
+          `;
+          container.appendChild(div);
+        });
+      } else {
+        const container = document.getElementById('liste-demandes-artisan');
+        container.innerHTML = '';
+        const ouvertes = cacheDemandes.filter(d => d.statut === 'ouvert');
+        if (ouvertes.length === 0) return container.innerHTML = '<div class="empty-state">Aucune demande disponible.</div>';
 
-    /* RENDER VUE ARTISAN */
-    function rendreVueArtisan() {
-      const container = document.getElementById('liste-demandes-artisan');
-      container.innerHTML = '';
-
-      const demandesOuvertes = cacheDemandes.filter(d => d.statut === 'ouvert');
-
-      if (demandesOuvertes.length === 0) {
-        container.innerHTML = '<div class="empty-state">Aucune demande en cours pour le moment.</div>';
-        return;
+        ouvertes.forEach(d => {
+          const div = document.createElement('div');
+          div.className = 'demand-card';
+          div.innerHTML = `
+            <div class="demand-header">
+              <span class="demand-title">${escapeHTML(d.metier)} — ${escapeHTML(d.quartier)}</span>
+            </div>
+            <div class="price-tag">Prix proposé : ${formaterPrix(d.prix_propose)}</div>
+            <p class="demand-desc">${escapeHTML(d.description)}</p>
+            <button class="btn-action btn-call" style="width:100%;" onclick="ouvrirModalOffre(${d.id}, ${d.prix_propose})">🤝 Faire une offre</button>
+          `;
+          container.appendChild(div);
+        });
       }
+    }
 
-      demandesOuvertes.forEach(d => {
-        const div = document.createElement('div');
-        div.className = 'demand-card';
+    /* ANNUAIRE DES ARTISANS */
+    async function chargerArtisans() {
+      const { data } = await supabaseClient.from('artisans').select('*').eq('est_verifie', true).order('est_sponsorise', { ascending: false });
+      if (!data) return;
+      tousLesArtisans = data;
+      
+      // Select modal offre
+      const select = document.getElementById('off-artisan-id');
+      select.innerHTML = '<option value="">-- Sélectionner votre profil --</option>';
+      data.forEach(a => select.innerHTML += `<option value="${a.id}">${escapeHTML(a.nom)} (${escapeHTML(a.metier)})</option>`);
 
-        let badgeUrg = '<span class="badge-urgency urg-rdv">🗓️ RDV</span>';
-        if (d.urgence === 'immediat') badgeUrg = '<span class="badge-urgency urg-immediat">🚨 Urgent</span>';
+      genererFiltresMetiers(data);
+      afficherArtisans(data);
+    }
 
-        div.innerHTML = `
-          <div class="demand-header">
-            <span class="demand-title">${escapeHTML(d.metier)} — ${escapeHTML(d.quartier)}</span>
-            ${badgeUrg}
-          </div>
-          <div style="font-size: 0.85em; color: #64748b;">Client : ${escapeHTML(d.client_nom)}</div>
-          <div class="price-tag">Prix proposé client : ${formaterPrix(d.prix_propose)}</div>
-          <p class="demand-desc">${escapeHTML(d.description)}</p>
-          ${d.image_url ? `<img src="${escapeHTML(d.image_url)}" class="demand-img">` : ''}
-          <button class="btn-action btn-primary" onclick="ouvrirModalOffre(${d.id}, ${d.prix_propose})">🤝 Faire une proposition / Accepter</button>
-        `;
-        container.appendChild(div);
+    function genererFiltresMetiers(artisans) {
+      const container = document.getElementById('tags-container');
+      const metiers = [...new Set(artisans.map(a => a.metier).filter(Boolean))].sort();
+      container.innerHTML = `<div class="tag ${metierFiltre === 'TOUS' ? 'active' : ''}" onclick="filtrerMetier('TOUS', this)">Tous</div>`;
+      metiers.forEach(m => {
+        container.innerHTML += `<div class="tag ${metierFiltre === m ? 'active' : ''}" onclick="filtrerMetier('${m}', this)">${escapeHTML(m)}</div>`;
       });
     }
 
-    /* ACTIONS & FORMULAIRES */
+    function afficherArtisans(liste) {
+      const conteneur = document.getElementById('liste-artisans');
+      conteneur.innerHTML = '';
+      if (liste.length === 0) return conteneur.innerHTML = '<div class="empty-state">Aucun artisan trouvé.</div>';
+
+      liste.forEach(a => {
+        const card = document.createElement('div');
+        card.className = `artisan-card ${a.est_sponsorise ? 'sponso' : ''}`;
+        card.innerHTML = `
+          <div class="artisan-header">
+            <div class="artisan-name">${a.est_sponsorise ? '⭐ ' : ''}${escapeHTML(a.nom)}</div>
+            <span class="artisan-metier">${escapeHTML(a.metier)}</span>
+          </div>
+          <div class="artisan-quartier">📍 ${escapeHTML(a.quartier)}</div>
+          ${a.description ? `<div class="artisan-desc">${escapeHTML(a.description)}</div>` : ''}
+          <div class="actions-grid">
+            <a href="tel:${escapeHTML(a.telephone)}" class="btn-action btn-call">📞 Appeler</a>
+            ${a.whatsapp ? `<a href="https://wa.me/${escapeHTML(a.whatsapp)}" target="_blank" class="btn-action btn-wa">💬 WhatsApp</a>` : ''}
+          </div>
+        `;
+        conteneur.appendChild(card);
+      });
+    }
+
+    function filtrerArtisans() {
+      const r = document.getElementById('search-input').value.toLowerCase().trim();
+      const res = tousLesArtisans.filter(a => {
+        const mSearch = (a.nom && a.nom.toLowerCase().includes(r)) || (a.metier && a.metier.toLowerCase().includes(r)) || (a.quartier && a.quartier.toLowerCase().includes(r));
+        const mMetier = metierFiltre === 'TOUS' || a.metier === metierFiltre;
+        return mSearch && mMetier;
+      });
+      afficherArtisans(res);
+    }
+
+    function filtrerMetier(metier, elem) {
+      metierFiltre = metier;
+      document.querySelectorAll('.filter-tags .tag').forEach(t => t.classList.remove('active'));
+      if (elem) elem.classList.add('active');
+      filtrerArtisans();
+    }
+
+    /* INSCRIPTIONS ET DEMANDES */
+    function ouvrirModalInscription() { document.getElementById('modalInscription').style.display = 'flex'; }
+    function fermerModalInscription() { document.getElementById('modalInscription').style.display = 'none'; }
     function ouvrirModalDemande() { document.getElementById('modalDemande').style.display = 'flex'; }
     function fermerModalDemande() { document.getElementById('modalDemande').style.display = 'none'; }
+    function ouvrirModalOffre(id, prix) { document.getElementById('off-demande-id').value = id; document.getElementById('off-prix').value = prix || ''; document.getElementById('modalOffre').style.display = 'flex'; }
+    function fermerModalOffre() { document.getElementById('modalOffre').style.display = 'none'; }
+
+    async function soumettreInscription(e) {
+      e.preventDefault();
+      const payload = {
+        nom: document.getElementById('ins-nom').value.trim(),
+        metier: document.getElementById('ins-metier').value.trim(),
+        quartier: document.getElementById('ins-quartier').value.trim(),
+        telephone: document.getElementById('ins-tel').value.trim(),
+        whatsapp: document.getElementById('ins-wa').value.trim(),
+        description: document.getElementById('ins-desc').value.trim(),
+        est_verifie: false
+      };
+      const { error } = await supabaseClient.from('artisans').insert([payload]);
+      if (!error) { alert("Demande envoyée !"); fermerModalInscription(); }
+    }
 
     async function soumettreDemande(e) {
       e.preventDefault();
       const payload = {
         client_nom: document.getElementById('dem-nom').value.trim(),
         client_tel: document.getElementById('dem-tel').value.trim(),
-        metier: document.getElementById('dem-metier').value,
+        metier: document.getElementById('dem-metier').value.trim(),
         quartier: document.getElementById('dem-quartier').value.trim(),
         description: document.getElementById('dem-desc').value.trim(),
         urgence: document.getElementById('dem-urgence').value,
-        prix_propose: parseFloat(document.getElementById('dem-prix').value) || 0,
-        image_url: document.getElementById('dem-img').value.trim() || null
+        prix_propose: parseFloat(document.getElementById('dem-prix').value) || 0
       };
-
       const { error } = await supabaseClient.from('demandes').insert([payload]);
-      if (!error) {
-        alert("✅ Besoin publié ! Les artisans vont recevoir votre demande.");
-        fermerModalDemande();
-        document.getElementById('form-demande').reset();
-        chargerDemandes();
-      } else alert("❌ Erreur : " + error.message);
+      if (!error) { alert("Demande publiée !"); fermerModalDemande(); chargerDemandes(); }
     }
-
-    function ouvrirModalOffre(demandeId, prixClient) {
-      document.getElementById('off-demande-id').value = demandeId;
-      document.getElementById('off-prix').value = prixClient || '';
-      document.getElementById('modalOffre').style.display = 'flex';
-    }
-    function fermerModalOffre() { document.getElementById('modalOffre').style.display = 'none'; }
 
     async function soumettreOffre(e) {
       e.preventDefault();
-      const demande_id = document.getElementById('off-demande-id').value;
-      const artisan_id = document.getElementById('off-artisan-id').value;
-      const prix_offre = parseFloat(document.getElementById('off-prix').value);
-      const message = document.getElementById('off-msg').value.trim();
-
-      if (!artisan_id) return alert("Veuillez sélectionner votre profil artisan.");
-
-      const { error } = await supabaseClient.from('offres').insert([{ demande_id, artisan_id, prix_offre, message }]);
-      if (!error) {
-        alert("🤝 Votre offre a été transmise au client !");
-        fermerModalOffre();
-        document.getElementById('form-offre').reset();
-        chargerDemandes();
-      } else alert("❌ Erreur : " + error.message);
+      const payload = {
+        demande_id: document.getElementById('off-demande-id').value,
+        artisan_id: document.getElementById('off-artisan-id').value,
+        prix_offre: parseFloat(document.getElementById('off-prix').value),
+        message: document.getElementById('off-msg').value.trim()
+      };
+      const { error } = await supabaseClient.from('offres').insert([payload]);
+      if (!error) { alert("Offre envoyée !"); fermerModalOffre(); chargerDemandes(); }
     }
 
     async function accepterOffre(offreId, demandeId) {
-      if (!confirm("Accepter cette offre et débloquer les coordonnées de l'artisan ?")) return;
-
-      // Marquer l'offre comme acceptée et la demande comme attribuée
+      if (!confirm("Accepter cette offre ?")) return;
       await supabaseClient.from('offres').update({ statut: 'acceptee' }).eq('id', offreId);
       await supabaseClient.from('demandes').update({ statut: 'attribue' }).eq('id', demandeId);
-
       chargerDemandes();
     }
 
-    init();
+    initPage();
   </script>
 </body>
 </html>
