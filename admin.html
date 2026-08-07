@@ -127,7 +127,7 @@
 
     /* CONTENEUR GÉNÉRIQUE SCROLLABLE AVEC EN-TÊTE FIXE */
     .table-scroll-container {
-      max-height: 220px; /* Limite la hauteur à environ 4-5 lignes */
+      max-height: 250px; /* Limite la hauteur à environ 5-6 lignes */
       overflow-y: auto;
       border: 1px solid #e2e8f0;
       border-radius: 8px;
@@ -329,20 +329,24 @@
         <h2>📊 Statistiques de Contact (Clics Artisans)</h2>
         <button class="btn btn-green" onclick="exporterClicsXLSX()">📥 Exporter Rapport Clics (Excel)</button>
       </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Artisan / Prestataire</th>
-            <th>Métier</th>
-            <th>📞 Clics Appel</th>
-            <th>💬 Clics WhatsApp</th>
-            <th>Total Interprété</th>
-          </tr>
-        </thead>
-        <tbody id="table-stats">
-          <tr><td colspan="5" class="empty-msg">Chargement des statistiques...</td></tr>
-        </tbody>
-      </table>
+
+      <!-- Zone Scrollable Compacte -->
+      <div class="table-scroll-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Artisan / Prestataire</th>
+              <th>Métier</th>
+              <th>📞 Clics Appel</th>
+              <th>💬 Clics WhatsApp</th>
+              <th>Total Interprété</th>
+            </tr>
+          </thead>
+          <tbody id="table-stats">
+            <tr><td colspan="5" class="empty-msg">Chargement des statistiques...</td></tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <!-- SECTION 4 : NUMÉROS D'URGENCE -->
@@ -619,7 +623,7 @@
         .from('visites_journalieres')
         .select('*')
         .order('date_visite', { ascending: false })
-        .limit(5);
+        .limit(90);
 
       const tbody = document.getElementById('table-visites');
       if (error || !data) { tbody.innerHTML = '<tr><td colspan="3" class="empty-msg">Erreur de chargement.</td></tr>'; return; }
