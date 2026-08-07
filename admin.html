@@ -1330,9 +1330,45 @@
     }
 
     async function validerArtisan(id) {
-      await supabaseClient.from('artisans').update({ est_verifie: true }).eq('id', id);
-      chargerArtisans();
+  // 1. Mise à jour de la base de données Supabase
+  const { error } = await supabaseClient
+    .from('artisans')
+    .update({ est_verifie: true })
+    .eq('id', id);
+
+  if (error) {
+    alert("❌ Erreur lors de la validation : " + error.message);
+    return;
+  }
+
+  // 2. Recherche de l'artisan validé dans la liste en mémoire
+  const artisan = cacheArtisans.find(a => Number(a.id) === Number(id));
+
+  // 3. Génération et ouverture du lien WhatsApp
+  if (artisan) {
+    // Récupération prioritaire du numéro WhatsApp, sinon du Téléphone standard
+    let numTel = artisan.whatsapp || artisan.telephone || '';
+    
+    // Nettoyage du numéro (suppression des espaces, tirets et signes +)
+    numTel = numTel.replace(/\+/g, '').replace(/\s+/g, '').replace(/-/g, '');
+
+    // Formatage au format international Madagascar si le numéro commence par 0
+    if (numTel.startsWith('0')) {
+      numTel = '261' + numTel.substring(1);
     }
+
+    if (numTel) {
+      const message = `Bonjour ${artisan.nom}, félicitations ! 🎉 Votre fiche est désormais validée et publiée sur la plateforme FixTana !`;
+      const urlWhatsapp = `https://wa.me/${numTel}?text=${encodeURIComponent(message)}`;
+      
+      // Ouverture directe de WhatsApp dans un nouvel onglet
+      window.open(urlWhatsapp, '_blank');
+    }
+  }
+
+  // 4. Rafraîchissement dynamique des tables
+  chargerArtisans();
+}
 
     async function supprimerArtisan(id) {
       if (confirm("Supprimer cet artisan ?")) {
