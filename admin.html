@@ -1399,6 +1399,199 @@
       }
     }
 
+    async function enregistrerLog(action, details) {
+  try {
+    await supabaseClient.from('logs').insert([{ action, details }]);
+    chargerLogs(); // Rafraîchissement automatique du tableau des logs
+  } catch (err) {
+    console.error("Erreur enregistrement log :", err);
+  }
+}
+
+// --- CHARGEMENT & AFFICHAGE DES LOGS ---
+async function chargerLogs() {
+  const { data: logs, error } = await supabaseClient
+    .from('logs')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(50); // Affiche les 50 dernières actions
+
+  const tbody = document.getElementById('table-logs');
+  if (error || !logs) {
+    tbody.innerHTML = '<tr><td colspan="3" class="empty-msg">Erreur de chargement des logs.</td></tr>';
+    return;
+  }
+
+  if (logs.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="3" class="empty-msg">Aucune action enregistrée pour le moment.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = '';
+  logs.forEach(l => {
+    const dateLog = new Date(l.created_at).toLocaleString('fr-FR', {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit', second: '2-digit'
+    });
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><small style="color:#64748b; font-weight:bold;">${dateLog}</small></td>
+      <td><strong>${escapeHTML(l.action)}</strong></td>
+      <td>${escapeHTML(l.details)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function exporterLogsXLSX() {
+  // Optionnel : exportation Excel de l'historique
+  supabaseClient.from('logs').select('*').order('created_at', { ascending: false }).then(({ data }) => {
+    if (!data || data.length === 0) return alert("Aucun log à exporter.");
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Logs d'activité");
+    XLSX.writeFile(wb, `FixTana_Logs_${new Date().toISOString().split('T')[0]}.xlsx`);
+  });
+}
+
+// --- MISE À JOUR DE LA FONCTION INIT ---
+// Pensez à ajouter chargerLogs() dans initAdmin() :
+async function initAdmin() {
+  await chargerVisites();
+  await chargerStats();
+  await chargerPubs();
+  await chargerUrgences();
+  await chargerPharmacies();
+  await chargerArtisans();
+  await chargerLogs(); // <--- AJOUT ICI
+
+  supabaseClient
+    .channel('admin-realtime')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'logs' }, () => chargerLogs()) // <--- Renseigne les logs en temps réel
+    .subscribe();
+}
+
+// =========================================================================
+// INTEGRATION DES LOGS DANS TOUTES LES ACTIONS DU SITE
+// =========================================================================
+
+/* 1. ARTISANS */
+async function validerArtisan(id) {
+  const artisan = cacheArtisans.find(a => Number(a.id) === Number(id));
+  const { error } = await supabaseClient.from('artisans').update({ est_verifie: true }).eq('id', id);
+
+  if (!error) {
+    await enregistrerLog("Validation Artisan", `Validation de la fiche de ${artisan ? artisan.nom : 'ID ' + id}`);
+    
+    // Notification WhatsApp
+    if (artisan) {
+      let numTel = (artisan.whatsapp || artisan.telephone || '').replace(/\+/g, '').replace(/\s+/g, '').replace(/-/g, '');
+      if (numTel.startsWith('0')) numTel = '261' + numTel.substring(1);
+      if (numTel) {
+        const msg = `Bonjour ${artisan.nom}, félicitations ! 🎉 Votre fiche est désormais validée et publiée sur FixTana !`;
+        window.open(`https://wa.me/${numTel}?text=${encodeURIComponent(msg)}`, '_blank');
+      }
+    }
+    chargerArtisans();
+  }
+}
+
+async function supprimerArtisan(id) {
+  const artisan = cacheArtisans.find(a => Number(a.id) === Number(id));
+  if (confirm(`Supprimer l'artisan "${artisan ? artisan.nom : id}" ?`)) {
+    const { error } = await supabaseClient.from('artisans').delete().eq('id', id);
+    if (!error) {
+      await enregistrerLog("Suppression Artisan", `Suppression de l'artisan "${artisan ? artisan.nom : 'ID ' + id}"`);
+      chargerArtisans();
+      chargerStats();
+    }
+  }
+}
+
+async function toggleSponsor(id, nouveauStatut) {
+  const artisan = cacheArtisans.find(a => Number(a.id) === Number(id));
+  await supabaseClient.from('artisans').update({ est_sponsorise: nouveauStatut }).eq('id', id);
+  await enregistrerLog("Sponsorisation Artisan", `${nouveauStatut ? 'Mise en avant' : 'Retrait du sponsor'} pour "${artisan ? artisan.nom : id}"`);
+  chargerArtisans();
+}
+
+/* 2. PUBLICITÉS */
+async function ajouterOuModifierPub(e) {
+  e.preventDefault();
+  const id = document.getElementById('pub-id-edition').value;
+  const titre = document.getElementById('pub-titre').value.trim();
+  // ... (récupération des autres champs identiques à votre code actuel)
+
+  if (id) {
+    await supabaseClient.from('publicites').update(payload).eq('id', id);
+    await enregistrerLog("Modification Pub", `Modification de la campagne "${titre}"`);
+  } else {
+    await supabaseClient.from('publicites').insert([payload]);
+    await enregistrerLog("Création Pub", `Ajout d'une nouvelle publicité : "${titre}" (${prix} Ar)`);
+  }
+  reinitialiserFormulairePub();
+  chargerPubs();
+}
+
+async function prolongerPubRapide(id) {
+  const pub = listePubsCache.find(p => Number(p.id) === Number(id));
+  // ... (Logique de sélection du nombre de jours inchangée) ...
+  
+  const { error } = await supabaseClient.from('publicites').update({ date_fin: nouvelleDateFinStr, est_actif: true }).eq('id', id);
+  if (!error) {
+    await enregistrerLog("Prolongation Pub", `Prolongation de la pub "${pub.titre}" jusqu'au ${formaterDate(nouvelleDateFinStr)} (+${joursAAjouter} jours)`);
+    chargerPubs();
+  }
+}
+
+async function supprimerPub(id) {
+  const pub = listePubsCache.find(p => Number(p.id) === Number(id));
+  if (confirm("Supprimer cette publicité ?")) {
+    await supabaseClient.from('publicites').delete().eq('id', id);
+    await enregistrerLog("Suppression Pub", `Suppression de la publicité "${pub ? pub.titre : id}"`);
+    chargerPubs();
+  }
+}
+
+/* 3. PHARMACIES */
+async function ajouterPharmacie(event) {
+  event.preventDefault();
+  const nom = document.getElementById('ph-nom').value.trim();
+  // ... (code d'insertion habituel) ...
+  if (!error) {
+    await enregistrerLog("Ajout Pharmacie", `Ajout de la pharmacie de garde "${nom}"`);
+    chargerPharmacies();
+  }
+}
+
+async function supprimerPharmacie(id) {
+  const p = cachePharmacies.find(item => item.id === id);
+  if (confirm("Supprimer cette pharmacie ?")) {
+    await supabaseClient.from('pharmacies').delete().eq('id', id);
+    await enregistrerLog("Suppression Pharmacie", `Suppression de la pharmacie "${p ? p.nom : id}"`);
+    chargerPharmacies();
+  }
+}
+
+/* 4. URGENCES */
+async function ajouterUrgence(e) {
+  // ...
+  if (!error) {
+    await enregistrerLog("Ajout Numéro Urgence", `Ajout du service d'urgence "${nom}" (${telephone})`);
+    chargerUrgences();
+  }
+}
+
+async function supprimerUrgence(id) {
+  const u = cacheUrgences.find(i => i.id === id);
+  if (confirm("Supprimer ce numéro d'urgence ?")) {
+    await supabaseClient.from('urgences').delete().eq('id', id);
+    await enregistrerLog("Suppression Urgence", `Suppression du service d'urgence "${u ? u.nom : id}"`);
+    chargerUrgences();
+  }
+}
+    
     /* UTILS */
     function fermerModales() {
       document.getElementById('modalUrgence').style.display = 'none';
