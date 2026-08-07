@@ -3,114 +3,79 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FixTana - Artisans & Services à Tana</title>
+  <title>FixTana - Dépannage & Services à Tana</title>
   
   <!-- Supabase JS Client -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  
-  <!-- ⚠️ ADSENSE : Remplacez ca-pub-XXXXXXXXXXXXXXXX par votre identifiant AdSense après validation -->
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
 
   <style>
     * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    body { background-color: #f4f6f9; margin: 0; padding: 20px; color: #333; }
+    body { background-color: #f4f6f9; margin: 0; padding: 15px; color: #1e293b; }
     .container { max-width: 600px; margin: 0 auto; }
     
-    .header { text-align: center; margin-bottom: 20px; }
-    h1 { font-size: 1.8em; color: #1e293b; margin: 0 0 5px 0; }
-    p.sub { color: #64748b; font-size: 0.9em; margin: 0 0 15px 0; }
+    .header { text-align: center; margin-bottom: 15px; }
+    h1 { font-size: 1.8em; color: #0f172a; margin: 0 0 5px 0; }
+    p.sub { color: #64748b; font-size: 0.85em; margin: 0 0 15px 0; }
     
-    .nav-links { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-    .nav-links a, .nav-links button { text-decoration: none; font-size: 0.85em; font-weight: bold; padding: 8px 14px; border-radius: 20px; border: none; cursor: pointer; transition: 0.2s; }
-    .nav-links a.urgent { background: #fee2e2; color: #991b1b; }
-    .nav-links button.register { background: #dcfce7; color: #15803d; }
-    .nav-links button.register:hover { background: #bbf7d0; }
+    /* Boutons de mode (Client / Artisan) */
+    .mode-switcher { display: flex; gap: 8px; margin-bottom: 20px; background: #e2e8f0; padding: 4px; border-radius: 12px; }
+    .mode-btn { flex: 1; border: none; padding: 10px; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 0.85em; }
+    .mode-btn.active { background: #2563eb; color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
 
-    /* CARROUSEL PUBLICITAIRE INTERNE */
-    .carousel-container {
-      position: relative;
-      max-width: 100%;
-      margin: 0 0 20px 0;
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-      background: #fffbeb;
-      border: 1px solid #fde68a;
-    }
-    .pub-slide {
-      display: none;
-      padding: 15px;
-      text-decoration: none;
-      color: #78350f;
-    }
-    .pub-slide.active { display: block; }
-    .pub-tag {
-      font-size: 0.7em;
-      text-transform: uppercase;
-      font-weight: bold;
-      color: #b45309;
-      margin-bottom: 6px;
-      display: block;
-    }
-    .pub-slide img {
+    /* Bouton principal "Poster un besoin" */
+    .btn-post-need {
       width: 100%;
-      height: 120px;
-      object-fit: cover;
-      border-radius: 8px;
-      margin-bottom: 8px;
-      display: block;
-    }
-    .pub-title { font-weight: bold; font-size: 1.05em; color: #92400e; margin-bottom: 4px; }
-    .pub-desc { font-size: 0.85em; color: #a16207; margin: 0; }
-    .carousel-dots { display: flex; justify-content: center; gap: 6px; padding-bottom: 10px; background: #fffbeb; }
-    .dot { width: 8px; height: 8px; background-color: #fcd34d; border-radius: 50%; cursor: pointer; transition: 0.3s; }
-    .dot.active-dot { background-color: #b45309; width: 18px; border-radius: 10px; }
-
-    /* CONTENEUR ADSENSE AU MILIEU DE LA LISTE */
-    .adsense-card {
-      background: #ffffff;
+      background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+      color: white;
+      border: none;
+      padding: 14px;
       border-radius: 12px;
-      padding: 10px;
-      margin-bottom: 15px;
-      text-align: center;
-      border: 1px dashed #cbd5e1;
+      font-size: 1em;
+      font-weight: bold;
+      cursor: pointer;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
     }
 
-    /* Barre de recherche & Filtres dynamiques */
-    .search-box { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.95em; margin-bottom: 15px; outline: none; }
-    .filter-tags { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px; }
-    .tag { background: white; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 15px; font-size: 0.8em; cursor: pointer; white-space: nowrap; }
-    .tag.active { background: #2563eb; color: white; border-color: #2563eb; }
+    /* Cartes de Demandes */
+    .demand-card { background: white; border-radius: 12px; padding: 16px; margin-bottom: 15px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.03); }
+    .demand-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+    .demand-title { font-weight: bold; font-size: 1em; color: #0f172a; }
+    .badge-urgency { font-size: 0.7em; padding: 4px 8px; border-radius: 6px; font-weight: bold; }
+    .urg-immediat { background: #fee2e2; color: #991b1b; }
+    .urg-aujourdhui { background: #fef3c7; color: #92400e; }
+    .urg-rdv { background: #e0f2fe; color: #0369a1; }
 
-    /* Cartes Artisans */
-    .artisan-card { background: white; border-radius: 12px; padding: 16px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.04); border: 1px solid #e2e8f0; }
-    .artisan-card.sponso { border: 2px solid #f59e0b; background: #fffbeb; }
-    .artisan-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
-    .artisan-name { font-weight: bold; font-size: 1.1em; color: #0f172a; }
-    .artisan-metier { background: #eff6ff; color: #1d4ed8; font-size: 0.75em; padding: 3px 8px; border-radius: 10px; font-weight: bold; }
-    .artisan-quartier { font-size: 0.85em; color: #64748b; margin-bottom: 10px; }
-    .artisan-desc { font-size: 0.85em; color: #334155; margin-bottom: 12px; line-height: 1.4; }
-    .actions-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .btn-action { text-align: center; padding: 10px; border-radius: 8px; text-decoration: none; font-size: 0.85em; font-weight: bold; }
-    .btn-call { background: #2563eb; color: white; }
-    .btn-wa { background: #16a34a; color: white; }
+    .price-tag { font-size: 1.1em; font-weight: bold; color: #16a34a; margin: 8px 0; }
+    .demand-desc { font-size: 0.88em; color: #334155; margin-bottom: 10px; line-height: 1.4; }
+    .demand-img { width: 100%; max-height: 180px; object-fit: cover; border-radius: 8px; margin-bottom: 10px; }
 
-    .empty-state { text-align: center; color: #64748b; padding: 30px; background: white; border-radius: 10px; border: 1px dashed #cbd5e1; }
+    /* Accordéon Offres des artisans */
+    .offers-box { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px; margin-top: 10px; }
+    .offer-item { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; margin-bottom: 8px; }
+    .offer-item:last-child { margin-bottom: 0; }
+    .offer-artisan-name { font-weight: bold; font-size: 0.9em; display: flex; align-items: center; justify-content: space-between; }
+    .offer-price { color: #2563eb; font-weight: bold; font-size: 0.95em; }
 
-    /* Modale Inscription */
-    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; padding: 15px; }
-    .modal-content { background: white; padding: 25px; border-radius: 12px; width: 100%; max-width: 450px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
-    .modal-content h2 { margin-top: 0; color: #0f172a; font-size: 1.3em; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; }
+    /* Modale & Formulaires */
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 1000; padding: 15px; }
+    .modal-content { background: white; padding: 20px; border-radius: 12px; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; }
+    .modal-content h2 { margin-top: 0; font-size: 1.2em; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; }
     .form-group { margin-bottom: 12px; }
     .form-group label { display: block; font-size: 0.85em; font-weight: 600; color: #475569; margin-bottom: 4px; }
-    .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9em; outline: none; }
-    .modal-buttons { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
-    .btn-submit { background: #16a34a; color: white; border: none; padding: 10px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; }
-    .btn-cancel { background: #94a3b8; color: white; border: none; padding: 10px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+    .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9em; outline: none; }
+    .modal-buttons { display: flex; justify-content: flex-end; gap: 10px; margin-top: 15px; }
+    
+    .btn-action { width: 100%; border: none; padding: 10px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 0.85em; }
+    .btn-primary { background: #2563eb; color: white; }
+    .btn-green { background: #16a34a; color: white; }
+    .btn-cancel { background: #94a3b8; color: white; }
 
-    /* Footer */
-    footer { text-align: center; margin-top: 30px; padding: 15px 0; border-top: 1px solid #cbd5e1; font-size: 0.8em; color: #64748b; }
-    footer a { color: #2563eb; text-decoration: none; }
+    .empty-state { text-align: center; color: #64748b; padding: 30px; background: white; border-radius: 10px; border: 1px dashed #cbd5e1; }
   </style>
 </head>
 <body>
@@ -118,81 +83,119 @@
   <div class="container">
     <div class="header">
       <h1>🛠️ FixTana</h1>
-      <p class="sub">Trouvez les meilleurs artisans de confiance à Antananarivo</p>
-      
-      <div class="nav-links">
-        <a href="urgences.html" class="urgent">🚨 Urgences & Pharmacies</a>
-        <button class="register" onclick="ouvrirModalInscription()">➕ Devenir Prestataire</button>
+      <p class="sub">Négociez et trouvez votre artisan en direct à Antananarivo</p>
+
+      <!-- SWITCHER MODE CLIENT / ARTISAN -->
+      <div class="mode-switcher">
+        <button id="btn-mode-client" class="mode-btn active" onclick="basculerMode('client')">👨‍💼 Mode Client</button>
+        <button id="btn-mode-artisan" class="mode-btn" onclick="basculerMode('artisan')">🔧 Mode Artisan / Prestataire</button>
       </div>
     </div>
 
-    <!-- CARROUSEL PUBLICITAIRE INTERNE -->
-    <div id="pub-carousel-wrapper" class="carousel-container" style="display: none;">
-      <div id="pub-slides-container"></div>
-      <div id="pub-dots-container" class="carousel-dots"></div>
+    <!-- VUE CLIENT : POSTER UN BESOIN -->
+    <div id="view-client">
+      <button class="btn-post-need" onclick="ouvrirModalDemande()">
+        <span>📢</span> Demander une intervention (Proposer un prix)
+      </button>
+
+      <h3>📋 Vos demandes en cours</h3>
+      <div id="liste-demandes-client">
+        <div class="empty-state">Chargement de vos demandes...</div>
+      </div>
     </div>
 
-    <!-- BLOC ADSENSE HAUT -->
-    <div class="adsense-card">
-      <ins class="adsbygoogle"
-           style="display:block"
-           data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
-           data-ad-slot="1234567890"
-           data-ad-format="auto"
-           data-full-width-responsive="true"></ins>
-      <script>
-           (adsbygoogle = window.adsbygoogle || []).push({});
-      </script>
+    <!-- VUE ARTISAN : REPONDRE AUX DEMANDES -->
+    <div id="view-artisan" style="display: none;">
+      <div style="margin-bottom: 15px; background: #eff6ff; padding: 12px; border-radius: 10px; font-size: 0.85em; color: #1e40af;">
+        ℹ️ <strong>Espace Artisan :</strong> Parcourez les demandes des clients, acceptez leur tarif ou proposez votre contre-offre.
+      </div>
+      <h3>🔔 Demandes clients récentes à Tana</h3>
+      <div id="liste-demandes-artisan">
+        <div class="empty-state">Recherche des demandes autour de vous...</div>
+      </div>
     </div>
-
-    <!-- Recherche & Filtres Dynamiques -->
-    <input type="text" id="search-input" class="search-box" placeholder="Rechercher (ex: Plombier, Analakely...)" oninput="filtrerArtisans()">
-    
-    <div class="filter-tags" id="tags-container"></div>
-
-    <!-- Liste des Artisans -->
-    <div id="liste-artisans">
-      <div class="empty-state">Chargement des prestataires...</div>
-    </div>
-
-    <!-- FOOTER DU SITE -->
-    <footer>
-      <p>© 2026 FixTana - Tous droits réservés | <a href="politique-confidentialite.html">Mentions Légales & Confidentialité</a></p>
-    </footer>
   </div>
 
-  <!-- MODALE D'INSCRIPTION ARTISAN -->
-  <div id="modalInscription" class="modal" onclick="gererClicExterieurModal(event)">
+  <!-- MODALE : CREER UNE DEMANDE (CLIENT) -->
+  <div id="modalDemande" class="modal">
     <div class="modal-content">
-      <h2>📝 Inscription Prestataire</h2>
-      <form id="form-inscription" onsubmit="soumettreInscription(event)">
+      <h2>📢 Publication de votre besoin</h2>
+      <form id="form-demande" onsubmit="soumettreDemande(event)">
         <div class="form-group">
-          <label for="ins-nom">Nom complet / Nom de l'entreprise *</label>
-          <input type="text" id="ins-nom" required placeholder="Ex: Jean Rakoto">
+          <label>Votre Nom complet *</label>
+          <input type="text" id="dem-nom" required placeholder="Ex: Rado">
         </div>
         <div class="form-group">
-          <label for="ins-metier">Métier / Activité *</label>
-          <input type="text" id="ins-metier" required placeholder="Ex: Plombier, Vitrier...">
+          <label>Téléphone *</label>
+          <input type="tel" id="dem-tel" required placeholder="Ex: 034 00 000 00">
         </div>
         <div class="form-group">
-          <label for="ins-quartier">Quartier d'intervention *</label>
-          <input type="text" id="ins-quartier" required placeholder="Ex: Analakely, Ankorondrano...">
+          <label>Service requis *</label>
+          <select id="dem-metier" required>
+            <option value="">-- Choisir un métier --</option>
+            <option value="Plomberie">Plomberie</option>
+            <option value="Électricité">Électricité</option>
+            <option value="Mécanique Auto / Moto">Mécanique Auto / Moto</option>
+            <option value="Serrurerie">Serrurerie</option>
+            <option value="Menuiserie">Menuiserie</option>
+            <option value="Autre">Autre service</option>
+          </select>
         </div>
         <div class="form-group">
-          <label for="ins-tel">Numéro Téléphone *</label>
-          <input type="tel" id="ins-tel" required placeholder="Ex: 034 00 000 00">
+          <label>Quartier d'intervention *</label>
+          <input type="text" id="dem-quartier" required placeholder="Ex: Mahamasina, Ankorondrano...">
         </div>
         <div class="form-group">
-          <label for="ins-wa">Numéro WhatsApp (facultatif)</label>
-          <input type="tel" id="ins-wa" placeholder="Ex: 261340000000">
+          <label>Description détaillée du problème *</label>
+          <textarea id="dem-desc" rows="3" required placeholder="Ex: Fuite d'eau sous l'évier de la cuisine, tuyau percé."></textarea>
         </div>
         <div class="form-group">
-          <label for="ins-desc">Courte description de vos services</label>
-          <textarea id="ins-desc" rows="3" placeholder="Présentez brièvement vos compétences..."></textarea>
+          <label>Urgence *</label>
+          <select id="dem-urgence" required>
+            <option value="immediat">🚨 Immédiat (Urgent)</option>
+            <option value="aujourdhui">📅 Aujourd'hui</option>
+            <option value="rdv">🗓️ Rendez-vous programmé</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Votre prix proposé (Ariary) - Facultatif</label>
+          <input type="number" id="dem-prix" placeholder="Ex: 25000" min="0" step="1000">
+        </div>
+        <div class="form-group">
+          <label>Photo du problème (URL Image) - Facultatif</label>
+          <input type="url" id="dem-img" placeholder="https://exemples.com/photo.jpg">
         </div>
         <div class="modal-buttons">
-          <button type="button" class="btn-cancel" onclick="fermerModalInscription()">Annuler</button>
-          <button type="submit" id="btn-submit-form" class="btn-submit">Envoyer ma demande</button>
+          <button type="button" class="btn-action btn-cancel" onclick="fermerModalDemande()">Annuler</button>
+          <button type="submit" id="btn-submit-demande" class="btn-action btn-green">Publier la demande</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODALE : FAIRE UNE CONTRE-OFFRE (ARTISAN) -->
+  <div id="modalOffre" class="modal">
+    <div class="modal-content">
+      <h2>🤝 Faire une offre au client</h2>
+      <form id="form-offre" onsubmit="soumettreOffre(event)">
+        <input type="hidden" id="off-demande-id">
+        <div class="form-group">
+          <label>Sélectionner votre profil Artisan *</label>
+          <select id="off-artisan-id" required>
+            <option value="">Chargement de votre profil...</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Votre tarif proposé (Ar) *</label>
+          <input type="number" id="off-prix" required min="1000" step="1000" placeholder="Ex: 30000">
+        </div>
+        <div class="form-group">
+          <label>Message / Précision pour le client</label>
+          <textarea id="off-msg" rows="2" placeholder="Ex: Je peux intervenir dans 20 min. Fournitures non incluses."></textarea>
+        </div>
+        <div class="modal-buttons">
+          <button type="button" class="btn-action btn-cancel" onclick="fermerModalOffre()">Annuler</button>
+          <button type="submit" class="btn-action btn-primary">Envoyer l'offre</button>
         </div>
       </form>
     </div>
@@ -204,319 +207,241 @@
 
     const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    let tousLesArtisans = [];
-    let metierFiltre = 'TOUS';
-    let currentSlideIndex = 0;
-    let carouselTimer = null;
+    let modeActuel = 'client';
+    let cacheDemandes = [];
+    let cacheArtisans = [];
 
     function escapeHTML(str) {
       if (!str) return '';
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
     }
 
-    async function initPage() {
-      await comptabiliserVisite();
-      await chargerCarrouselPubs();
-      await chargerArtisans();
+    function formaterPrix(m) {
+      return m ? Number(m).toLocaleString('fr-FR') + ' Ar' : 'Sur devis';
     }
 
-    async function comptabiliserVisite() {
-      try {
-        await supabaseClient.rpc('enregistrer_visite');
-      } catch (err) {
-        console.error("Erreur enregistrement visite", err);
-      }
+    async function init() {
+      await chargerArtisansPourSelect();
+      await chargerDemandes();
+
+      // Écoute Supabase Realtime pour mettre à jour automatiquement dès qu'une offre/demande arrive
+      supabaseClient
+        .channel('public-indrive')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'demandes' }, () => chargerDemandes())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'offres' }, () => chargerDemandes())
+        .subscribe();
     }
 
-    /* CARROUSEL PUBLICITAIRE INTERNE */
-    async function chargerCarrouselPubs() {
-      const { data: pubs, error } = await supabaseClient
-        .from('publicites')
-        .select('*')
-        .eq('est_actif', true)
+    function basculerMode(mode) {
+      modeActuel = mode;
+      document.getElementById('btn-mode-client').className = `mode-btn ${mode === 'client' ? 'active' : ''}`;
+      document.getElementById('btn-mode-artisan').className = `mode-btn ${mode === 'artisan' ? 'active' : ''}`;
+      
+      document.getElementById('view-client').style.display = mode === 'client' ? 'block' : 'none';
+      document.getElementById('view-artisan').style.display = mode === 'artisan' ? 'block' : 'none';
+
+      afficherDemandes();
+    }
+
+    async function chargerArtisansPourSelect() {
+      const { data } = await supabaseClient.from('artisans').select('id, nom, metier').eq('est_verifie', true);
+      cacheArtisans = data || [];
+      const select = document.getElementById('off-artisan-id');
+      select.innerHTML = '<option value="">-- Sélectionnez votre profil --</option>';
+      cacheArtisans.forEach(a => {
+        select.innerHTML += `<option value="${a.id}">${escapeHTML(a.nom)} (${escapeHTML(a.metier)})</option>`;
+      });
+    }
+
+    async function chargerDemandes() {
+      const { data: demandes, error } = await supabaseClient
+        .from('demandes')
+        .select(`
+          *,
+          offres (
+            id,
+            prix_offre,
+            message,
+            statut,
+            artisans ( id, nom, metier, telephone, whatsapp, quartier )
+          )
+        `)
         .order('created_at', { ascending: false });
 
-      const wrapper = document.getElementById('pub-carousel-wrapper');
-      const slidesContainer = document.getElementById('pub-slides-container');
-      const dotsContainer = document.getElementById('pub-dots-container');
-
-      if (error || !pubs || pubs.length === 0) {
-        if (wrapper) wrapper.style.display = 'none';
-        return;
-      }
-
-      const aujourdhui = new Date();
-      aujourdhui.setHours(0, 0, 0, 0);
-
-      const pubsValides = pubs.filter(p => {
-        if (p.date_debut) {
-          const [y, m, d] = p.date_debut.split('-').map(Number);
-          const dateDebut = new Date(y, m - 1, d);
-          if (dateDebut > aujourdhui) return false;
-        }
-
-        if (p.date_fin) {
-          const [y, m, d] = p.date_fin.split('-').map(Number);
-          const dateFin = new Date(y, m - 1, d);
-          if (dateFin < aujourdhui) return false;
-        }
-
-        return true;
-      });
-
-      if (pubsValides.length === 0) {
-        if (wrapper) wrapper.style.display = 'none';
-        return;
-      }
-
-      wrapper.style.display = 'block';
-      slidesContainer.innerHTML = '';
-      dotsContainer.innerHTML = '';
-
-      pubsValides.forEach((p, index) => {
-        const slide = document.createElement('a');
-        slide.className = `pub-slide ${index === 0 ? 'active' : ''}`;
-        slide.href = escapeHTML(p.lien_url) || '#';
-        if (p.lien_url) slide.target = '_blank';
-
-        slide.onclick = () => enregistrerEventPub(p.id, 'clic');
-
-        const imgHTML = p.image_url ? `<img src="${escapeHTML(p.image_url)}" alt="${escapeHTML(p.titre)}">` : '';
-
-        slide.innerHTML = `
-          <span class="pub-tag">📢 Sponsorisé</span>
-          ${imgHTML}
-          <div class="pub-title">${escapeHTML(p.titre)}</div>
-          ${p.description ? `<p class="pub-desc">${escapeHTML(p.description)}</p>` : ''}
-        `;
-        slidesContainer.appendChild(slide);
-
-        enregistrerEventPub(p.id, 'impression');
-
-        if (pubsValides.length > 1) {
-          const dot = document.createElement('span');
-          dot.className = `dot ${index === 0 ? 'active-dot' : ''}`;
-          dot.onclick = () => afficherSlide(index);
-          dotsContainer.appendChild(dot);
-        }
-      });
-
-      if (pubsValides.length > 1) {
-        lancerAutoPlay(pubsValides.length);
+      if (!error && demandes) {
+        cacheDemandes = demandes;
+        afficherDemandes();
       }
     }
 
-    async function enregistrerEventPub(pubId, eventType) {
-      try {
-        await supabaseClient
-          .from('publicites_events')
-          .insert([{ pub_id: pubId, event_type: eventType }]);
-
-        const champ = eventType === 'clic' ? 'nb_clics' : 'nb_impressions';
-        const { data: current } = await supabaseClient
-          .from('publicites')
-          .select(champ)
-          .eq('id', pubId)
-          .single();
-
-        const valeurActuelle = current ? (current[champ] || 0) : 0;
-        
-        await supabaseClient
-          .from('publicites')
-          .update({ [champ]: valeurActuelle + 1 })
-          .eq('id', pubId);
-      } catch (err) {
-        console.error("Erreur tracking pub:", err);
-      }
+    function afficherDemandes() {
+      if (modeActuel === 'client') rendrevueClient();
+      else rendreVueArtisan();
     }
 
-    function afficherSlide(index) {
-      const slides = document.querySelectorAll('.pub-slide');
-      const dots = document.querySelectorAll('.dot');
-      if (slides.length === 0) return;
-
-      slides.forEach(s => s.classList.remove('active'));
-      dots.forEach(d => d.classList.remove('active-dot'));
-
-      currentSlideIndex = index;
-      if (slides[currentSlideIndex]) slides[currentSlideIndex].classList.add('active');
-      if (dots[currentSlideIndex]) dots[currentSlideIndex].classList.add('active-dot');
-    }
-
-    function lancerAutoPlay(totalSlides) {
-      if (carouselTimer) clearInterval(carouselTimer);
-      carouselTimer = setInterval(() => {
-        currentSlideIndex = (currentSlideIndex + 1) % totalSlides;
-        afficherSlide(currentSlideIndex);
-      }, 5000);
-    }
-
-    /* ARTISANS & FILTRES */
-    async function chargerArtisans() {
-      const { data, error } = await supabaseClient
-        .from('artisans')
-        .select('*')
-        .eq('est_verifie', true)
-        .order('est_sponsorise', { ascending: false })
-        .order('nom', { ascending: true });
-
-      if (error || !data) {
-        document.getElementById('liste-artisans').innerHTML = '<div class="empty-state">Erreur lors du chargement des prestataires.</div>';
-        return;
-      }
-
-      tousLesArtisans = data;
-      genererFiltresMetiers(data);
-      afficherArtisans(tousLesArtisans);
-    }
-
-    function genererFiltresMetiers(artisans) {
-      const container = document.getElementById('tags-container');
-      if (!container) return;
-
-      const metiersUniques = [...new Set(artisans.map(a => a.metier).filter(Boolean))].sort();
-
+    /* RENDER VUE CLIENT */
+    function rendrevueClient() {
+      const container = document.getElementById('liste-demandes-client');
       container.innerHTML = '';
 
-      const tagTous = document.createElement('div');
-      tagTous.className = `tag ${metierFiltre === 'TOUS' ? 'active' : ''}`;
-      tagTous.innerText = 'Tous';
-      tagTous.onclick = function() { filtrerMetier('TOUS', this); };
-      container.appendChild(tagTous);
-
-      metiersUniques.forEach(metier => {
-        const tag = document.createElement('div');
-        tag.className = `tag ${metierFiltre === metier ? 'active' : ''}`;
-        tag.innerText = metier;
-        tag.onclick = function() { filtrerMetier(metier, this); };
-        container.appendChild(tag);
-      });
-    }
-
-    function afficherArtisans(liste) {
-      const conteneur = document.getElementById('liste-artisans');
-      conteneur.innerHTML = '';
-
-      if (liste.length === 0) {
-        conteneur.innerHTML = '<div class="empty-state">Aucun artisan ne correspond à votre recherche.</div>';
+      if (cacheDemandes.length === 0) {
+        container.innerHTML = '<div class="empty-state">Vous n\'avez posté aucune demande.</div>';
         return;
       }
 
-      liste.forEach((a, index) => {
-        const card = document.createElement('div');
-        card.className = `artisan-card ${a.est_sponsorise ? 'sponso' : ''}`;
-        
-        const telNettoye = (a.telephone || '').replace(/\s+/g, '');
-        const waNettoye = (a.whatsapp || '').replace(/\+/g, '').replace(/\s+/g, '');
+      cacheDemandes.forEach(d => {
+        const div = document.createElement('div');
+        div.className = 'demand-card';
 
-        card.innerHTML = `
-          <div class="artisan-header">
-            <div class="artisan-name">${a.est_sponsorise ? '⭐ ' : ''}${escapeHTML(a.nom)}</div>
-            <span class="artisan-metier">${escapeHTML(a.metier)}</span>
-          </div>
-          <div class="artisan-quartier">📍 ${escapeHTML(a.quartier)}</div>
-          ${a.description ? `<div class="artisan-desc">${escapeHTML(a.description)}</div>` : ''}
-          <div class="actions-grid">
-            <a href="tel:${escapeHTML(telNettoye)}" class="btn-action btn-call" onclick="enregistrerClic(${a.id}, 'appel')">📞 Appeler</a>
-            ${a.whatsapp ? `<a href="https://wa.me/${escapeHTML(waNettoye)}" target="_blank" class="btn-action btn-wa" onclick="enregistrerClic(${a.id}, 'whatsapp')">💬 WhatsApp</a>` : ''}
-          </div>
-        `;
-        conteneur.appendChild(card);
+        let badgeUrg = '<span class="badge-urgency urg-rdv">🗓️ RDV</span>';
+        if (d.urgence === 'immediat') badgeUrg = '<span class="badge-urgency urg-immediat">🚨 Urgent</span>';
+        else if (d.urgence === 'aujourdhui') badgeUrg = '<span class="badge-urgency urg-aujourdhui">📅 Aujourd\'hui</span>';
 
-        if ((index + 1) % 4 === 0 && index !== liste.length - 1) {
-          const adContainer = document.createElement('div');
-          adContainer.className = 'adsense-card';
-          adContainer.innerHTML = `
-            <ins class="adsbygoogle"
-                 style="display:block"
-                 data-ad-format="fluid"
-                 data-ad-layout-key="-fb+5w+4e-db+86"
-                 data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
-                 data-ad-slot="9876543210"></ins>
-          `;
-          conteneur.appendChild(adContainer);
-          (adsbygoogle = window.adsbygoogle || []).push({});
+        const nbOffres = d.offres ? d.offres.length : 0;
+
+        let htmlOffres = '';
+        if (nbOffres > 0) {
+          htmlOffres = `<div class="offers-box"><strong>💬 ${nbOffres} offre(s) d'artisan(s) reçue(s) :</strong><br><br>`;
+          d.offres.forEach(o => {
+            const art = o.artisans || {};
+            const estAcceptee = o.statut === 'acceptee';
+
+            htmlOffres += `
+              <div class="offer-item" style="${estAcceptee ? 'border: 2px solid #16a34a; background: #f0fdf4;' : ''}">
+                <div class="offer-artisan-name">
+                  <span>👤 ${escapeHTML(art.nom || 'Artisan')}</span>
+                  <span class="offer-price">${formaterPrix(o.prix_offre)}</span>
+                </div>
+                <div style="font-size: 0.8em; color: #64748b; margin-top: 2px;">📍 ${escapeHTML(art.quartier || 'Tana')}</div>
+                ${o.message ? `<p style="font-size: 0.85em; margin: 5px 0; color: #334155;">"${escapeHTML(o.message)}"</p>` : ''}
+                
+                ${estAcceptee ? `
+                  <div style="margin-top: 8px; padding: 8px; background: #dcfce7; border-radius: 6px; font-size: 0.85em;">
+                    <strong>✅ Offre acceptée ! Contactez l'artisan :</strong><br>
+                    📞 Tel: <a href="tel:${art.telephone}">${art.telephone}</a><br>
+                    ${art.whatsapp ? `💬 WA: <a href="https://wa.me/${art.whatsapp}" target="_blank">Ouvrir WhatsApp</a>` : ''}
+                  </div>
+                ` : `
+                  <button class="btn-action btn-green" style="margin-top: 6px;" onclick="accepterOffre(${o.id}, ${d.id})">✅ Accepter cette offre</button>
+                `}
+              </div>
+            `;
+          });
+          htmlOffres += `</div>`;
+        } else {
+          htmlOffres = `<div style="font-size: 0.8em; color: #94a3b8; font-style: italic; margin-top: 8px;">En attente de propositions d'artisans...</div>`;
         }
+
+        div.innerHTML = `
+          <div class="demand-header">
+            <span class="demand-title">${escapeHTML(d.metier)} — ${escapeHTML(d.quartier)}</span>
+            ${badgeUrg}
+          </div>
+          <div class="price-tag">Votre proposition : ${formaterPrix(d.prix_propose)}</div>
+          <p class="demand-desc">${escapeHTML(d.description)}</p>
+          ${d.image_url ? `<img src="${escapeHTML(d.image_url)}" class="demand-img">` : ''}
+          ${htmlOffres}
+        `;
+        container.appendChild(div);
       });
     }
 
-    async function enregistrerClic(artisanId, typeAction) {
-      try {
-        await supabaseClient.from('clics_contact').insert([{ artisan_id: artisanId, type_action: typeAction }]);
-      } catch (err) {
-        console.error("Erreur enregistrement clic", err);
-      }
-    }
+    /* RENDER VUE ARTISAN */
+    function rendreVueArtisan() {
+      const container = document.getElementById('liste-demandes-artisan');
+      container.innerHTML = '';
 
-    function filtrerArtisans() {
-      const recherche = document.getElementById('search-input').value.toLowerCase().trim();
-      const resultats = tousLesArtisans.filter(a => {
-        const matchSearch = (a.nom && a.nom.toLowerCase().includes(recherche)) || 
-                            (a.metier && a.metier.toLowerCase().includes(recherche)) || 
-                            (a.quartier && a.quartier.toLowerCase().includes(recherche));
-        const matchMetier = (metierFiltre === 'TOUS') || (a.metier === metierFiltre);
-        return matchSearch && matchMetier;
+      const demandesOuvertes = cacheDemandes.filter(d => d.statut === 'ouvert');
+
+      if (demandesOuvertes.length === 0) {
+        container.innerHTML = '<div class="empty-state">Aucune demande en cours pour le moment.</div>';
+        return;
+      }
+
+      demandesOuvertes.forEach(d => {
+        const div = document.createElement('div');
+        div.className = 'demand-card';
+
+        let badgeUrg = '<span class="badge-urgency urg-rdv">🗓️ RDV</span>';
+        if (d.urgence === 'immediat') badgeUrg = '<span class="badge-urgency urg-immediat">🚨 Urgent</span>';
+
+        div.innerHTML = `
+          <div class="demand-header">
+            <span class="demand-title">${escapeHTML(d.metier)} — ${escapeHTML(d.quartier)}</span>
+            ${badgeUrg}
+          </div>
+          <div style="font-size: 0.85em; color: #64748b;">Client : ${escapeHTML(d.client_nom)}</div>
+          <div class="price-tag">Prix proposé client : ${formaterPrix(d.prix_propose)}</div>
+          <p class="demand-desc">${escapeHTML(d.description)}</p>
+          ${d.image_url ? `<img src="${escapeHTML(d.image_url)}" class="demand-img">` : ''}
+          <button class="btn-action btn-primary" onclick="ouvrirModalOffre(${d.id}, ${d.prix_propose})">🤝 Faire une proposition / Accepter</button>
+        `;
+        container.appendChild(div);
       });
-      afficherArtisans(resultats);
     }
 
-    function filtrerMetier(metier, elem) {
-      metierFiltre = metier;
-      document.querySelectorAll('.filter-tags .tag').forEach(t => t.classList.remove('active'));
-      if (elem) elem.classList.add('active');
-      filtrerArtisans();
-    }
+    /* ACTIONS & FORMULAIRES */
+    function ouvrirModalDemande() { document.getElementById('modalDemande').style.display = 'flex'; }
+    function fermerModalDemande() { document.getElementById('modalDemande').style.display = 'none'; }
 
-    /* MODALE INSCRIPTION */
-    function ouvrirModalInscription() { 
-      document.getElementById('modalInscription').style.display = 'flex'; 
-    }
-    
-    function fermerModalInscription() { 
-      document.getElementById('modalInscription').style.display = 'none'; 
-      document.getElementById('form-inscription').reset(); 
-    }
-
-    function gererClicExterieurModal(e) {
-      if (e.target.id === 'modalInscription') {
-        fermerModalInscription();
-      }
-    }
-
-    async function soumettreInscription(e) {
+    async function soumettreDemande(e) {
       e.preventDefault();
-      const btnSubmit = document.getElementById('btn-submit-form');
-      btnSubmit.disabled = true;
-      btnSubmit.innerText = "Envoi...";
+      const payload = {
+        client_nom: document.getElementById('dem-nom').value.trim(),
+        client_tel: document.getElementById('dem-tel').value.trim(),
+        metier: document.getElementById('dem-metier').value,
+        quartier: document.getElementById('dem-quartier').value.trim(),
+        description: document.getElementById('dem-desc').value.trim(),
+        urgence: document.getElementById('dem-urgence').value,
+        prix_propose: parseFloat(document.getElementById('dem-prix').value) || 0,
+        image_url: document.getElementById('dem-img').value.trim() || null
+      };
 
-      const nom = document.getElementById('ins-nom').value.trim();
-      const metier = document.getElementById('ins-metier').value.trim();
-      const quartier = document.getElementById('ins-quartier').value.trim();
-      const telephone = document.getElementById('ins-tel').value.trim();
-      const whatsapp = document.getElementById('ins-wa').value.trim();
-      const description = document.getElementById('ins-desc').value.trim();
-
-      const { error } = await supabaseClient
-        .from('artisans')
-        .insert([{ nom, metier, quartier, telephone, whatsapp, description, est_verifie: false }]);
-
-      btnSubmit.disabled = false;
-      btnSubmit.innerText = "Envoyer ma demande";
-
+      const { error } = await supabaseClient.from('demandes').insert([payload]);
       if (!error) {
-        alert("Merci ! Votre demande a été envoyée avec succès et sera validée sous peu.");
-        fermerModalInscription();
-      } else {
-        alert("Erreur lors de l'envoi : " + error.message);
-      }
+        alert("✅ Besoin publié ! Les artisans vont recevoir votre demande.");
+        fermerModalDemande();
+        document.getElementById('form-demande').reset();
+        chargerDemandes();
+      } else alert("❌ Erreur : " + error.message);
     }
 
-    initPage();
+    function ouvrirModalOffre(demandeId, prixClient) {
+      document.getElementById('off-demande-id').value = demandeId;
+      document.getElementById('off-prix').value = prixClient || '';
+      document.getElementById('modalOffre').style.display = 'flex';
+    }
+    function fermerModalOffre() { document.getElementById('modalOffre').style.display = 'none'; }
+
+    async function soumettreOffre(e) {
+      e.preventDefault();
+      const demande_id = document.getElementById('off-demande-id').value;
+      const artisan_id = document.getElementById('off-artisan-id').value;
+      const prix_offre = parseFloat(document.getElementById('off-prix').value);
+      const message = document.getElementById('off-msg').value.trim();
+
+      if (!artisan_id) return alert("Veuillez sélectionner votre profil artisan.");
+
+      const { error } = await supabaseClient.from('offres').insert([{ demande_id, artisan_id, prix_offre, message }]);
+      if (!error) {
+        alert("🤝 Votre offre a été transmise au client !");
+        fermerModalOffre();
+        document.getElementById('form-offre').reset();
+        chargerDemandes();
+      } else alert("❌ Erreur : " + error.message);
+    }
+
+    async function accepterOffre(offreId, demandeId) {
+      if (!confirm("Accepter cette offre et débloquer les coordonnées de l'artisan ?")) return;
+
+      // Marquer l'offre comme acceptée et la demande comme attribuée
+      await supabaseClient.from('offres').update({ statut: 'acceptee' }).eq('id', offreId);
+      await supabaseClient.from('demandes').update({ statut: 'attribue' }).eq('id', demandeId);
+
+      chargerDemandes();
+    }
+
+    init();
   </script>
 </body>
 </html>
