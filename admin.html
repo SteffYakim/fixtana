@@ -552,7 +552,7 @@
           .limit(50);
 
         if (error || !logs) {
-          tbody.innerHTML = '<tr><td colspan="3" class="empty-msg">⚠️ La table "logs" n\'existe pas encore ou l\'accès est restreint.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="3" class="empty-msg">⚠️ La table "logs" n\'existe pas encore ou RLS est activé.</td></tr>';
           return;
         }
 
@@ -894,82 +894,100 @@
 
     /* --- 5. PHARMACIES --- */
     async function chargerPharmacies() {
-  const { data: pharmacies, error } = await supabaseClient
-    .from('pharmacies')
-    .select('*')
-    .order('nom', { ascending: true });
+      const { data: pharmacies, error } = await supabaseClient.from('pharmacies').select('*').order('nom', { ascending: true });
+      const tbody = document.getElementById('table-pharmacies');
+      tbody.innerHTML = '';
 
-  const tbody = document.getElementById('table-pharmacies');
-  tbody.innerHTML = '';
+      if (error || !pharmacies || pharmacies.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">Aucune pharmacie enregistrée.</td></tr>';
+        return;
+      }
 
-  if (error || !pharmacies || pharmacies.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" class="empty-msg">Aucune pharmacie enregistrée.</td></tr>';
-    return;
-  }
+      cachePharmacies = pharmacies;
+      const aujourdhui = new Date();
+      aujourdhui.setHours(0, 0, 0, 0);
 
-  cachePharmacies = pharmacies;
+      let alertesText = [];
 
-  // Date actuelle sans l'heure pour une comparaison exacte sur le jour
-  const aujourdhui = new Date();
-  aujourdhui.setHours(0, 0, 0, 0);
+      pharmacies.forEach(p => {
+        let statutBadge = '<span class="badge-status status-ok">🟢 En Garde</span>';
+        const dateCible = p.date_fin_garde || p.date_debut_garde;
 
-  let alertesText = [];
+        if (dateCible) {
+          const [year, month, day] = dateCible.split('-').map(Number);
+          const dateFin = new Date(year, month - 1, day);
+          const diffJours = Math.round((dateFin - aujourdhui) / (1000 * 60 * 60 * 24));
 
-  pharmacies.forEach(p => {
-    let statutBadge = '<span class="badge-status status-ok">🟢 En Garde</span>';
-    
-    // Vérification basée sur la date de fin (ou la date unique saisie)
-    const dateCible = p.date_fin_garde || p.date_debut_garde;
+          if (diffJours < 0) {
+            statutBadge = '<span class="badge-status status-expired">🔴 Expirée</span>';
+            alertesText.push(`• <strong>${escapeHTML(p.nom)}</strong> : La garde s'est terminée le ${formaterDate(dateCible)}.`);
+          } else if (diffJours <= 2) {
+            const libelle = diffJours === 0 ? "Aujourd'hui" : `dans ${diffJours} j`;
+            statutBadge = `<span class="badge-status status-warning">⏳ Fin ${libelle}</span>`;
+            alertesText.push(`• <strong>${escapeHTML(p.nom)}</strong> : Fin de garde ${libelle} (${formaterDate(dateCible)}).`);
+          }
+        }
 
-    if (dateCible) {
-      const [year, month, day] = dateCible.split('-').map(Number);
-      const dateFin = new Date(year, month - 1, day);
-      
-      // Calcul du nombre de jours de différence
-      const diffJours = Math.round((dateFin - aujourdhui) / (1000 * 60 * 60 * 24));
+        const periodeStr = (p.date_debut_garde && p.date_fin_garde) 
+          ? `Du ${formaterDate(p.date_debut_garde)} au ${formaterDate(p.date_fin_garde)}`
+          : (dateCible ? formaterDate(dateCible) : 'Non définie');
 
-      if (diffJours < 0) {
-        // La date est dépassée
-        statutBadge = '<span class="badge-status status-expired">🔴 Expirée</span>';
-        alertesText.push(`• <strong>${escapeHTML(p.nom)}</strong> : La garde s'est terminée le ${formaterDate(dateCible)}.`);
-      } else if (diffJours <= 2) {
-        // La fin approche (aujourd'hui ou dans 1-2 jours)
-        const libelle = diffJours === 0 ? "Aujourd'hui" : `dans ${diffJours} j`;
-        statutBadge = `<span class="badge-status status-warning">⏳ Fin ${libelle}</span>`;
-        alertesText.push(`• <strong>${escapeHTML(p.nom)}</strong> : Fin de garde ${libelle} (${formaterDate(dateCible)}).`);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${escapeHTML(p.nom)}</strong></td>
+          <td>${escapeHTML(p.quartier)}${p.telephone ? '<br><small style="color:#64748b;">' + escapeHTML(p.telephone) + '</small>' : ''}</td>
+          <td><small>${periodeStr}</small></td>
+          <td>${statutBadge}</td>
+          <td style="text-align: right; white-space: nowrap;">
+            <button class="btn btn-primary" title="Modifier" onclick="ouvrirEditPharmacie(${p.id})">✏️</button>
+            <button class="btn btn-danger" title="Supprimer" onclick="supprimerPharmacie(${p.id})">🗑️</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      const alertBanner = document.getElementById('alert-garde');
+      if (alertBanner) {
+        if (alertesText.length > 0) {
+          document.getElementById('alert-garde-text').innerHTML = alertesText.join('<br>');
+          alertBanner.style.display = 'block';
+        } else alertBanner.style.display = 'none';
       }
     }
 
-    // Formatage de l'affichage des dates
-    const periodeStr = (p.date_debut_garde && p.date_fin_garde) 
-      ? `Du ${formaterDate(p.date_debut_garde)} au ${formaterDate(p.date_fin_garde)}`
-      : (dateCible ? formaterDate(dateCible) : 'Non définie');
-
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td><strong>${escapeHTML(p.nom)}</strong></td>
-      <td>${escapeHTML(p.quartier)}${p.telephone ? '<br><small style="color:#64748b;">' + escapeHTML(p.telephone) + '</small>' : ''}</td>
-      <td><small>${periodeStr}</small></td>
-      <td>${statutBadge}</td>
-      <td style="text-align: right; white-space: nowrap;">
-        <button class="btn btn-primary" title="Modifier" onclick="ouvrirEditPharmacie(${p.id})">✏️</button>
-        <button class="btn btn-danger" title="Supprimer" onclick="supprimerPharmacie(${p.id})">🗑️</button>
-      </td>
-    `;
-    tbody.appendChild(tr);
-  });
-
-  // Mise à jour de la bannière d'alerte jaune au-dessus si des gardes sont périmées
-  const alertBanner = document.getElementById('alert-garde');
-  if (alertBanner) {
-    if (alertesText.length > 0) {
-      document.getElementById('alert-garde-text').innerHTML = alertesText.join('<br>');
-      alertBanner.style.display = 'block';
-    } else {
-      alertBanner.style.display = 'none';
+    function ouvrirEditPharmacie(id) {
+      const p = cachePharmacies.find(item => Number(item.id) === Number(id));
+      if (!p) return;
+      document.getElementById('edit-ph-id').value = p.id;
+      document.getElementById('edit-ph-nom').value = p.nom || '';
+      document.getElementById('edit-ph-quartier').value = p.quartier || '';
+      document.getElementById('edit-ph-tel').value = p.telephone || '';
+      document.getElementById('edit-ph-debut').value = p.date_debut_garde || '';
+      document.getElementById('edit-ph-fin').value = p.date_fin_garde || '';
+      document.getElementById('modalPharmacie').style.display = 'flex';
     }
-  }
-}
+
+    async function sauvegarderPharmacie() {
+      const id = document.getElementById('edit-ph-id').value;
+      const nom = document.getElementById('edit-ph-nom').value.trim();
+      const quartier = document.getElementById('edit-ph-quartier').value.trim();
+      const telephone = document.getElementById('edit-ph-tel').value.trim();
+      const date_debut_garde = document.getElementById('edit-ph-debut').value || null;
+      const date_fin_garde = document.getElementById('edit-ph-fin').value || null;
+
+      const { error } = await supabaseClient
+        .from('pharmacies')
+        .update({ nom, quartier, telephone, date_debut_garde, date_fin_garde })
+        .eq('id', id);
+
+      if (!error) {
+        await enregistrerLog("Modification Pharmacie", `Mise à jour des informations de "${nom}" (${quartier})`);
+        fermerModales();
+        chargerPharmacies();
+      } else {
+        alert("❌ Erreur : " + error.message);
+      }
+    }
 
     async function ajouterPharmacie(e) {
       e.preventDefault();
